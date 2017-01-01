@@ -14,11 +14,14 @@ $pid = arr[2]
 $pyout.expect(">>>")
 
 # Import necessary libs
-@init = "
+init = "
 from __future__ import print_function
 import time
 import pychromecast
 import json
 "
 
-run_py(@init)
+run_py(init)
+
+PythonHelper.refresh_devices()
+

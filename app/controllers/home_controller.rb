@@ -10,13 +10,17 @@ class HomeController < ApplicationController
 
   def refresh_devices
     # Wait until terminal is ready
-    @get_devices = "
-      chromecasts = pychromecast.get_chromecasts()
-      arr = [cc.device.friendly_name for cc in chromecasts]
-      print(json.dumps(arr))
-    "
 
-    @devices = JSON.parse(run_py(@get_devices))
+    @devices = JSON.parse(run_py($get_devices))
+  end
+
+  def get_devices
+    devices = $redis.get("devices")
+    if devices.blank?
+      refresh_devices()
+      devices = $redis.get("devices")
+    end
+    render :json => devices
   end
 
   def template

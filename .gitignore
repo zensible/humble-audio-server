@@ -23,3 +23,7 @@ midi
 .DS_Store
 public/uploads
 screen*
+
+public/audio
+
+public/.DS_Store

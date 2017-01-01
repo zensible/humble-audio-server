@@ -5,5 +5,6 @@ Rails.application.routes.draw do
   get '/template/:template_name' => 'home#template'
 
   get '/api/refresh_devices' => 'home#refresh_devices'
+  get '/api/get_devices' => 'home#get_devices'
 
 end

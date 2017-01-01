@@ -1,5 +1,5 @@
 
-multiroomApp.controller('GlobalCtrl', function ($scope, $routeParams, $route, $rootScope) {
+multiroomApp.controller('GlobalCtrl', function ($scope, $routeParams, $route, $http, $rootScope) {
 
   $scope.safeApply = function() {
     if(!$scope.$$phase) {
@@ -7,13 +7,34 @@ multiroomApp.controller('GlobalCtrl', function ($scope, $routeParams, $route, $
     }
   }
 
-  /*
-   *   Intialize code
-   */
-  setTimeout(function() {
-    $('#top').css('height', ($(window).height()+"px"))
-  }, 1)
-  //init_player($scope, Ode, $location, $rootScope);
+  $rootScope.showDefaultError = function(data, status) {
+    if (status === 500) {  // Rails exception occured. Show a friendly message rather than the enormous html/css error coming back from Rails.
+      data = "A server error occured. Please try again in a few minutes.";
+    }
+    var message = "";
+    if (typeof data === 'string') {
+      message = data;
+    } else if (Array.isArray(data)) {
+      jQuery.each(data, function(i, val) {
+        message += (message === "" ? "" : "<br>") + val;
+      });
+    } else {
+      jQuery.each(data, function(i, val) {
+        message += (message === "" ? "" : "<br>") + i + " ";
+
+        // Fixing a bug with messaging where "Status error 5" was showing up. This was likely because
+        // of the val[0] that previously existed. As the error message structure types is not consistent
+        // it could be that val was sometimes an array, in which case val[0] makes sense. So just in case
+        // there is a check for array type, but otherwise val.
+        if(_.isArray(val)) {
+          message += val[0]; // ??? path...
+        } else {
+          message += val; // Usual path...
+        }
+      });
+    }
+    alert(message);
+  };
 
 });
 

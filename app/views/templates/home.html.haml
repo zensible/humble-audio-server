@@ -4,8 +4,22 @@
       %p{ "ng-repeat" => "mode in home.modes" }
         %a{ "ng-click" => "selectMode(mode)"}
           {{mode}}
-    %td#selector1.stretch.block this should stretch
-    %td#selector2.stretch.block this should be the content width
+    %td#selector1.stretch.block
+      {{home.mode}}
+    %td#selector2.stretch.block
+      {{home.mode}}
   %tr#devices
     %td{ :colspan => 3 }
-      device
+      %table{ :style => "width: 100%; height: 100%" }
+        %tr
+          %td{ :style => "width: 50%" }
+            %p{ "ng-repeat" => "device in home.devices.left" }
+              {{device.friendly_name}}
+          %td{ :style => "width: 50%" }
+            %p{ "ng-repeat" => "device in home.devices.right" }
+              {{device.friendly_name}}
+  %tr#play-bar
+    %td{ :colspan => 3 }
+      shuffle | back | play/pause | forward | repeat
+      %br
+      [ ------- ]
