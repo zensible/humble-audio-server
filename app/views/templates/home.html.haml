@@ -1,0 +1,11 @@
+%table#top{:style => "width: 100%;", "ng-controller" => "HomeCtrl"}
+  %tr#media-select
+    %td#modes.autofit.block
+      %p{ "ng-repeat" => "mode in home.modes" }
+        %a{ "ng-click" => "selectMode(mode)"}
+          {{mode}}
+    %td#selector1.stretch.block this should stretch
+    %td#selector2.stretch.block this should be the content width
+  %tr#devices
+    %td{ :colspan => 3 }
+      device

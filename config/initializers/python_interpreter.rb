@@ -1,3 +1,4 @@
+include PythonHelper
 
 #RubyPython.start
 require 'expect'
@@ -11,3 +12,13 @@ $pid = arr[2]
 
 # Wait until terminal is ready
 $pyout.expect(">>>")
+
+# Import necessary libs
+@init = "
+from __future__ import print_function
+import time
+import pychromecast
+import json
+"
+
+run_py(@init)

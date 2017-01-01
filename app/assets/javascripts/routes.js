@@ -2,9 +2,9 @@
 if (!window.isBot) {
   angular.module('multiroomApp').config(function($routeProvider) {
     return $routeProvider.when('/home', {
-      templateUrl: '/template/setup'
+      templateUrl: '/template/home'
     }).otherwise({
-      templateUrl: '/template/setup'
+      templateUrl: '/template/home'
     });
   });
   
