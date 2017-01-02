@@ -4,15 +4,21 @@ Rails.application.routes.draw do
 
   get '/template/:template_name' => 'home#template'
 
-  get '/api/refresh_devices' => 'home#refresh_devices'
-  get '/api/get_devices' => 'home#get_devices'
+  scope '/api' do
+    scope '/devices' do
+      get '/refresh' => 'devices#refresh'
+      get '/get' => 'devices#get'
+      get '/select/:friendly_name' => 'devices#select'
+    end
 
-  get '/api/refresh_media/:mode' => 'home#refresh_media'
-  get '/api/get_media/:mode' => 'home#get_media'
-
-  post '/api/play_media' => 'home#play_media'
-  get '/api/stop_media' => 'home#stop_media'
-  get '/api/pause_media' => 'home#pause_media'
-  get '/api/select_cast/:friendly_name' => 'home#sel_cast'
+    #get '/api/devices/set_volume/:val' => 'home#set_volume'
+    scope '/mp3s' do
+      get '/refresh/:mode' => 'mp3s#refresh'
+      get '/get/:mode' => 'mp3s#get'
+      post '/play' => 'mp3s#play'
+      get '/stop' => 'mp3s#stop'
+      get '/pause' => 'mp3s#pause'
+    end
+  end
 
 end

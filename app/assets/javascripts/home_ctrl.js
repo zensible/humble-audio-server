@@ -69,7 +69,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
   }
 
   $scope.select_cast = function(device) {
-    Media.select_cast(device.friendly_name)    
+    Device.select_cast(device.friendly_name)    
   }
 
   var cache = {}

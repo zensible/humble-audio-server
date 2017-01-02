@@ -53,11 +53,11 @@
       %table{ :style => "width: 100%; height: 100%" }
         %tr
           %td{ :style => "width: 50%" }
-            %p{ "ng-repeat" => "device in home.devices.left" }
+            %p{ "ng-repeat" => "device in home.devices.groups" }
               %a{ "ng-click" => "select_cast(device)" }
                 {{device.friendly_name}}
           %td{ :style => "width: 50%" }
-            %p{ "ng-repeat" => "device in home.devices.right" }
+            %p{ "ng-repeat" => "device in home.devices.audios" }
               %a{ "ng-click" => "select_cast(device)" }
                 {{device.friendly_name}}
 
