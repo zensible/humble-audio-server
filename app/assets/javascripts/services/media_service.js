@@ -19,6 +19,10 @@ angular.module("multiroomApp").factory('Media', function($rootScope, HttpErrorWr
 
     pause: function(success, error) {
       HttpErrorWrapper.get("/api/mp3s/pause/", success, error);
+    },
+
+    resume: function(success, error) {
+      HttpErrorWrapper.get("/api/mp3s/resume", success, error);
     }
 
   };

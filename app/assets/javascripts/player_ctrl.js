@@ -29,7 +29,7 @@ var init_player = function($scope, $rootScope) {
     $scope.playlist.items = [];
     if (playlist && playlist.length > 0) {
       $scope.playlist.items = playlist;
-      $scope.playlist.current_index = 0;
+      $scope.playlist.current_index = -1;
       $scope.playlist.current_item = $scope.playlist.items[0];
     }
   }
@@ -128,55 +128,11 @@ var init_player = function($scope, $rootScope) {
   $scope.player.pause = function() {
     $scope.player.playing = false;
     isPaused = true;
-
-    var item = $scope.playlist.current_item;
-
-    switch (item.type) {
-      case "ode":
-        $scope.ode.stop();
-      case "audio":
-        if (item.file_extension == '.mid') {
-          $scope.player_midi.stop();
-        }
-        if (item.file_extension == '.mp3') {
-          $scope.player_mp3.stop();
-        }
-        break;
-    }
-    /*
-    switch($scope.currentPage) {
-      case "home":
-      case "board":
-
-        break;
-      case "upload":
-        // play recently uploaded song if any
-        break;
-      case "compose":
-        break;
-      default:
-        alert("wha? " + $scope.currentPage);
-    }
-    */
   }
 
   $scope.player.resume = function() {
+    $scope.player.playing = true;
     isPaused = false;
-
-    var posMs = $scope.playlist.current_item.position_ms;
-
-    switch (item.type) {
-      case "ode":
-        $scope.ode.play(cursorCompile.curSong, posMs, $scope.player.nextAuto);
-      case "audio":
-        if (item.file_extension == '.mid') {
-          $scope.midi.play(posMs, $scope.player.nextAuto);
-        }
-        if (item.file_extension == '.mp3') {
-          $scope.player_mp3.play(Math.floor(posMs / 1000), $scope.player.nextAuto);
-        }
-        break;
-    }
   }
 
   // User clicked the progress bar, seek to that part of the song

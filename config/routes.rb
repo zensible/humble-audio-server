@@ -18,6 +18,7 @@ Rails.application.routes.draw do
       post '/play' => 'mp3s#play'
       get '/stop' => 'mp3s#stop'
       get '/pause' => 'mp3s#pause'
+      get '/resume' => 'mp3s#resume'
     end
   end
 

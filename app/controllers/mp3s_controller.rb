@@ -28,6 +28,11 @@ class Mp3sController < ApiController
     render :json => { success: true }
   end
 
+  def resume
+    Device.resume()
+    render :json => { success: true }
+  end
+
   def refresh
     mode = params[:mode]
 

@@ -63,7 +63,8 @@ import json
     if str.match(/#{Regexp.escape('Traceback (most recent call last)')}/)
     end
     str = str.gsub(/^\s?#{Regexp.escape(cmd)}/, "")
-
+    str = str.gsub(/^\r?/, "")
+    str = str.gsub(/^\n?/, "")
     #puts "AFTER: [[#{str}]]"
     return str
   end

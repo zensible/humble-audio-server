@@ -45,10 +45,20 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     url = url_prefix + encodeURI(path.replace(regex, ''))
     url = url.replace(/'/, '%27')
 
+    $scope.player.pause()
+    $scope.buffering = true;
+
+    // Buffering begins...
+    var item = $scope.playlist.items[index];
+    $scope.playlist.current_index = index;
+    $scope.playlist.current_item = item;
+
     Media.play({
       id: mp3['id'],
       url: url
     }, function(response) {
+      $scope.buffering = false;
+      // Buffering complete.
       $scope.player.play(index, 0, function() { })
       // Show progress bar
       console.log("resp", response)
@@ -61,7 +71,15 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
   }
 
   $scope.pause = function() {
-    Media.pause()
+    Media.pause(function(response) {
+      $scope.player.pause()
+    })
+  }
+
+  $scope.resume = function() {
+    Media.resume(function(response) {
+      $scope.player.resume()
+    })
   }
 
   $scope.volume_change = function(device) {

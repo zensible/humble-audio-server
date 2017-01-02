@@ -44,6 +44,10 @@
           Time
       .mp3-record{ "ng-repeat" => "mp3 in home.media" }
         .mp3-title.ellipsis
+          %div{ "ng-if" => "playlist.current_index == $index", style: "position: absolute; margin-left: -20px" }
+            %img{ "src" => "/images/sound_16.png", "ng-if" => "!buffering" }
+            %img{ "src" => "/images/sound_buffering_16.png", "ng-if" => "buffering" }
+
           %a{ "ng-click" => "play($index)"}
             {{mp3.title || mp3.filename}}
         .mp3-artist.ellipsis
@@ -61,15 +65,22 @@
     %table.table{ :style => "width: 100%" }
       %tr
         %td{ :style => "width: 50%" }
-          %p{ "ng-repeat" => "device in home.devices.groups" }
-            %a{ "ng-click" => "select_cast(device)" }
-              {{device.friendly_name}}
-        %td{ :style => "width: 50%" }
-          %div{ "ng-repeat" => "device in home.devices.audios" }
-            %a{ "ng-click" => "select_cast(device)" }
-              {{device.friendly_name}}
-            %input.slider{ type: "range", min: "0", max: "1", step: ".05", "ng-mouseup" => "volume_change(device)", "ng-model" => "device.volume_level" }
+          %table{ :style => "width: 100%; table-layout: fixed" }
+            %tr{ "ng-repeat" => "device in home.devices.groups" }
+              %td.ellipsis{ :style => "width: 40%;" }
+                %a.ellipsis{ "ng-click" => "select_cast(device)" }
+                  {{device.friendly_name}}
+              %td.ellipsis{ :style => "width: 60%; padding-right: 40px" }
+                %input.slider{ type: "range", min: "0", max: "1", step: ".05", "ng-mouseup" => "volume_change(device)", "ng-model" => "device.volume_level" }
 
+        %td{ :style => "width: 50%" }
+          %table{ :style => "width: 100%; table-layout: fixed" }
+            %tr{ "ng-repeat" => "device in home.devices.audios" }
+              %td.ellipsis{ :style => "width: 40%;" }
+                %a.ellipsis{ "ng-click" => "select_cast(device)" }
+                  {{device.friendly_name}}
+              %td.ellipsis{ :style => "width: 60%; padding-right: 40px" }
+                %input.slider{ type: "range", min: "0", max: "1", step: ".05", "ng-mouseup" => "volume_change(device)", "ng-model" => "device.volume_level" }
   #playbar
     #playerControl.g-z-index-header.m-visible
       #playerControl__inner
@@ -82,10 +93,10 @@
             %li{ style: "float: left; width: 50px;" }
               %img{ "ng-src" => "{{ playlist.current_item['img50'] }}" }
             %li#playerControl__playPauseSkip
-              %button#player-prev.skipControl.playerControl__icon.sc-ir.skipControl__previous{ "ng-click" => "player.prev()", title: "Play previous", "ng-class" => "{ 'disabled': !player.allowPlaylist || player.playlistIndex == 0 }" }
-              %button#player.play.playControl.playerControl__icon.sc-ir{"ng-show" => "!player.playing", "ng-click" => "player.play()", :title => "Play current", title: "Play current", "ng-class" => "{ 'disabled': playlist.items.length == 0 }"}
-              %button#player-pause.pauseControl.playerControl__icon.sc-ir{"ng-show" => "player.playing", "ng-click" => "player.pause()", "ng-cloak" => "", :title => "Pause current", title: "Pause current"}
-              %button#player-next.skipControl.playerControl__icon.sc-ir.skipControl__next{ "ng-click" => "player.next()", title: "Skip to next", "ng-class" => "{ 'disabled': !player.allowPlaylist || player.playlistIndex == player.playlist.length - 1 }" }
+              %button#player-prev.skipControl.playerControl__icon.sc-ir.skipControl__previous{ "ng-click" => "player.prev()", title: "Play previous", "ng-class" => "{ 'disabled': player.playlistIndex == 0 }" }
+              %button#player.play.playControl.playerControl__icon.sc-ir{"ng-show" => "!player.playing", "ng-click" => "resume()", :title => "Play current", title: "Play current", "ng-class" => "{ 'disabled': playlist.items.length == 0 }"}
+              %button#player-pause.pauseControl.playerControl__icon.sc-ir{"ng-show" => "player.playing", "ng-click" => "pause()", "ng-cloak" => "", :title => "Pause current", title: "Pause current"}
+              %button#player-next.skipControl.playerControl__icon.sc-ir.skipControl__next{ "ng-click" => "player.next()", title: "Skip to next", "ng-class" => "{ 'disabled': player.playlistIndex == player.playlist.length - 1 }" }
 
             %li#playerControl__repeat
               %button.repeatControl.sc-ir{:title => "Repeat playing track"} Repeat track
@@ -100,13 +111,3 @@
                   #playbackChrono__progressHandle.sc-ir{:style => "left: 16px;"}
                 #playbackChrono__duration
                   %span{"aria-hidden" => "true"}
-
-            %li#playerControl__volume{ "ng-mouseenter" => "player.showVol()", "ng-mouseleave" => "player.hideVol()" }
-              .volume{"data-level" => "4"}
-                .volume__iconWrapper
-                  %button.volume__button.volume__speakerIcon.sc-ir
-                    Toggle mute
-                .volume__sliderWrapper
-                  .volume__sliderBackground
-                  .volume__sliderProgress{:style => "height: 36.8px;"}
-                  .volume__sliderHandle{:style => "top: 65.2px;"}  }

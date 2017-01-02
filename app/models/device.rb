@@ -62,6 +62,26 @@ print(json.dumps(arr))
       mc.play_media('#{url}', 'audio/mp3')
     }
     PyChromecast.run(str)
+
+    str = %Q{
+      print(mc.status.player_state)
+    }
+
+    player_state = ""
+    cnt = 0
+    while(player_state != "BUFFERING" && cnt < 20)
+      puts "1 #{player_state}"
+      player_state = PyChromecast.run(str)
+      puts "1.1 #{player_state}"
+      sleep(0.25)
+    end
+
+    cnt = 0
+    while(player_state == "BUFFERING" && cnt < 20)
+      puts "2 #{player_state}"
+      player_state = PyChromecast.run(str)
+      sleep(0.1)
+    end
   end
 
   def self.stop()
@@ -76,6 +96,14 @@ print(json.dumps(arr))
     str = %Q{
       mc = cast.media_controller
       mc.pause()
+    }
+    PyChromecast.run(str)
+  end
+
+  def self.resume()
+    str = %Q{
+      mc = cast.media_controller
+      mc.play()
     }
     PyChromecast.run(str)
   end
