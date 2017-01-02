@@ -1,25 +1,72 @@
-%table#top{:style => "width: 100%;", "ng-controller" => "HomeCtrl"}
+%table.one-pane#top{"ng-controller" => "HomeCtrl"}
   %tr#media-select
-    %td#modes.autofit.block
-      %p{ "ng-repeat" => "mode in home.modes" }
-        %a{ "ng-click" => "selectMode(mode)"}
-          {{mode}}
-    %td#selector1.stretch.block
-      {{home.mode}}
-    %td#selector2.stretch.block
-      {{home.mode}}
+    %td#modes.autofit.block.bordered
+      %div#modes-container
+        %p
+          %a{ "ng-click" => "selectMode('presets')"}
+            Presets
+        %p
+          %a{ "ng-click" => "selectMode('radio')"}
+            Radio
+        %p
+          %a{ "ng-click" => "selectMode('music')"}
+            Music
+        %p
+          %a{ "ng-click" => "selectMode('spoken')"}
+            Spoken
+        %p
+          %a{ "ng-click" => "selectMode('white-noise')"}
+            White Noise
+
+    %td#selector1.stretch.block.bordered
+
+    %td#selector2.stretch.block.bordered
+      %table.mp3-record
+        %tr
+          %td
+            Title
+          %td
+            Artist
+          %td
+            Album
+          %td
+            Year
+          %td
+            Time
+        %tr{ "ng-repeat" => "mp3 in home.media" }
+          %td.mp3-title
+            %a{ "ng-click" => "play(mp3)"}
+              {{mp3.title || mp3.filename}}
+          %td.mp3-artist
+            {{mp3.artist || 'N/A' }}
+          %td.mp3-album
+            {{mp3.album || 'N/A'}}
+          %td.mp3-year
+            {{mp3.year || 'N/A'}}
+          %td.mp3-length_seconds
+            {{mp3.length_seconds | secondsToDateTime | date:'H:mm:ss' }}
+      %a{ "ng-click" => "refresh_media()"}
+        refresh
+
   %tr#devices
     %td{ :colspan => 3 }
       %table{ :style => "width: 100%; height: 100%" }
         %tr
           %td{ :style => "width: 50%" }
             %p{ "ng-repeat" => "device in home.devices.left" }
-              {{device.friendly_name}}
+              %a{ "ng-click" => "select_cast(device)" }
+                {{device.friendly_name}}
           %td{ :style => "width: 50%" }
             %p{ "ng-repeat" => "device in home.devices.right" }
-              {{device.friendly_name}}
+              %a{ "ng-click" => "select_cast(device)" }
+                {{device.friendly_name}}
+
   %tr#play-bar
     %td{ :colspan => 3 }
       shuffle | back | play/pause | forward | repeat
+      %a{ "ng-click" => "pause()" }
+        Pause
+      %a{ "ng-click" => "stop()" }
+        STOP
       %br
       [ ------- ]

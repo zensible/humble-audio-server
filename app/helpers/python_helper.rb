@@ -1,16 +1,12 @@
 module PythonHelper
 
   def parse_result(cmd, str)
+    #puts "BEFORE: [[#{str}]] cmd: [[#{cmd}]]"
     # Trim off trailing >>> and preceding command so we return only output
     str = str.gsub(/\r*\n>>>/, "")
-    str = str.gsub(/\s*#{Regexp.escape(cmd)}\r*\n/, "")
+    str = str.gsub(/\s?#{Regexp.escape(cmd)}/, "")
 
-    #abort "#{cmd} - [#{str}]" if str.match(/Justin/)
-    #lines = str.split(/(\r)\n/)
-    #output = []
-    #lines.each do |line|
-    #  puts "== OUT: #{line}"
-    #end
+    #puts "AFTER: [[#{str}]]"
     return str
   end
 
@@ -20,10 +16,13 @@ module PythonHelper
       next if cmd.blank? || cmd.gsub(/\s+/, "").blank?
       cmd = cmd.gsub(/^\s+/, '')
       puts "= RUN: [#{cmd}]"
+      STDOUT.flush
       $pyin.puts cmd
+      #sleep(0.01)
       $pyout.expect(">>>") do |result|
         retval = parse_result(cmd, result[0])
         puts "= result1: ***#{retval}***"
+        STDOUT.flush
       end
     end
     return retval
@@ -46,7 +45,7 @@ print(json.dumps(arr))
     found = false
     # Filter out non-audio chromecasts if any
     all.each do |dev|
-      if dev['cast_type'] == 'audio'
+      if dev['cast_type'] == 'audio' || dev['cast_type'] == 'group'
         found = true
         if dev['friendly_name'].match(/^L/)
           devices[:left].push(dev)
@@ -59,6 +58,39 @@ print(json.dumps(arr))
       raise "No chromecast audio devices found on the network!"
     end
     $redis.set("devices", JSON.dump(devices))
+  end
+
+  def select_cast(nam)
+    str = %Q{
+      cast = next(cc for cc in chromecasts if cc.device.friendly_name == "#{nam}")
+      cast.wait()
+    }
+    run_py(str)
+    $redis.set("cur_cast", nam)
+  end
+
+  def play_url(url)
+    str = %Q{
+      mc = cast.media_controller
+      mc.play_media('#{url}', 'audio/mp3')
+    }
+    run_py(str)
+  end
+
+  def cast_stop()
+    str = %Q{
+      mc = cast.media_controller
+      mc.stop()
+    }
+    run_py(str)
+  end
+
+  def cast_pause()
+    str = %Q{
+      mc = cast.media_controller
+      mc.pause()
+    }
+    run_py(str)
   end
 
 end
