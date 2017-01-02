@@ -16,4 +16,11 @@ class DevicesController < ApiController
     render :json => { success: true }
   end
 
+  def volume_change
+    friendly_name = params[:friendly_name]
+    Device.select(friendly_name)
+    Device.set_volume(params[:volume_level])
+    render :json => { success: true }
+  end
+
 end

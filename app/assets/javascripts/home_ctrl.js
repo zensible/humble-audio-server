@@ -2,7 +2,7 @@
 multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $rootScope, Device, Media) {
 
   var autosize = function() {
-    $('#top').css('height', ($(window).height()+"px"))
+    //$('#top').css('height', ($(window).height()+"px"))
   }
   autosize();
 
@@ -28,11 +28,14 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
         })
       } else {
         $scope.home.media = response.data
+        $scope.player.init($scope.home.media)
       }
     })
   }
 
-  $scope.play = function(mp3) {
+  $scope.play = function(index) {
+    var mp3 = $scope.home.media[index];
+
     public_prefix = '/Users/eightfold/multiroom/public'
     url_prefix = 'http://192.168.0.103:3000'
 
@@ -46,6 +49,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       id: mp3['id'],
       url: url
     }, function(response) {
+      $scope.player.play(index, 0, function() { })
       // Show progress bar
       console.log("resp", response)
       console.log("playing!")
@@ -59,6 +63,15 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
   $scope.pause = function() {
     Media.pause()
   }
+
+  $scope.volume_change = function(device) {
+    var val = device.volume_level;
+    if (device.volume_level == 1) { val = "1.0" }
+    if (device.volume_level == 0) { val = "0.0" }
+    Device.volume_change(device.friendly_name, val)
+  }
+
+  init_player($scope, $rootScope);
 
   $scope.refresh_media = function() {
     Media.refresh($scope.home.mode, function() {

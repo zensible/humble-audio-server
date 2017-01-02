@@ -1,0 +1,396 @@
+//colors
+$lightbg: #eeeeee
+$black_15: rgba(0,0,0,.15)
+$color_mountain_mist_approx: #999
+$color_international_orange_approx: #0075bf
+$color_celeste_approx: #ccc
+$color_mine_shaft_approx: #333
+
+//urls
+$url_0: url(/images/previous_16.png)
+$url_1: url(/images/next_16.png)
+$url_2: url(/images/play2_20.png)
+$url_3: url(https://a-v2.sndcdn.com/assets/images/playback/repeat-track-b45f6e.svg)
+$url_4: url(/images/sound_16.png)
+$url_5: url(https://a-v2.sndcdn.com/assets/images/playback/volume-muted-624fac.svg)
+$url_6: url(/images/pause2_20.png)
+
+//@extend-elements
+//original selectors
+//.repeatControl:before, .repeatControl:after
+.extend_1 
+    content: ''
+    position: absolute
+    top: 0
+    left: 0
+    width: 19px
+    height: 50px
+    background-repeat: no-repeat
+    background-position: left center
+    cursor: pointer
+    //If you use compass, instead of the line below you could use + transition($transition-1, $transition-2, $transition-3, $transition-4, $transition-5, $transition-6, $transition-7, $transition-8, $transition-9, $transition-10)
+    transition: opacity 200ms
+
+
+//original selectors
+//.volume__button:before, .volume__button:after
+.extend_2 
+    content: ''
+    width: 0
+    height: 0
+    position: absolute
+    background-image: $url_4
+
+
+//original selectors
+//.volume__sliderProgress, .volume__sliderBackground, .volume__sliderHandle
+.extend_3 
+    opacity: 0
+    //If you use compass, instead of the line below you could use + transition($transition-1, $transition-2, $transition-3, $transition-4, $transition-5, $transition-6, $transition-7, $transition-8, $transition-9, $transition-10)
+    transition: opacity 100ms linear
+    //If you use compass, instead of the line below you could use + transition-delay($delay-1, $delay-2, $delay-3, $delay-4, $delay-5, $delay-6, $delay-7, $delay-8, $delay-9, $delay-10)
+    transition-delay: 100ms
+
+
+//original selectors
+//.volume__sliderWrapper:before, .volume__sliderWrapper:after
+.extend_4 
+    content: ""
+    position: absolute
+    width: 0
+    height: 0
+    //If you use compass, instead of the line below you could use + box-sizing($bs)
+    box-sizing: border-box
+    //If you use compass, instead of the line below you could use + transform-origin($origin-x, $origin-y, $origin-z, $only3d)
+    transform-origin: 0 0
+    //If you use compass, instead of the line below you could use + transform($scale, $rotate, $transx, $transy, $skewx, $skewy, $originx, $originy)
+    transform: rotate(-45deg)
+    pointer-events: none
+
+.volume.expanded .volume__sliderWrapper
+    height: 118px
+    border-color: #ccc
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1)
+    overflow: intial
+
+
+.sc-ir 
+    border: 0
+    font: 0/0 a
+    //If you use compass, instead of the line below you could use + text-shadow($shadow-1, $shadow-2, $shadow-3, $shadow-4, $shadow-5, $shadow-6, $shadow-7, $shadow-8, $shadow-9, $shadow-10)
+    text-shadow: none
+    color: transparent
+    background-color: transparent
+
+.l-container 
+    padding: 0 30px
+    width: 1180px
+    margin: 0 auto
+    &.l-fullwidth 
+        width: 1240px
+        padding: 0
+
+    &:before 
+        content: ""
+        display: table
+
+    &:after 
+        content: ""
+        display: table
+
+
+#playerControl 
+    position: fixed
+    bottom: 0
+    visibility: hidden
+    width: 100%
+    //If you use compass, instead of the line below you could use + perspective($p)
+    perspective: 900
+    //If you use compass, instead of the line below you could use + perspective-origin($origin)
+    perspective-origin: 80% 100%
+    &.m-visible #playerControl__inner 
+        //If you use compass, instead of the line below you could use + transform($scale, $rotate, $transx, $transy, $skewx, $skewy, $originx, $originy)
+        transform: translateY(0)
+
+
+#playerControl__inner 
+    background-color: $lightbg
+    border-top: 1px solid $black_15
+    height: 50px
+    visibility: visible
+    //If you use compass, instead of the line below you could use + transition($transition-1, $transition-2, $transition-3, $transition-4, $transition-5, $transition-6, $transition-7, $transition-8, $transition-9, $transition-10)
+    transition: transform 200ms ease-out
+    //If you use compass, instead of the line below you could use + transform($scale, $rotate, $transx, $transy, $skewx, $skewy, $originx, $originy)
+    transform: translateY(100%)
+
+#playerControl__wrapper 
+    padding-bottom: 10px
+    visibility: visible
+    position: relative
+
+.g-dark 
+    color: $color_mountain_mist_approx
+
+.sc-list-nostyle 
+    list-style: none
+    margin: 0
+
+.sc-clearfix 
+    &:before 
+        content: ""
+        display: table
+
+    &:after 
+        content: ""
+        display: table
+
+
+#playerControl__playPauseSkip 
+    float: left
+    margin: 0 40px 0 0
+
+.playerControl__icon 
+    border: 0
+    height: 46px
+    position: relative
+    float: left
+    &.disabled 
+        opacity: .3
+        cursor: default
+
+
+.skipControl__previous 
+    background-image: $url_0
+    background-position: 40% center
+
+.skipControl__next 
+    background-image: $url_1
+    background-position: 60% center
+
+.skipControl 
+    width: 33px
+    background-repeat: no-repeat
+
+.playControl 
+    background: $url_2 no-repeat 55% center
+    width: 46px
+    margin: 0 6px
+
+.pauseControl 
+    background: $url_6 no-repeat 55% center
+    width: 46px
+    margin: 0 6px
+
+#playerControl__controls 
+    position: relative
+
+#playerControl__repeat 
+    float: left
+    margin-right: 20px
+
+.repeatControl 
+    width: 19px
+    height: 46px
+    margin: 0
+    padding: 0
+    position: relative
+    //If you use compass, instead of the line below you could use + transition($transition-1, $transition-2, $transition-3, $transition-4, $transition-5, $transition-6, $transition-7, $transition-8, $transition-9, $transition-10)
+    transition: box-shadow 200ms
+    &:before 
+        background-image: $url_3
+        opacity: .75
+        @extend %extend_1 !optional
+
+    &:after 
+        @extend %extend_1 !optional
+
+
+#playerControl__timeline 
+    float: left
+    margin-right: 20px
+
+#playbackChrono 
+    float: left
+    font-size: 11px
+    visibility: hidden
+    &.has-sound 
+        visibility: visible
+
+
+#playbackChrono__timePassed 
+    width: 50px
+    height: 46px
+    color: $color_international_orange_approx
+    text-align: right
+    float: left
+    line-height: 46px
+
+#playbackChrono__duration 
+    width: 50px
+    height: 46px
+    float: left
+    line-height: 46px
+    color: $color_mine_shaft_approx
+    text-align: left
+
+#playbackChrono__progressWrapper 
+    float: left
+    line-height: 46px
+    position: relative
+    width: 487px
+    padding: 10px 0
+    margin: 13px 10px 0
+
+#playbackChrono__progressBackground 
+    width: 100%
+    height: 1px
+    background-color: $color_celeste_approx
+    position: absolute
+
+#playbackChrono__progressBar 
+    position: absolute
+    width: 0px
+    height: 1px
+    background-color: $color_international_orange_approx
+    //If you use compass, instead of the line below you could use + transition($transition-1, $transition-2, $transition-3, $transition-4, $transition-5, $transition-6, $transition-7, $transition-8, $transition-9, $transition-10)
+
+#playbackChrono__progressHandle 
+    position: absolute
+    border: 1px solid $color_international_orange_approx
+    //If you use compass, instead of the line below you could use + border-radius($radius, $vertical-radius)
+    border-radius: 100%
+    height: 8px
+    width: 8px
+    background-color: $color_international_orange_approx
+    //If you use compass, instead of the line below you could use + box-sizing($bs)
+    box-sizing: border-box
+    top: 50%
+    margin-top: -3px
+    opacity: 0
+    //If you use compass, instead of the line below you could use + transition($transition-1, $transition-2, $transition-3, $transition-4, $transition-5, $transition-6, $transition-7, $transition-8, $transition-9, $transition-10)
+    transition: opacity 150ms
+
+#playerControl__volume 
+    position: absolute
+    right: 390px
+
+.volume 
+    position: relative
+
+.sc-visuallyhidden 
+    border: 0
+    clip: rect(0 0 0 0)
+    height: 1px
+    margin: -1px
+    overflow: hidden
+    padding: 0
+    position: absolute
+    width: 1px
+
+.volume__iconWrapper 
+    position: relative
+
+.volume__button 
+    display: block
+    border: 0
+    background: $url_5 no-repeat left center
+    outline: 0
+    width: 20px
+    height: 46px
+    &:before 
+        @extend %extend_2 !optional
+
+    &:after 
+        @extend %extend_2 !optional
+
+
+.sc-hidden 
+    display: none!important
+    visibility: hidden
+
+.volume__sliderWrapper 
+    position: absolute
+    left: -9px
+    bottom: 40px
+    z-index: 1
+    width: 30px
+    height: 0
+    //If you use compass, instead of the line below you could use + transition($transition-1, $transition-2, $transition-3, $transition-4, $transition-5, $transition-6, $transition-7, $transition-8, $transition-9, $transition-10)
+    transition: height 100ms
+    //If you use compass, instead of the line below you could use + transform($scale, $rotate, $transx, $transy, $skewx, $skewy, $originx, $originy)
+    transform: translateZ(0)
+    overflow: hidden
+    background-color: $lightbg
+    border: 1px solid transparent
+    outline: 0
+    cursor: pointer
+    &:before 
+        @extend %extend_4 !optional
+
+    &:after 
+        @extend %extend_4 !optional
+
+
+.volume__sliderProgress 
+    @extend %extend_3 !optional
+    background: $color_international_orange_approx
+    bottom: 13px
+    position: absolute
+    width: 2px
+    margin-left: 14px
+
+.volume__sliderBackground 
+    @extend %extend_3 !optional
+    position: absolute
+    display: block
+    background-color: $color_celeste_approx
+    bottom: 13px
+    left: 0
+    height: 92px
+    width: 2px
+    border: none
+    //If you use compass, instead of the line below you could use + box-shadow($shadow-1, $shadow-2, $shadow-3, $shadow-4, $shadow-5, $shadow-6, $shadow-7, $shadow-8, $shadow-9, $shadow-10)
+    box-shadow: none
+    //If you use compass, instead of the line below you could use + border-radius($radius, $vertical-radius)
+    border-radius: 0
+    outline: 0
+    margin-left: 14px
+
+.volume__sliderHandle 
+    @extend %extend_3 !optional
+    position: absolute
+    display: block
+    width: 8px
+    height: 8px
+    //If you use compass, instead of the line below you could use + border-radius($radius, $vertical-radius)
+    border-radius: 100%
+    background-color: $color_international_orange_approx
+    margin-left: 11px
+    top: 0
+
+.volume[data-level='1'] .volume__button 
+    background-image: $url_4
+
+.volume[data-level='2'] .volume__button 
+    background-image: $url_4
+
+.volume[data-level='3'] .volume__button 
+    background-image: $url_4
+
+.volume[data-level='4'] .volume__button 
+    background-image: $url_4
+
+.volume[data-level='5'] .volume__button 
+    background-image: $url_4
+
+.volume[data-level='6'] .volume__button 
+    background-image: $url_4
+
+.volume[data-level='7'] .volume__button 
+    background-image: $url_4
+
+.volume[data-level='8'] .volume__button 
+    background-image: $url_4
+
+.volume[data-level='9'] .volume__button 
+    background-image: $url_4

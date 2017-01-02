@@ -5,7 +5,7 @@ class Sync
   def self.refresh(mode)
     audio_dir = $settings['AUDIO_DIR']
     audio_dir = audio_dir.gsub(/\/$/, '') # Strip trailing / if any
-sleep 10
+#sleep 10
     stats = {
       :added => 0,
       :existing => 0,

@@ -1,67 +1,65 @@
+html, body, #view
+  height: 100%
 
-table#top
-  height: 1000px
-  width: 100%
-
-  #modes
-    font-size: 20px
-
-  td.stretch
-    width: 50%
-
-  tr td.autofit
-    padding: 0px
-    width: 1%
-    min-width: 140px
+  .ellipsis
     white-space: nowrap
+    overflow: hidden
+    text-overflow: ellipsis  
 
-  tr#media-select
+  #top.flex-column
     height: 100%
-    vertical-align: top
-    td.bordered
-      border: 1px solid #000
-
-    td#modes-container
-      height: 100%
-      overflow-y: auto
-      overflow-x: none
-
-    table.mp3-record
-      width: 100%
-      
-      td
-        max-width: 800px
-        white-space: nowrap
-        overflow: hidden
-        text-overflow: ellipsis
-
-      td.mp3-title
-        max-width: 800px
-        width: 33%
-      td.mp3-artist
-        max-width: 800px
-        width: 30%
-      td.mp3-album
-        max-width: 800px
-        width: 30%
-      td.mp3-year
-        max-width: 50px
-        width: 5%
-      td.mp3-length_seconds
-        max-width: 50px
-        width: 5%
-
-  tr#devices
-    height: 100px
-    vertical-align: top
-
-  tr#play-bar
-    height: 50px
-    vertical-align: top
-
-table#top.one-pane
-  td#selector1
-    width: 0px
-  td#selector2
     width: 100%
+    display: flex
+    flex-direction: column
 
+    #media-selector
+      margin-bottom: 1px
+      flex: 5 5 80%
+      display: flex
+      flex-direction: row
+      overflow-y: scroll
+
+      #mode-select
+        width: 100px
+      #selector1
+        flex: 1 1 20%
+        min-width: 0
+      #selector2
+        flex: 3 1 80%
+        .mp3-record
+          height: 40px
+          display: flex
+          flex-direction: row
+          .mp3-title
+            flex: 12 12
+          .mp3-artist
+            flex: 8 8
+          .mp3-album
+            flex: 8 8
+          .mp3-year
+            flex: 2 2
+          .mp3-length-seconds
+            flex: 2 2
+
+
+    #cast-select
+      flex: 1 1 20%
+      overflow-y: scroll
+
+      display: flex
+      flex-direction: row
+
+    #playbar
+      height: 80px
+
+@media screen and (max-width: 600px)
+  .mp3-album
+    display: none
+
+@media screen and (max-width: 800px)
+  .mp3-year
+    display: none
+
+@media screen and (max-width: 1000px)
+  .mp3-length-seconds
+    display: none

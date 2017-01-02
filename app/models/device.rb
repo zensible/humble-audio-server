@@ -21,9 +21,15 @@ class Device
 
   # Refresh list of devices and save to cache
   def self.refresh()
+
+    # Without this sleep, the cc.status calls will fail with: "AttributeError: 'NoneType' object has no attribute 'status_text'"
+    # I'm making it configurable here in case others require a longer sleep
+    sleep_before_status = 1 
+
     $get_devices = "
 chromecasts = pychromecast.get_chromecasts()
-arr = [ { u'friendly_name': cc.device.friendly_name, u'model_name': cc.device.model_name, 'uuid': cc.device.uuid.urn[9:], 'cast_type': cc.device.cast_type } for cc in chromecasts]
+time.sleep(#{sleep_before_status})
+arr = [ { u'friendly_name': cc.device.friendly_name, u'model_name': cc.device.model_name, 'uuid': cc.device.uuid.urn[9:], 'cast_type': cc.device.cast_type, 'status_text': cc.status.status_text, 'volume_level': cc.status.volume_level } for cc in chromecasts]
 print(json.dumps(arr))
     "
     all = PyChromecast.run($get_devices)
@@ -70,6 +76,13 @@ print(json.dumps(arr))
     str = %Q{
       mc = cast.media_controller
       mc.pause()
+    }
+    PyChromecast.run(str)
+  end
+
+  def self.set_volume(level)
+    str = %Q{
+      cast.set_volume(#{level})
     }
     PyChromecast.run(str)
   end

@@ -9,9 +9,9 @@ Rails.application.routes.draw do
       get '/refresh' => 'devices#refresh'
       get '/get' => 'devices#get'
       get '/select/:friendly_name' => 'devices#select'
+      get '/volume_change/:friendly_name/:volume_level' => 'devices#volume_change', :constraints => { :volume_level => /\d\.\d+/ }
     end
 
-    #get '/api/devices/set_volume/:val' => 'home#set_volume'
     scope '/mp3s' do
       get '/refresh/:mode' => 'mp3s#refresh'
       get '/get/:mode' => 'mp3s#get'
