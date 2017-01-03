@@ -1,8 +1,12 @@
 angular.module("multiroomApp").factory('Media', function($rootScope, HttpErrorWrapper) {
   return {
 
-    get: function(mode, success, error) {
-      HttpErrorWrapper.get("/api/mp3s/get/" + mode, success, error);
+    get: function(mode, id, success, error) {
+      HttpErrorWrapper.get("/api/mp3s/get/" + mode + '/' + id, success, error);
+    },
+
+    get_folders: function(success, error) {
+      HttpErrorWrapper.get("/api/mp3s/get_folders", success, error);
     },
 
     refresh: function(mode, success, error) {

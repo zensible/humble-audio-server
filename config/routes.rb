@@ -13,8 +13,9 @@ Rails.application.routes.draw do
     end
 
     scope '/mp3s' do
+      get '/get/:mode/:id' => 'mp3s#get'
+      get '/get_folders' => 'mp3s#get_folders'
       get '/refresh/:mode' => 'mp3s#refresh'
-      get '/get/:mode' => 'mp3s#get'
       post '/play' => 'mp3s#play'
       get '/stop' => 'mp3s#stop'
       get '/pause' => 'mp3s#pause'

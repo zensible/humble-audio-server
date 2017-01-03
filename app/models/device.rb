@@ -1,4 +1,5 @@
 class Device
+  require 'benchmark'
 
   def self.select(friendly_name)
     str = %Q{
@@ -50,6 +51,8 @@ print(json.dumps(arr))
         devices[:groups].push(dev)
       end
     end
+    devices[:groups] = devices[:groups].sort_by { |hsh| hsh["friendly_name"] }
+    devices[:audios] = devices[:audios].sort_by { |hsh| hsh["friendly_name"] }
     if !found
       raise "No chromecast audio devices found on the network! Please set up your chromecasts and try again."
     end
@@ -67,21 +70,26 @@ print(json.dumps(arr))
       print(mc.status.player_state)
     }
 
-    player_state = ""
-    cnt = 0
-    while(player_state != "BUFFERING" && cnt < 20)
-      puts "1 #{player_state}"
-      player_state = PyChromecast.run(str)
-      puts "1.1 #{player_state}"
-      sleep(0.25)
-    end
+    # Magic number here. Should wait for device state PLAYING, however the change from status BUFFERING to PLAYING seems to be about 1 second longer than when the playback actually begins on the device
 
-    cnt = 0
-    while(player_state == "BUFFERING" && cnt < 20)
-      puts "2 #{player_state}"
-      player_state = PyChromecast.run(str)
-      sleep(0.1)
-    end
+    sleep 3
+    #puts Benchmark.measure {
+    #  player_state = ""
+    #  cnt = 0
+    #  while(player_state != "BUFFERING" && cnt < 20)
+    #    puts "1 #{player_state}"
+    #    player_state = PyChromecast.run(str)
+    #    puts "1.1 #{player_state}"
+    #    sleep(0.25)
+    #  end
+
+    #  cnt = 0
+    #  while(player_state == "BUFFERING" && cnt < 20)
+    #    puts "2 #{player_state}"
+    #    player_state = PyChromecast.run(str)
+    #    sleep(0.1)
+    #  end
+    #}
   end
 
   def self.stop()

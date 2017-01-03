@@ -1,6 +1,8 @@
 
 multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $rootScope, Device, Media) {
 
+  window.scope = $scope;
+
   var autosize = function() {
     //$('#top').css('height', ($(window).height()+"px"))
   }
@@ -14,23 +16,56 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     return value.replace(/[\-\[\]{}()*+?.,\\\^$|#\s]/g, "\\$&");
   }
 
-  $scope.selectMode = function(mode) {
-    $scope.home.mode = mode
-    Media.get(mode, function(response) {
+  $scope.getMedia = function(mode, id, callback) {
+    Media.get(mode, -1, function(response) {
+      /*
       if (response.data.length == 0) {
         Media.refresh(mode, function(response) {
-          console.log(response)
           var stats = response.data['stats']
-          console.log("stats", stats)
           Media.get(mode, function(response) {
             $scope.home.media = response.data
           })
         })
       } else {
-        $scope.home.media = response.data
-        $scope.player.init($scope.home.media)
-      }
+      */
+      $scope.home.media = response.data
+      $scope.player.init($scope.home.media)
     })
+  }
+
+  $scope.selectMode = function(mode) {
+    //if ($scope.home.mode == 'mode') { return; }
+    $scope.home.mode = mode
+
+    $scope.home.media = [];
+
+    if (mode == 'white-noise') {
+      $scope.getMedia('white-noise', -1, function() {
+        console.log("DONE")
+      })
+    }
+    if (mode == 'music') {
+      Media.get_folders(function(response) {
+        $scope.home.folders = response.data
+      })
+    }
+  }
+
+  $scope.get_media_folder = function(id) {
+    Media.get('music', id, function(response) {
+      /*
+      if (response.data.length == 0) {
+        Media.refresh(mode, function(response) {
+          var stats = response.data['stats']
+          Media.get(mode, function(response) {
+            $scope.home.media = response.data
+          })
+        })
+      } else {
+      */
+      $scope.home.media = response.data
+      $scope.player.init($scope.home.media)
+    })    
   }
 
   $scope.play = function(index) {
@@ -82,20 +117,31 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     })
   }
 
+  var timer;
+
   $scope.volume_change = function(device) {
-    var val = device.volume_level;
-    if (device.volume_level == 1) { val = "1.0" }
-    if (device.volume_level == 0) { val = "0.0" }
-    Device.volume_change(device.friendly_name, val)
+    clearTimeout(timer);
+    timer = setTimeout(function() {
+      var val = device.volume_level;
+      if (device.volume_level == 1) { val = "1.0" }
+      if (device.volume_level == 0) { val = "0.0" }
+      Device.volume_change(device.friendly_name, val)
+    }, 100)
+  }
+
+  $scope.basename = function(str)
+  {
+     var base = new String(str).substring(str.lastIndexOf('/') + 1); 
+      if(base.lastIndexOf(".") != -1)       
+          base = base.substring(0, base.lastIndexOf("."));
+     return base;
   }
 
   init_player($scope, $rootScope);
 
   $scope.refresh_media = function() {
     Media.refresh($scope.home.mode, function() {
-      Media.get($scope.home.mode, function(response) {
-        $scope.home.media = response.data
-      })
+      $scope.selectMode($scope.home.mode);
     })
   }
 
@@ -106,7 +152,6 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
   var cache = {}
 
   $scope.home = {
-    modes: [ 'presets', 'radio', 'music', 'spoken', 'white noise' ],
     mode: '',
     devices: [],
     selector1: [],
@@ -118,6 +163,6 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     $scope.home.devices = response.data
   })
 
-  $scope.selectMode('white-noise')
+  $scope.selectMode('music')
 });
 

@@ -19,9 +19,26 @@ class Sync
 
     case mode
     when "music"
-
+      folders = Folder.all
+      folders_hsh = {}
+      folders.each do |fold|
+        folders_hsh[fold.full_path] = fold
+      end
+      Dir.glob("#{audio_dir}/music/**").each do |dir|
+        if folders_hsh[dir]
+          fold = folders_hsh[dir]
+        else
+          fold = Folder.create(:full_path => dir, :basename => File.basename(dir))
+        end
+        folder_id = fold.id
+        parse_dir(mode, arr, stats, dir, folder_id)
+      end
+      sql = "
+        DELETE FROM folders WHERE id NOT IN (SELECT folder_id FROM mp3s WHERE mode = 'music')
+      "
+      ActiveRecord::Base.connection.execute(sql)
     when "white-noise"
-      parse_dir(mode, arr, stats, "#{audio_dir}/white-noise/*.mp3")
+      parse_dir(mode, arr, stats, "#{audio_dir}/white-noise")
     end
 
     stats[:total] = stats[:existing] + stats[:added]
@@ -42,17 +59,17 @@ class Sync
     return [hsh_existing_path, hsh_existing_md5, to_delete]
   end
 
-  def self.parse_dir(mode, arr, stats, path)
+  def self.parse_dir(mode, arr, stats, path, folder_id = nil)
     hsh_existing_path = arr[0]
     hsh_existing_md5 = arr[1]
     to_delete = arr[2]
-    Dir.glob(path).each do |dir|
+    Dir.glob(path + "/*.mp3").each do |dir|
       if hsh_existing_path[dir]
         stats[:existing] += 1
         puts "Already in DB: #{dir}"
       else
         md5 = Digest::MD5.hexdigest(File.read(dir))
-        attrs = get_attributes(mode, dir, md5)
+        attrs = get_attributes(mode, dir, md5, folder_id)
         if attrs.nil?
           stats[:error] += 1
           Rails.logger.warn("== Could not read file information: #{dir}. Not an MP3?")
@@ -79,7 +96,7 @@ class Sync
     Rails.logger.warn("WE NEED TO DELETE: #{to_delete}")
   end
 
-  def self.get_attributes(mode, path, md5)
+  def self.get_attributes(mode, path, md5, folder_id)
     TagLib::FileRef.open(path) do |fileref|
       if fileref.null?
         return nil
@@ -96,6 +113,7 @@ class Sync
           :year => tag.year,
           :genre => tag.genre,
           :length_seconds => fileref.audio_properties.length,
+          :folder_id => folder_id,
           :path => path,
           :filename => File.basename(path),
           :md5 => md5

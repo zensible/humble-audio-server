@@ -8,8 +8,9 @@ class CreateMp3s < ActiveRecord::Migration[5.0]
       t.string :artist
       t.integer :year
       t.string :genre
-      t.string :track_nr
+      t.integer :track_nr
       t.integer :length_seconds
+      t.integer :folder_id
       t.string :path
       t.string :filename
       t.string :md5

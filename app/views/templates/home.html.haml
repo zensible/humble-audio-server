@@ -1,15 +1,18 @@
 #top.flex-column{"ng-controller" => "HomeCtrl"}
   #media-selector.flex-height
-    #mode-select
+    #mode-select.ellipsis
       %p
         %a{ "ng-click" => "selectMode('presets')"}
           Presets
       %p
-        %a{ "ng-click" => "selectMode('radio')"}
-          Radio
+        %a{ "ng-click" => "selectMode('playlists')"}
+          Playlists
       %p
         %a{ "ng-click" => "selectMode('music')"}
           Music
+      %p
+        %a{ "ng-click" => "selectMode('radio')"}
+          Radio
       %p
         %a{ "ng-click" => "selectMode('spoken')"}
           Spoken
@@ -17,23 +20,22 @@
         %a{ "ng-click" => "selectMode('white-noise')"}
           White Noise
 
-    #selector1.ellipsis
-      %p
-        playlist name 1
-      %p
-        playlist name 2
-      %p
-        playlist name 3
-      %p
-        playlist name 4
-      %p
-        playlist name 5
-      %p
-        playlist name 6
+    #selector1.ellipsis{ "ng-if" => "home.mode == 'music' || home.mode == 'playlist'" }
+      %div{ "ng-if" => "home.mode == 'music'" }
+        %h4
+          Music By Folder:
+        .folder-name{ "ng-repeat" => "folder in home.folders" }
+          %a{ "ng-click" => "get_media_folder(folder.id)"}
+            {{folder.basename}}
+
     #selector2
       .mp3-record
         .mp3-title
           Title
+          (
+          %a{ "ng-click" => "refresh_media()"}
+            refresh
+          )
         .mp3-artist.ellipsis
           Artist
         .mp3-album.ellipsis
@@ -58,8 +60,7 @@
           {{mp3.year || 'N/A'}}
         .mp3-length-seconds
           {{mp3.length_seconds | secondsToDateTime | date:'H:mm:ss' }}
-      %a{ "ng-click" => "refresh_media()"}
-        refresh
+
 
   #cast-select.flex-height
     %table.table{ :style => "width: 100%" }
@@ -71,7 +72,7 @@
                 %a.ellipsis{ "ng-click" => "select_cast(device)" }
                   {{device.friendly_name}}
               %td.ellipsis{ :style => "width: 60%; padding-right: 40px" }
-                %input.slider{ type: "range", min: "0", max: "1", step: ".05", "ng-mouseup" => "volume_change(device)", "ng-model" => "device.volume_level" }
+                %input.slider{ type: "range", min: "0", max: "1", step: ".05", "ng-click" => "volume_change(device)", "ng-model" => "device.volume_level" }
 
         %td{ :style => "width: 50%" }
           %table{ :style => "width: 100%; table-layout: fixed" }
@@ -80,7 +81,8 @@
                 %a.ellipsis{ "ng-click" => "select_cast(device)" }
                   {{device.friendly_name}}
               %td.ellipsis{ :style => "width: 60%; padding-right: 40px" }
-                %input.slider{ type: "range", min: "0", max: "1", step: ".05", "ng-mouseup" => "volume_change(device)", "ng-model" => "device.volume_level" }
+                {{device.volume_level}}
+                %input.slider{ type: "range", min: "0", max: "1", step: ".05", "ng-click" => "volume_change(device)", "ng-model" => "device.volume_level" }
   #playbar
     #playerControl.g-z-index-header.m-visible
       #playerControl__inner

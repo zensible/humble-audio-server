@@ -5,7 +5,7 @@ import pychromecast
 chromecasts = pychromecast.get_chromecasts()
 [cc.device.friendly_name for cc in chromecasts]
 
-cast = next(cc for cc in chromecasts if cc.device.friendly_name == "L2-Bedroom-Guest")
+cast = next(cc for cc in chromecasts if cc.device.friendly_name == "Both Bedrooms")
 # Wait for cast device to be ready
 cast.wait()
 print(cast.device)
@@ -17,7 +17,7 @@ print(cast.status)
 
 mc = cast.media_controller
 
-mc.play_media('http://192.168.0.103:3000/audio/white-noise/SimplyNoise_Soundscape_Summer_Waves.mp3', 'audio/mp3')
+mc.play_media('http://192.168.0.103:3000/test.m3u', 'audio/x-mpegurl')
 #mc.play_media('http://stream.wbez.org/wbez128.mp3', 'audio/mp3')
 print(mc.status)
 print(cast.status)

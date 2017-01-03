@@ -20,12 +20,17 @@ html, body, #view
       overflow-y: scroll
 
       #mode-select
-        width: 100px
+        width: 150px
+        font-size: 20px
+        padding-top: 4px
+        padding-left: 8px
       #selector1
-        flex: 1 1 20%
+        flex: 1 1 30%
         min-width: 0
+        .folder-name
+          font-size: 14px
       #selector2
-        flex: 3 1 80%
+        flex: 3 1 70%
         .mp3-record
           height: 40px
           display: flex
@@ -54,7 +59,7 @@ html, body, #view
     #playbar
       height: 80px
 
-@media screen and (max-width: 600px)
+@media screen and (max-width: 700px)
   .mp3-album
     display: none
 
