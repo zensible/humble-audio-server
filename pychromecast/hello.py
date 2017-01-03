@@ -5,7 +5,7 @@ import pychromecast
 chromecasts = pychromecast.get_chromecasts()
 [cc.device.friendly_name for cc in chromecasts]
 
-cast = next(cc for cc in chromecasts if cc.device.friendly_name == "Both Bedrooms")
+cast = next(cc for cc in chromecasts if cc.device.friendly_name == "Kitchen")
 # Wait for cast device to be ready
 cast.wait()
 print(cast.device)

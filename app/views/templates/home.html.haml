@@ -1,12 +1,12 @@
 #top.flex-column{"ng-controller" => "HomeCtrl"}
-  #media-selector.flex-height{ "ng-if" => "home.device == null"}
+  #media-selector{ "ng-if" => "home.device == null"}
     %div{ :style => "padding: 20px" }
       %p
         Welcome to Multiroom Audio 1.0
       %p
         Please select a Chromecast audio device below
 
-  #media-selector.flex-height{ "ng-if" => "home.device != null"}
+  #media-selector{ "ng-if" => "home.device != null"}
     #mode-select.ellipsis
       %p
         %a{ "ng-click" => "selectMode('presets')"}
@@ -27,13 +27,12 @@
         %a{ "ng-click" => "selectMode('white-noise')"}
           White Noise
 
-    #selector1.ellipsis{ "ng-if" => "home.mode == 'music' || home.mode == 'playlist'" }
-      %div{ "ng-if" => "home.mode == 'music'" }
-        %h4
-          Music By Folder:
-        .folder-name{ "ng-repeat" => "folder in home.folders" }
-          %a{ "ng-click" => "get_media_folder(folder.id)"}
-            {{folder.basename}}
+    #selector1{ "ng-if" => "home.mode == 'music'", style: "white-space: nowrap; text-overflow: ellipsis; overflow-x: hidden" }
+      %h4
+        Music By Folder:
+      .folder-name{ "ng-repeat" => "folder in home.folders" }
+        %a{ "ng-click" => "get_media_folder(folder.id)" }
+          {{folder.basename}}
 
     #selector2
       .mp3-record
@@ -69,7 +68,7 @@
           {{mp3.length_seconds | secondsToDateTime | date:'H:mm:ss' }}
 
 
-  #cast-select.flex-height
+  #cast-select
     %table.table{ :style => "width: 100%" }
       %tr
         %td{ :style => "width: 50%" }
