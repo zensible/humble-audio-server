@@ -27,16 +27,40 @@ class Mp3sController < ApiController
   end
 
   def play
-    id = params[:id]
-    url = params[:url]
-    Device.play_url(url)
+    urls = params[:urls]
+    playlist_md5 = Digest::MD5.hexdigest(JSON.dump(urls))
+    $redis.set("cur_playlist", playlist_md5)
 
-    #child_pid = fork do
-    #  sleep 10
-    #  Device.play_url("http://192.168.0.103:3000/audio/music/!Dance%20Mix/05%20-%20Setting%20Sun.mp3")
-    #  exit
-    #end
+    # What's happening here since it's non-obvious:
+    #
+    # pychromecast doesn't support queuing mp3s, so we if we want to sequentially play a playlist we have to implement the queue ourselves
+    #
+    # It would be easy to play the URLs in sequence, but Rails needs a response or the browser will time out.
+    # So, we fork the process and tell Rails we've begun playing
+    # 
+    child_pid = fork do
+      urls.each do |url|
+        Device.play_url(url)
 
+        player_state = ""
+        cnt = 0
+        while (player_state != "BUFFERING")
+          player_state = Device.player_status()
+          sleep(0.25)
+        end
+
+        player_state = "BUFFERING"
+        cnt = 0
+        while (player_state != "IDLE") # == "PLAYING" || player_state == "PAUSED" || player_state == "BUFFERING"
+          player_state = Device.player_status()
+          sleep(0.25)
+          exit if $redis.get("cur_playlist") != playlist_md5  # A user played a different playlist
+        end
+      end
+      exit
+    end
+    sleep(3)
+    render :json => { success: true }
   end
 
   def stop

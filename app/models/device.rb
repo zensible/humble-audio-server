@@ -59,6 +59,13 @@ print(json.dumps(arr))
     $redis.set("devices", JSON.dump(devices))
   end
 
+  def self.player_status
+    str = %Q{
+      print(mc.status.player_state)
+    }
+    PyChromecast.run(str)
+  end
+
   def self.play_url(url)
     str = %Q{
       mc = cast.media_controller
@@ -66,13 +73,13 @@ print(json.dumps(arr))
     }
     PyChromecast.run(str)
 
-    str = %Q{
-      print(mc.status.player_state)
-    }
+    #str = %Q{
+    #  print(mc.status.player_state)
+    #}
 
     # Magic number here. Should wait for device state PLAYING, however the change from status BUFFERING to PLAYING seems to be about 1 second longer than when the playback actually begins on the device
 
-    sleep 3
+    #sleep 3
     #puts Benchmark.measure {
     #  player_state = ""
     #  cnt = 0

@@ -69,16 +69,33 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
   }
 
   $scope.play = function(index) {
-    var mp3 = $scope.home.media[index];
+    //var mp3 = $scope.home.media[index];
 
     public_prefix = '/Users/eightfold/multiroom/public'
     url_prefix = 'http://192.168.0.103:3000'
 
     var regex = new RegExp(RegExp.escape(public_prefix));
 
-    var path = mp3['path'];
-    url = url_prefix + encodeURI(path.replace(regex, ''))
-    url = url.replace(/'/, '%27')
+    var url_playlist = []
+    var mp3s = $scope.home.media;
+    for (var i = index; i < mp3s.length; i++) {
+      var mp3 = mp3s[i];
+
+      var path = mp3['path'];
+      url = url_prefix + encodeURI(path.replace(regex, ''))
+      url = url.replace(/'/g, '%27')
+
+      url_playlist.push(url);
+    }
+    for (var i = 0; i < index; i++) {
+      var mp3 = mp3s[i];
+
+      var path = mp3['path'];
+      url = url_prefix + encodeURI(path.replace(regex, ''))
+      url = url.replace(/'/g, '%27')
+
+      url_playlist.push(url);
+    }
 
     $scope.player.pause()
     $scope.buffering = true;
@@ -88,10 +105,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     $scope.playlist.current_index = index;
     $scope.playlist.current_item = item;
 
-    Media.play({
-      id: mp3['id'],
-      url: url
-    }, function(response) {
+    Media.play({ urls: url_playlist }, function(response) {
       $scope.buffering = false;
       // Buffering complete.
       $scope.player.play(index, 0, function() { })
