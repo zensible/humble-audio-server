@@ -1,5 +1,12 @@
 #top.flex-column{"ng-controller" => "HomeCtrl"}
-  #media-selector.flex-height
+  #media-selector.flex-height{ "ng-if" => "home.device == null"}
+    %div{ :style => "padding: 20px" }
+      %p
+        Welcome to Multiroom Audio 1.0
+      %p
+        Please select a Chromecast audio device below
+
+  #media-selector.flex-height{ "ng-if" => "home.device != null"}
     #mode-select.ellipsis
       %p
         %a{ "ng-click" => "selectMode('presets')"}
@@ -46,7 +53,7 @@
           Time
       .mp3-record{ "ng-repeat" => "mp3 in home.media" }
         .mp3-title.ellipsis
-          %div{ "ng-if" => "playlist.current_index == $index", style: "position: absolute; margin-left: -20px" }
+          %div{ "ng-if" => "playlist.current_index == $index", style: "margin-left: -20px; display: inline" }
             %img{ "src" => "/images/sound_16.png", "ng-if" => "!buffering" }
             %img{ "src" => "/images/sound_buffering_16.png", "ng-if" => "buffering" }
 
@@ -71,6 +78,8 @@
               %td.ellipsis{ :style => "width: 40%;" }
                 %a.ellipsis{ "ng-click" => "select_cast(device)" }
                   {{device.friendly_name}}
+                  %sup{ "ng-if" => "home.device == device" }
+                    *
               %td.ellipsis{ :style => "width: 60%; padding-right: 40px" }
                 %input.slider{ type: "range", min: "0", max: "1", step: ".05", "ng-click" => "volume_change(device)", "ng-model" => "device.volume_level" }
 
@@ -80,8 +89,9 @@
               %td.ellipsis{ :style => "width: 40%;" }
                 %a.ellipsis{ "ng-click" => "select_cast(device)" }
                   {{device.friendly_name}}
+                  %sup{ "ng-if" => "home.device == device" }
+                    *
               %td.ellipsis{ :style => "width: 60%; padding-right: 40px" }
-                {{device.volume_level}}
                 %input.slider{ type: "range", min: "0", max: "1", step: ".05", "ng-click" => "volume_change(device)", "ng-model" => "device.volume_level" }
   #playbar
     #playerControl.g-z-index-header.m-visible

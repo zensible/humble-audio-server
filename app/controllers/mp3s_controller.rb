@@ -38,7 +38,8 @@ class Mp3sController < ApiController
     # It would be easy to play the URLs in sequence, but Rails needs a response or the browser will time out.
     # So, we fork the process and tell Rails we've begun playing
     # 
-    child_pid = fork do
+    #child_pid = fork do
+    Thread.new do
       urls.each do |url|
         Device.play_url(url)
 
@@ -46,6 +47,7 @@ class Mp3sController < ApiController
         cnt = 0
         while (player_state != "BUFFERING")
           player_state = Device.player_status()
+          Thread.exit if $redis.get("cur_playlist") != playlist_md5  # A user played a different playlist
           sleep(0.25)
         end
 
@@ -53,11 +55,10 @@ class Mp3sController < ApiController
         cnt = 0
         while (player_state != "IDLE") # == "PLAYING" || player_state == "PAUSED" || player_state == "BUFFERING"
           player_state = Device.player_status()
-          sleep(0.25)
-          exit if $redis.get("cur_playlist") != playlist_md5  # A user played a different playlist
+          Thread.exit if $redis.get("cur_playlist") != playlist_md5  # A user played a different playlist
+          sleep(0.5)
         end
       end
-      exit
     end
     sleep(3)
     render :json => { success: true }

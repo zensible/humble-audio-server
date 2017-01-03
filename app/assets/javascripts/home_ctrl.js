@@ -160,7 +160,8 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
   }
 
   $scope.select_cast = function(device) {
-    Device.select_cast(device.friendly_name)    
+    Device.select_cast(device.friendly_name)
+    $scope.home.device = device;
   }
 
   var cache = {}
@@ -170,11 +171,26 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     devices: [],
     selector1: [],
     selector2: [],
-    media: []
+    media: [],
+    device: null
   }
 
   Device.get(function(response) {
     $scope.home.devices = response.data
+
+    for (var i = 0; i < $scope.home.devices.groups.length; i++) {
+      var device = $scope.home.devices.groups[i]
+      if (device.friendly_name == window.cur_cast) {
+        $scope.home.device = device;
+      }
+    }
+    for (var i = 0; i < $scope.home.devices.audios.length; i++) {
+      var device = $scope.home.devices.audios[i]
+      if (device.friendly_name == window.cur_cast) {
+        $scope.home.device = device;
+      }
+    }
+
   })
 
   $scope.selectMode('music')

@@ -2,3 +2,7 @@
 unless ENV["RAILS_ENV"].nil? || ENV["RAILS_ENV"] == 'test' || !!@rake
   PyChromecast.init()
 end
+
+at_exit { 
+  $redis.set("cur_cast", "")
+}
