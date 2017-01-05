@@ -1,4 +1,4 @@
-#top.flex-column{"ng-controller" => "HomeCtrl"}
+#top{"ng-controller" => "HomeCtrl"}
   #media-selector{ "ng-if" => "home.device == null"}
     %div{ :style => "padding: 20px" }
       %p
@@ -11,6 +11,7 @@
       %p
         %a{ "ng-click" => "selectMode('presets')"}
           Presets
+        %img{ "src" => "/images/sound_16.png", "ng-if" => "" }
       %p
         %a{ "ng-click" => "selectMode('playlists')"}
           Playlists
@@ -31,17 +32,23 @@
       %h4
         Music By Folder:
       .folder-name{ "ng-repeat" => "folder in home.folders" }
-        %a{ "ng-click" => "get_media_folder(folder.id)" }
+        %a{ "ng-click" => "get_media_folder(folder)" }
           {{folder.basename}}
+        %sup{ "ng-if" => "folder.id == home.state_shared.folder"}
+          *
 
-    #selector2
+    #selector2{ "ng-if" => "home.mode == 'radio'" }
+      .mp3-record{ "ng-repeat" => "station in home.radio_stations" }
+        .mp3-title.ellipsis
+          %a{ "ng-click" => "play_radio(station)"}
+            {{station.name}}
+
+    #selector2{ "ng-if" => "home.mode == 'music' || home.mode == 'white-noise'"}
       .mp3-record
         .mp3-title
           Title
-          (
           %a{ "ng-click" => "refresh_media()"}
-            refresh
-          )
+            %img{ :src => "/images/refresh_16.png", :title => "Refresh the media in '{{home.mode}}'" }
         .mp3-artist.ellipsis
           Artist
         .mp3-album.ellipsis
@@ -50,6 +57,7 @@
           Year
         .mp3-length-seconds
           Time
+      / works for 'white-noise' and 'music'
       .mp3-record{ "ng-repeat" => "mp3 in home.media" }
         .mp3-title.ellipsis
           %div{ "ng-if" => "playlist.current_index == $index", style: "margin-left: -20px; display: inline" }
@@ -79,10 +87,12 @@
                   {{device.friendly_name}}
                   %sup{ "ng-if" => "home.device == device" }
                     *
-              %td.ellipsis{ :style => "width: 60%; padding-right: 40px" }
+              %td.ellipsis{ :style => "width: 60%; float: right" }
                 %input.slider{ type: "range", min: "0", max: "1", step: ".05", "ng-click" => "volume_change(device)", "ng-model" => "device.volume_level" }
 
         %td{ :style => "width: 50%" }
+          %img{ :src => "/images/refresh_16.png", title: "Refresh the list of casts/groups", style: "position: absolute; right: 20px" }
+
           %table{ :style => "width: 100%; table-layout: fixed" }
             %tr{ "ng-repeat" => "device in home.devices.audios" }
               %td.ellipsis{ :style => "width: 40%;" }
@@ -92,6 +102,7 @@
                     *
               %td.ellipsis{ :style => "width: 60%; padding-right: 40px" }
                 %input.slider{ type: "range", min: "0", max: "1", step: ".05", "ng-click" => "volume_change(device)", "ng-model" => "device.volume_level" }
+
   #playbar
     #playerControl.g-z-index-header.m-visible
       #playerControl__inner
@@ -105,12 +116,12 @@
               %img{ "ng-src" => "{{ playlist.current_item['img50'] }}" }
             %li#playerControl__playPauseSkip
               %button#player-prev.skipControl.playerControl__icon.sc-ir.skipControl__previous{ "ng-click" => "player.prev()", title: "Play previous", "ng-class" => "{ 'disabled': player.playlistIndex == 0 }" }
-              %button#player.play.playControl.playerControl__icon.sc-ir{"ng-show" => "!player.playing", "ng-click" => "resume()", :title => "Play current", title: "Play current", "ng-class" => "{ 'disabled': playlist.items.length == 0 }"}
+              %button#player.play.playControl.playerControl__icon.sc-ir{"ng-show" => "!player.playing", "ng-click" => "resume()", :title => "Play current", title: "Play current" }
               %button#player-pause.pauseControl.playerControl__icon.sc-ir{"ng-show" => "player.playing", "ng-click" => "pause()", "ng-cloak" => "", :title => "Pause current", title: "Pause current"}
               %button#player-next.skipControl.playerControl__icon.sc-ir.skipControl__next{ "ng-click" => "player.next()", title: "Skip to next", "ng-class" => "{ 'disabled': player.playlistIndex == player.playlist.length - 1 }" }
 
-            %li#playerControl__repeat
-              %button.repeatControl.sc-ir{:title => "Repeat playing track"} Repeat track
+              %button#repeat-toggle.skipControl.playerControl__icon.sc-ir{ "ng-click" => "toggleRepeat()", title: "Enable/disable repeat", :class => "skipControl__repeat_{{home.state_local.repeat}}" }
+              %button#repeat-toggle.skipControl.playerControl__icon.sc-ir{ "ng-click" => "toggleShuffle()", title: "Enable/disable shuffle", :class => "skipControl__shuffle_{{home.state_local.shuffle}}" }
 
             %li#playerControl__timeline.sc-clearfix
               #playbackChrono.sc-clearfix.is-scrubbable.has-sound

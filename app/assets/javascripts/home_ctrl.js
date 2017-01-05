@@ -49,9 +49,17 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
         $scope.home.folders = response.data
       })
     }
+    if (mode == 'radio') {
+      Media.get_radio(function(response) {
+        $scope.home.radio_stations = response.data;
+        console.log(response)
+      })
+    }
   }
 
-  $scope.get_media_folder = function(id) {
+  $scope.get_media_folder = function(folder) {
+    var id = folder.id;
+    $scope.home.state_local.folder = folder.id;
     Media.get('music', id, function(response) {
       /*
       if (response.data.length == 0) {
@@ -68,33 +76,45 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     })    
   }
 
+  $scope.play_radio = function(station) {
+    Media.play({ urls: [ station.url ] }, function(response) {
+      $scope.buffering = false;
+
+      // Buffering complete.
+      $scope.player.playing = true;
+
+      // Show progress bar
+      console.log("resp", response)
+      console.log("playing!")
+    })    
+  }
+
   $scope.play = function(index) {
     //var mp3 = $scope.home.media[index];
 
-    public_prefix = '/Users/eightfold/multiroom/public'
+    public_prefix = dirname(audio_dir)
     url_prefix = 'http://192.168.0.103:3000'
 
     var regex = new RegExp(RegExp.escape(public_prefix));
 
-    var url_playlist = []
+    var playlist = []
     var mp3s = $scope.home.media;
-    for (var i = index; i < mp3s.length; i++) {
-      var mp3 = mp3s[i];
 
+    function add_playlist(mp3) {
       var path = mp3['path'];
       url = url_prefix + encodeURI(path.replace(regex, ''))
       url = url.replace(/'/g, '%27')
 
-      url_playlist.push(url);
+      playlist.push({
+        id: mp3.id,
+        url: url
+      });
+    }
+    for (var i = index; i < mp3s.length; i++) {
+      add_playlist(mp3s[i])
     }
     for (var i = 0; i < index; i++) {
-      var mp3 = mp3s[i];
-
-      var path = mp3['path'];
-      url = url_prefix + encodeURI(path.replace(regex, ''))
-      url = url.replace(/'/g, '%27')
-
-      url_playlist.push(url);
+      add_playlist(mp3s[i])
     }
 
     $scope.player.pause()
@@ -105,7 +125,13 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     $scope.playlist.current_index = index;
     $scope.playlist.current_item = item;
 
-    Media.play({ urls: url_playlist }, function(response) {
+    var mode = $scope.home.mode;
+    data = {
+      state_local: $scope.home.state_local,
+      playlist: playlist
+    };
+
+    Media.play(data, function(response) {
       $scope.buffering = false;
       // Buffering complete.
       $scope.player.play(index, 0, function() { })
@@ -113,6 +139,28 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       console.log("resp", response)
       console.log("playing!")
     })
+  }
+
+  $scope.toggleRepeat = function() {
+    switch ($scope.home.state_local.repeat) {
+      case "off":
+        $scope.home.state_local.repeat = "all";
+        break;
+      case "all":
+        $scope.home.state_local.repeat = "one";
+        break;
+      case "one":
+        $scope.home.state_local.repeat = "off";
+        break;
+    }
+  }
+
+  $scope.toggleShuffle = function() {
+    if ($scope.home.state_local.shuffle == "on") {
+      $scope.home.state_local.shuffle = "off";
+    } else {
+      $scope.home.state_local.shuffle = "on";
+    }
   }
 
   $scope.stop = function() {
@@ -143,8 +191,11 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     }, 100)
   }
 
-  $scope.basename = function(str)
-  {
+  var dirname = $scope.dirname = function(str) {
+    return str.replace(/\\/g,'/').replace(/\/[^\/]*$/, '');;
+  }
+
+  var basename = $scope.basename = function(str) {
      var base = new String(str).substring(str.lastIndexOf('/') + 1); 
       if(base.lastIndexOf(".") != -1)       
           base = base.substring(0, base.lastIndexOf("."));
@@ -172,7 +223,30 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     selector1: [],
     selector2: [],
     media: [],
-    device: null
+    radio_stations: [],
+    device: null,
+    state_local: {
+      player_state: "IDLE",
+      mode: "",
+      repeat: "off",  // off, all, one
+      shuffle: "off",
+      folder: -1,
+      playlist: -1,
+      mp3: {},
+      radio: "",
+      volumes: {}
+    },
+    state_shared: { // shared state
+      player_state: "IDLE",
+      mode: "",
+      repeat: "off",  // off, all, one
+      shuffle: "off",
+      folder: "",
+      playlist: "",
+      mp3: {},
+      radio: "",
+      volumes: {}
+    }
   }
 
   Device.get(function(response) {
@@ -192,6 +266,23 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     }
 
   })
+
+  App.cable.subscriptions.create('StateChannel', {
+    connected: function() {
+      console.log("Connected to ActionCable")
+    },
+    received: function(data) {
+      console.log("DATAAA", data)
+    },
+    disconnected: function() {
+      console.log("Disconnected!")
+    },
+    status: function() {
+      alert(5)
+      console.log("STATUS")
+    }
+  });
+
 
   $scope.selectMode('music')
 });

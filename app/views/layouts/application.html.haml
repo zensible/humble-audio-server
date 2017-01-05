@@ -5,6 +5,8 @@
     = csrf_meta_tags
     = stylesheet_link_tag    '/bootstrap/css/bootstrap.min.css', media: 'all'
     = stylesheet_link_tag    'application', media: 'all'
+    = action_cable_meta_tag
+
   %body{"ng-controller" => "GlobalCtrl", "ng-class" => "{{ currentPage }}" }
     = yield
     #view{ "ng-view" => "" }
@@ -14,6 +16,7 @@
     window.env = "#{Rails.env}";
     window.railsTest = #{Rails.env.test?};
     window.cur_cast = "#{@cur_cast}";
+    window.audio_dir = "#{$audio_dir}";
 
   = javascript_include_tag 'application'
   = javascript_include_tag '/bootstrap/js/bootstrap.js'

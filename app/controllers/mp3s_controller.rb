@@ -27,9 +27,19 @@ class Mp3sController < ApiController
   end
 
   def play
-    urls = params[:urls]
-    playlist_md5 = Digest::MD5.hexdigest(JSON.dump(urls))
+    playlist = params[:playlist]
+    state = params[:state_local]
+    playlist_md5 = Digest::MD5.hexdigest(JSON.dump(playlist))
     $redis.set("cur_playlist", playlist_md5)
+
+    if state[:shuffle] == "on"
+      abort "yerp"
+      clicked = playlist.shift # We want the clicked mp3 to play first, all else is shuffled
+      playlist.shuffle!
+      playlist.unshift(clicked)
+    end
+
+    #ActionCable.server.broadcast "state", { sent_by: 'Paul', body: 'This is a cool chat app.' }
 
     # What's happening here since it's non-obvious:
     #
@@ -39,8 +49,9 @@ class Mp3sController < ApiController
     # So, we fork the process and do the sequential play in the background.
     # 
     Thread.new do
-      urls.each do |url|
-        Device.play_url(url)
+      for i in 0..playlist.length
+        mp3 = playlist[i]
+        Device.play_url(mp3[:url])
         sleep(3)
 
         player_state = ""

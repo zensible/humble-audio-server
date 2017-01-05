@@ -3,9 +3,7 @@ class Sync
   # Syncs the mp3s in AUDIO_DIR to a mysql databases
 
   def self.refresh(mode)
-    audio_dir = $settings['AUDIO_DIR']
-    audio_dir = audio_dir.gsub(/\/$/, '') # Strip trailing / if any
-#sleep 10
+
     stats = {
       :added => 0,
       :existing => 0,
@@ -24,7 +22,7 @@ class Sync
       folders.each do |fold|
         folders_hsh[fold.full_path] = fold
       end
-      Dir.glob("#{audio_dir}/music/**").each do |dir|
+      Dir.glob("#{$audio_dir}/music/**").each do |dir|
         if folders_hsh[dir]
           fold = folders_hsh[dir]
         else
@@ -38,7 +36,7 @@ class Sync
       "
       ActiveRecord::Base.connection.execute(sql)
     when "white-noise"
-      parse_dir(mode, arr, stats, "#{audio_dir}/white-noise")
+      parse_dir(mode, arr, stats, "#{$audio_dir}/white-noise")
     end
 
     stats[:total] = stats[:existing] + stats[:added]

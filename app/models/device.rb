@@ -66,6 +66,19 @@ print(json.dumps(arr))
     PyChromecast.run(str)
   end
 
+  def self.wait_for_state(str)
+    player_state = ""
+    while (player_state != str)
+      puts "001"
+      player_state = Device.player_status()
+      puts "002"
+      yield
+      puts "003"
+      sleep(0.25)
+      puts "004"
+    end
+  end
+
   def self.play_url(url)
     str = %Q{
       mc = cast.media_controller
