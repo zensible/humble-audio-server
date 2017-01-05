@@ -22,6 +22,8 @@ Rails.application.routes.draw do
       get '/stop' => 'mp3s#stop'
       get '/pause' => 'mp3s#pause'
       get '/resume' => 'mp3s#resume'
+      get '/next' => 'mp3s#next'
+      get '/prev' => 'mp3s#prev'
     end
   end
 

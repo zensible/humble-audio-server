@@ -28,6 +28,7 @@
         %a{ "ng-click" => "selectMode('white-noise')"}
           White Noise
 
+    // Music, books
     #selector1{ "ng-if" => "home.mode == 'music'", style: "white-space: nowrap; text-overflow: ellipsis; overflow-x: hidden" }
       %h4
         Music By Folder:
@@ -37,12 +38,14 @@
         %sup{ "ng-if" => "folder.id == home.state_shared.folder"}
           *
 
+    // Radio
     #selector2{ "ng-if" => "home.mode == 'radio'" }
       .mp3-record{ "ng-repeat" => "station in home.radio_stations" }
         .mp3-title.ellipsis
           %a{ "ng-click" => "play_radio(station)"}
             {{station.name}}
 
+    // Music / White Noise
     #selector2{ "ng-if" => "home.mode == 'music' || home.mode == 'white-noise'"}
       .mp3-record
         .mp3-title
@@ -115,10 +118,10 @@
             %li{ style: "float: left; width: 50px;" }
               %img{ "ng-src" => "{{ playlist.current_item['img50'] }}" }
             %li#playerControl__playPauseSkip
-              %button#player-prev.skipControl.playerControl__icon.sc-ir.skipControl__previous{ "ng-click" => "player.prev()", title: "Play previous", "ng-class" => "{ 'disabled': player.playlistIndex == 0 }" }
+              %button#player-prev.skipControl.playerControl__icon.sc-ir.skipControl__previous{ "ng-click" => "prev()", title: "Play previous", "ng-class" => "{ 'disabled': player.playlistIndex == 0 }" }
               %button#player.play.playControl.playerControl__icon.sc-ir{"ng-show" => "!player.playing", "ng-click" => "resume()", :title => "Play current", title: "Play current" }
               %button#player-pause.pauseControl.playerControl__icon.sc-ir{"ng-show" => "player.playing", "ng-click" => "pause()", "ng-cloak" => "", :title => "Pause current", title: "Pause current"}
-              %button#player-next.skipControl.playerControl__icon.sc-ir.skipControl__next{ "ng-click" => "player.next()", title: "Skip to next", "ng-class" => "{ 'disabled': player.playlistIndex == player.playlist.length - 1 }" }
+              %button#player-next.skipControl.playerControl__icon.sc-ir.skipControl__next{ "ng-click" => "next()", title: "Skip to next", "ng-class" => "{ 'disabled': player.playlistIndex == player.playlist.length - 1 }" }
 
               %button#repeat-toggle.skipControl.playerControl__icon.sc-ir{ "ng-click" => "toggleRepeat()", title: "Enable/disable repeat", :class => "skipControl__repeat_{{home.state_local.repeat}}" }
               %button#repeat-toggle.skipControl.playerControl__icon.sc-ir{ "ng-click" => "toggleShuffle()", title: "Enable/disable shuffle", :class => "skipControl__shuffle_{{home.state_local.shuffle}}" }

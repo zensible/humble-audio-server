@@ -141,6 +141,14 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     })
   }
 
+  $scope.prev = function() {
+    Media.prev()
+  }
+
+  $scope.next = function() {
+    Media.next()
+  }
+
   $scope.toggleRepeat = function() {
     switch ($scope.home.state_local.repeat) {
       case "off":

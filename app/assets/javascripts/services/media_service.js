@@ -29,6 +29,14 @@ angular.module("multiroomApp").factory('Media', function($rootScope, HttpErrorWr
       HttpErrorWrapper.get("/api/mp3s/resume", success, error);
     },
 
+    next: function(success, error) {
+      HttpErrorWrapper.get("/api/mp3s/next", success, error);
+    },
+
+    prev: function(success, error) {
+      HttpErrorWrapper.get("/api/mp3s/prev", success, error);
+    },
+
     get_radio: function(success, error) {
       HttpErrorWrapper.get("/audio/radio.json", success, error);
     },

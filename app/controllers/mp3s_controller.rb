@@ -26,14 +26,23 @@ class Mp3sController < ApiController
     $redis.get("cur_cast")
   end
 
+  def next
+    $redis.set("playlist_move", "1")
+    render :json => { success: true }
+  end
+
+  def prev
+    $redis.set("playlist_move", "-1")
+    render :json => { success: true }
+  end
+
   def play
     playlist = params[:playlist]
     state = params[:state_local]
     playlist_md5 = Digest::MD5.hexdigest(JSON.dump(playlist))
-    $redis.set("cur_playlist", playlist_md5)
+    $redis.hset("cur_playlist", cur_cast, playlist_md5)
 
     if state[:shuffle] == "on"
-      abort "yerp"
       clicked = playlist.shift # We want the clicked mp3 to play first, all else is shuffled
       playlist.shuffle!
       playlist.unshift(clicked)
@@ -48,26 +57,44 @@ class Mp3sController < ApiController
     # It would be easy to play the URLs in sequence, waiting for each one to complete, but Rails needs a response or the browser will time out.
     # So, we fork the process and do the sequential play in the background.
     # 
+    #Thread.abort_on_exception=true
     Thread.new do
-      for i in 0..playlist.length
-        mp3 = playlist[i]
+      @index = 0
+      while (@index >= 0 && @index < playlist.length)
+        puts "Playlist index: #{@index}"
+        mp3 = playlist[@index]
         Device.play_url(mp3[:url])
         sleep(3)
 
-        player_state = ""
-        cnt = 0
-        while (player_state != "BUFFERING")
-          player_state = Device.player_status()
-          Thread.exit if $redis.get("cur_playlist") != playlist_md5 || player_state == "UNKNOWN"  # A user played a different playlist or cast went down
-          sleep(0.25)
+        def wait_for_it(str, playlist_md5)
+          player_state = ""
+          while (player_state != str)
+            player_state = Device.player_status()
+            Thread.exit if $redis.hget("cur_playlist", cur_cast) != playlist_md5 || player_state == "UNKNOWN"  # A user played a different playlist or cast went down
+            mov = $redis.get("playlist_move")
+            if !mov.blank?
+              $redis.set("playlist_move", "")
+              @index += mov.to_i  # Either forward or back in playlist (1 or -1)
+              return false
+            end
+            sleep(0.5)
+          end
+          return true
         end
 
-        player_state = "BUFFERING"
-        cnt = 0
-        while (player_state != "IDLE") # == "PLAYING" || player_state == "PAUSED" || player_state == "BUFFERING"
-          player_state = Device.player_status()
-          Thread.exit if $redis.get("cur_playlist") != playlist_md5 || player_state == "UNKNOWN"  # A user played a different playlist or cast went down
-          sleep(0.5)
+        # Wait for device to go from playing/paused/idle to buffering
+        if wait_for_it("BUFFERING", playlist_md5)
+          if wait_for_it("IDLE", playlist_md5)
+            # If we get here the song played its entire length. Move on to next song in playlist.
+            @index += 1
+          end
+        end
+
+        if state[:repeat] == "one"
+          @index = 0
+        end
+        if state[:repeat] == "all" && @index >= playlist.length
+          @index = 0
         end
       end
     end
