@@ -36,7 +36,7 @@ multiroomApp.controller('GlobalCtrl', function ($scope, $routeParams, $route, $
         }
       });
     }
-    alert(message);
+    $.notify("Error: " + message);
   };
 
   // Extend RegExp to add an 'escape for regex' function

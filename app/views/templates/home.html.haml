@@ -11,32 +11,37 @@
       %p
         %a{ "ng-click" => "selectMode('presets')"}
           Presets
-        %img{ "src" => "/images/sound_16.png", "ng-if" => "" }
+        %span.play-button{ "ng-if" => "is_playing('mode', 'presets')" }
       %p
         %a{ "ng-click" => "selectMode('playlists')"}
           Playlists
+        %span.play-button{ "ng-if" => "is_playing('mode', 'playlists')" }
       %p
         %a{ "ng-click" => "selectMode('music')"}
           Music
+        %span.play-button{ "ng-if" => "is_playing('mode', 'music')" }
       %p
         %a{ "ng-click" => "selectMode('radio')"}
           Radio
+        %span.play-button{ "ng-if" => "is_playing('mode', 'radio')" }
       %p
         %a{ "ng-click" => "selectMode('spoken')"}
           Spoken
+        %span.play-button{ "ng-if" => "is_playing('mode', 'spoken')" }
       %p
         %a{ "ng-click" => "selectMode('white-noise')"}
           White Noise
+        %span.play-button{ "ng-if" => "is_playing('mode', 'white-noise')" }
 
     // Music, books
     #selector1{ "ng-if" => "home.mode == 'music'", style: "white-space: nowrap; text-overflow: ellipsis; overflow-x: hidden" }
       %h4
         Music By Folder:
-      .folder-name{ "ng-repeat" => "folder in home.folders" }
-        %a{ "ng-click" => "select_folder(folder)" }
-          {{folder.basename}}
-        %sup{ "ng-if" => "folder.id == home.state_shared.folder"}
-          *
+      .folder-record{ "ng-repeat" => "folder in home.folders" }
+        .folder-name.ellipsis
+          %a{ "ng-click" => "select_folder(folder)" }
+            {{folder.basename}}
+          %span.play-button{ "ng-if" => "is_playing('folder_id', folder.id)" }
 
     // Radio
     #selector2{ "ng-if" => "home.mode == 'radio'" }
@@ -65,26 +70,26 @@
       / works for 'white-noise' and 'music'
       .mp3-record{ "ng-repeat" => "mp3 in home.mp3s" }
         .mp3-title.ellipsis
-          %div{ "ng-if" => "playlist.current_index == $index", style: "margin-left: -20px; display: inline" }
-            %img{ "src" => "/images/sound_16.png", "ng-if" => "!buffering" }
-            %img{ "src" => "/images/sound_buffering_16.png", "ng-if" => "buffering" }
-
           %a{ "ng-click" => "play($index)"}
             {{mp3.title || mp3.filename}}
+
+          %span.play-button{ "ng-if" => "is_playing('mp3_id', mp3.id)" }
         .mp3-artist.ellipsis
-          {{mp3.artist || 'N/A' }}
+          {{mp3.artist || ' - ' }}
         .mp3-album.ellipsis
-          {{mp3.album || 'N/A'}}
+          {{mp3.album || ' - '}}
         .mp3-year
-          {{mp3.year || 'N/A'}}
+          {{mp3.year || ' - '}}
         .mp3-length-seconds
           {{mp3.length_seconds | secondsToDateTime | date:'H:mm:ss' }}
 
 
   #cast-select
-    %table.table{ :style => "width: 100%" }
+    %div{ "ng-if" => "is_playing('mode', 'music')" }
+      SDFLKJSDLKFJ
+    %table{ :style => "width: 100%" }
       %tr
-        %td{ :style => "width: 50%" }
+        %td{ :style => "width: 50%; vertical-align: top" }
           %table{ :style => "width: 100%; table-layout: fixed" }
             %tr{ "ng-repeat" => "device in home.devices.groups" }
               %td.ellipsis{ :style => "width: 40%;" }
@@ -95,7 +100,7 @@
               %td.ellipsis{ :style => "width: 60%; float: right" }
                 %input.slider{ type: "range", min: "0", max: "1", step: ".05", "ng-click" => "volume_change(device)", "ng-model" => "device.volume_level" }
 
-        %td{ :style => "width: 50%" }
+        %td{ :style => "width: 50%; vertical-align: top" }
           %img.hand{ "ng-click" => "refresh_devices()", :src => "/images/refresh_16.png", title: "Refresh the list of casts/groups", style: "position: absolute; right: 20px" }
 
           %table{ :style => "width: 100%; table-layout: fixed" }
@@ -125,8 +130,8 @@
               %button#player-pause.pauseControl.playerControl__icon.sc-ir{"ng-show" => "player.playing", "ng-click" => "pause()", "ng-cloak" => "", :title => "Pause current", title: "Pause current"}
               %button#player-next.skipControl.playerControl__icon.sc-ir.skipControl__next{ "ng-click" => "next()", title: "Skip to next", "ng-class" => "{ 'disabled': player.playlistIndex == player.playlist.length - 1 }" }
 
-              %button#repeat-toggle.skipControl.playerControl__icon.sc-ir{ "ng-click" => "toggleRepeat()", title: "Enable/disable repeat", :class => "skipControl__repeat_{{home.state_local.repeat}}" }
-              %button#repeat-toggle.skipControl.playerControl__icon.sc-ir{ "ng-click" => "toggleShuffle()", title: "Enable/disable shuffle", :class => "skipControl__shuffle_{{home.state_local.shuffle}}" }
+              %button#repeat-toggle.skipControl.playerControl__icon.sc-ir{ "ng-click" => "toggleRepeat()", title: "Enable/disable repeat", :class => "skipControl__repeat_{{state_local.repeat}}" }
+              %button#repeat-toggle.skipControl.playerControl__icon.sc-ir{ "ng-click" => "toggleShuffle()", title: "Enable/disable shuffle", :class => "skipControl__shuffle_{{state_local.shuffle}}" }
 
             %li#playerControl__timeline.sc-clearfix
               #playbackChrono.sc-clearfix.is-scrubbable.has-sound

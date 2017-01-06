@@ -64,7 +64,7 @@ class Sync
     Dir.glob(path + "/*.mp3").each do |dir|
       if hsh_existing_path[dir]
         stats[:existing] += 1
-        puts "Already in DB: #{dir}"
+        #puts "Already in DB: #{dir}"
       else
         md5 = Digest::MD5.hexdigest(File.read(dir))
         attrs = get_attributes(mode, dir, md5, folder_id)
@@ -72,7 +72,8 @@ class Sync
           stats[:error] += 1
           Rails.logger.warn("== Could not read file information: #{dir}. Not an MP3?")
         else
-          if mp3 = hsh_existing_md5[md5]
+          mp3 = hsh_existing_md5[md5]
+          if mp3 && !File.exist?(mp3.path)
             stats[:moved] += 1
             puts "Mp3 has been moved or renamed, updating record #{mp3.id} for new location"
             mp3.update_attributes(attrs)

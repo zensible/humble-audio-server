@@ -23,7 +23,7 @@ class Mp3sController < ApiController
   end
 
   def cur_cast
-    $redis.get("cur_cast")
+    $redis.get("cur_cast")  # UUID of cast
   end
 
   def next
@@ -38,17 +38,24 @@ class Mp3sController < ApiController
 
   def play
     playlist = params[:playlist]
-    state = params[:state_local]
-    playlist_md5 = Digest::MD5.hexdigest(JSON.dump(playlist))
-    $redis.hset("cur_playlist", cur_cast, playlist_md5)
+    state_local = params[:state_local]
+    cast_uuid = cur_cast
 
-    if state[:shuffle] == "on"
+    @entry = {
+      cast_uuid: cast_uuid,
+      mode: state_local[:mode],
+      folder_id: state_local[:folder_id],
+      radio_station: state_local[:radio_station]
+    }
+
+    playlist_md5 = Digest::MD5.hexdigest(JSON.dump(playlist))
+    $redis.hset("cur_playlist", cast_uuid, playlist_md5)
+
+    if state_local[:shuffle] == "on"
       clicked = playlist.shift # We want the clicked mp3 to play first, all else is shuffled
       playlist.shuffle!
       playlist.unshift(clicked)
     end
-
-    #ActionCable.server.broadcast "state", { sent_by: 'Paul', body: 'This is a cool chat app.' }
 
     # What's happening here since it's non-obvious:
     #
@@ -63,14 +70,49 @@ class Mp3sController < ApiController
       while (@index >= 0 && @index < playlist.length)
         puts "Playlist index: #{@index}"
         mp3 = playlist[@index]
-        Device.play_url(mp3[:url])
-        sleep(3)
 
-        def wait_for_it(str, playlist_md5)
+        def play_start(cast_uuid, mp3)
+          puts "START"
+          @entry[:mp3_id] = mp3[:id]
+          @entry[:mp3_url] = mp3[:url]
+
+          state_shared = JSON.load($redis.get("state_shared") || "[]")
+          updated = []
+          state_shared.each do |st|
+            updated.push(st) unless st["cast_uuid"] == cast_uuid
+          end
+          updated.push(@entry)
+          str = JSON.dump(updated)
+          $redis.set("state_shared", str)
+          ActionCable.server.broadcast "state", str
+        end
+
+        def play_stop(cast_uuid)
+          puts "STOP"
+          state_shared = JSON.load($redis.get("state_shared") || "[]")
+          updated = []
+          state_shared.each do |st|
+            updated.push(st) unless st["cast_uuid"] == cast_uuid
+          end
+          str = JSON.dump(updated)
+          $redis.set("state_shared", str)
+          ActionCable.server.broadcast "state", str
+          Thread.exit
+        end
+
+        Device.play_url(mp3[:url])
+        print "001"
+        sleep(3)
+        play_start(cast_uuid, mp3)
+        print "002"
+
+        def wait_for_it(str, playlist_md5, cast_uuid)
           player_state = ""
           while (player_state != str)
             player_state = Device.player_status()
-            Thread.exit if $redis.hget("cur_playlist", cur_cast) != playlist_md5 || player_state == "UNKNOWN"  # A user played a different playlist or cast went down
+            puts "aaa"
+            play_stop(cast_uuid) if $redis.hget("cur_playlist", cast_uuid) != playlist_md5 || player_state == "UNKNOWN"  # A user played a different playlist or cast went down
+            puts "bbb"
             mov = $redis.get("playlist_move")
             if !mov.blank?
               $redis.set("playlist_move", "")
@@ -82,19 +124,26 @@ class Mp3sController < ApiController
           return true
         end
 
+        print "003"
         # Wait for device to go from playing/paused/idle to buffering
-        if wait_for_it("BUFFERING", playlist_md5)
-          if wait_for_it("IDLE", playlist_md5)
+        if wait_for_it("BUFFERING", playlist_md5, cast_uuid)
+        print "004"
+          if wait_for_it("IDLE", playlist_md5, cast_uuid)
             # If we get here the song played its entire length. Move on to next song in playlist.
             @index += 1
           end
         end
 
-        if state[:repeat] == "one"
+        print "005"
+        if state_local[:repeat] == "one"
           @index = 0
         end
-        if state[:repeat] == "all" && @index >= playlist.length
-          @index = 0
+        if @index >= playlist.length
+          if state_local[:repeat] == "all"
+            @index = 0
+          else
+            play_stop(cast_uuid)
+          end
         end
       end
     end

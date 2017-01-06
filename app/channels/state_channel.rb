@@ -3,6 +3,16 @@ class StateChannel < ApplicationCable::Channel
   # become a subscriber of this channel.
   def subscribed
     stream_from "state"
+    sleep 0.5 # Seems to be necessary to make the following work reliably
+    ActionCable.server.broadcast "state", $redis.get("state_shared")
   end
+
+  def connect
+  end
+
+  #def disconnect
+  #  # Any cleanup work needed when the cable connection is cut.
+  #end
+
 end
 

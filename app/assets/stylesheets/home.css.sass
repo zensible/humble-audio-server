@@ -10,6 +10,15 @@ html, body, #view
     overflow: hidden
     text-overflow: ellipsis  
 
+  .play-button
+    background-image: url(/images/sound_16.png)
+    //background-position: 40% center
+    float: right
+    width: 16px
+    height: 16px
+    margin-top: 5px
+    margin-right: 4px
+
   #top
     height: 100%
     width: 100%
@@ -33,16 +42,16 @@ html, body, #view
 
       #selector1
         flex: 1 1 30%
-        overflow-y: auto
-        .folder-name
-          height: 30px
+        overflow-y: visible
+        .folder-record
+          padding: 2px 8px 2px 8px
           font-size: 14px
 
       #selector2
         flex: 3 1 70%
-        overflow-y: auto
+        overflow-y: visible
         .mp3-record
-          height: 30px
+          padding: 2px 8px 2px 8px
           display: flex
           flex-direction: row
           .mp3-title
@@ -60,8 +69,11 @@ html, body, #view
 
 
     #cast-select
-      flex: 1 1 20%
+      //flex: 1 1 20%
+      height: 96px
       overflow-y: auto
+      td
+        padding: 1px 2px 1px 2px
 
     #playbar
       height: 80px

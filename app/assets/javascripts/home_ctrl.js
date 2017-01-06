@@ -7,29 +7,25 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       device: null,
       devices_loaded: false,
       mp3s: [],
-      radio_stations: [],
-      state_local: {
-        player_state: "IDLE",
-        mode: "",
-        repeat: "off",  // off, all, one
-        shuffle: "off",
-        folder: -1,
-        playlist: -1,
-        mp3: {},
-        radio: "",
-        volumes: {}
-      },
-      state_shared: { // shared state
-        player_state: "IDLE",
-        mode: "",
-        repeat: "off",  // off, all, one
-        shuffle: "off",
-        folder: "",
-        playlist: "",
-        mp3: {},
-        radio: "",
-        volumes: {}
-      }
+      radio_stations: []
+    }
+
+    // 
+    $scope.state_local = {
+      player_state: "IDLE",
+      mode: "",
+      repeat: "off",  // off, all, one
+      shuffle: "off",
+      folder_id: -1,
+      playlist: -1,
+      mp3: {},
+      radio_station: "",
+      volumes: {}
+    }
+
+    $scope.state_shared = { // shared state
+      playing: [],
+      volumes: {}
     }
 
     // Get devices, set current device if any
@@ -49,7 +45,9 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
           $scope.home.device = device;
         }
       }
-
+      var max = $scope.home.devices.groups.length;
+      if ($scope.home.devices.audios.length > max) { max = $scope.home.devices.audios.length; }
+      $('#cast-select').css("height", (24 * 4) + "px")
     })
 
     // Subscribe to state channel
@@ -58,7 +56,9 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
         console.log("Connected to ActionCable")
       },
       received: function(data) {
-        console.log("DATAAA", data)
+        console.log("got state: " + data)
+        $scope.state_shared = JSON.parse(data || "[]")
+        $scope.safeApply()
       },
       disconnected: function() {
         console.log("Disconnected!")
@@ -73,6 +73,29 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     if (mode) {
       $scope.selectMode(mode || 'music')
     }
+  }
+
+  $scope.is_playing = function(type, val) {
+    console.log("type", type, "val", val)
+       /*
+[{
+  "cast_uuid": "1bb851ea-5b0a-fce7-f395-16e1e13a86b9",
+  "mode": "music",
+  "folder_id": 225,
+  "radio_station": "",
+  "mp3_id": 2508,
+  "mp3_url": "http://192.168.0.103:3000/audio/music/!flerg/Mellow%20Gold%20-%2001%20-%20loser.mp3"
+}]
+*/    
+    var shared = $scope.state_shared;
+    for (var i = 0; i < shared.length; i++) {
+      console.log(type, shared[type], val)
+      var cast = shared[i];
+      if (cast[type] == val) {
+        return true;
+      }
+    }
+    return false;
   }
 
   function set_default_music_folder() {
@@ -129,7 +152,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     localStorage.setItem('folder::' + $scope.home.mode, folder.id);
 
     var id = folder.id;
-    $scope.home.state_local.folder = folder.id;
+    $scope.state_local.folder_id = folder.id;
     Media.get('music', id, function(response) {
       $scope.home.mp3s = response.data
       $scope.player.init($scope.home.mp3s)
@@ -138,7 +161,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
 
   $scope.play_radio = function(station) {
     data = {
-      state_local: $scope.home.state_local,
+      state_local: $scope.state_local,
       playlist: [ { id: -1, url: station.url } ]
     };
     Media.play(data, function(response) {
@@ -190,8 +213,9 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     $scope.playlist.current_item = item;
 
     var mode = $scope.home.mode;
+    $scope.state_local.mode = mode
     data = {
-      state_local: $scope.home.state_local,
+      state_local: $scope.state_local,
       playlist: playlist
     };
 
@@ -214,24 +238,24 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
   }
 
   $scope.toggleRepeat = function() {
-    switch ($scope.home.state_local.repeat) {
+    switch ($scope.state_local.repeat) {
       case "off":
-        $scope.home.state_local.repeat = "all";
+        $scope.state_local.repeat = "all";
         break;
       case "all":
-        $scope.home.state_local.repeat = "one";
+        $scope.state_local.repeat = "one";
         break;
       case "one":
-        $scope.home.state_local.repeat = "off";
+        $scope.state_local.repeat = "off";
         break;
     }
   }
 
   $scope.toggleShuffle = function() {
-    if ($scope.home.state_local.shuffle == "on") {
-      $scope.home.state_local.shuffle = "off";
+    if ($scope.state_local.shuffle == "on") {
+      $scope.state_local.shuffle = "off";
     } else {
-      $scope.home.state_local.shuffle = "on";
+      $scope.state_local.shuffle = "on";
     }
   }
 
