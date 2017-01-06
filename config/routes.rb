@@ -10,8 +10,8 @@ Rails.application.routes.draw do
     scope '/devices' do
       get '/refresh' => 'devices#refresh'
       get '/get' => 'devices#get'
-      get '/select/:friendly_name' => 'devices#select'
-      get '/volume_change/:friendly_name/:volume_level' => 'devices#volume_change', :constraints => { :volume_level => /\d\.\d+/ }
+      get '/select/:uuid' => 'devices#select'
+      get '/volume_change/:uuid/:volume_level' => 'devices#volume_change', :constraints => { :volume_level => /\d\.\d+/ }
     end
 
     scope '/mp3s' do

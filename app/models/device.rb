@@ -1,13 +1,13 @@
 class Device
   require 'benchmark'
 
-  def self.select(friendly_name)
+  def self.select(uuid)
     str = %Q{
-      cast = next(cc for cc in chromecasts if cc.device.friendly_name == "#{friendly_name}")
+      cast = next(cc for cc in chromecasts if cc.device.uuid.urn == "urn:uuid:#{uuid}")
       cast.wait()
     }
     PyChromecast.run(str)
-    $redis.set("cur_cast", friendly_name)
+    $redis.set("cur_cast", uuid)
   end
 
   # Get all devices from cache
@@ -57,6 +57,7 @@ print(json.dumps(arr))
       raise "No chromecast audio devices found on the network! Please set up your chromecasts and try again."
     end
     $redis.set("devices", JSON.dump(devices))
+    devices
   end
 
   def self.player_status

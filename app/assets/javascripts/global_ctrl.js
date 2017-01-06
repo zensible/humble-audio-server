@@ -39,5 +39,10 @@ multiroomApp.controller('GlobalCtrl', function ($scope, $routeParams, $route, $
     alert(message);
   };
 
+  // Extend RegExp to add an 'escape for regex' function
+  RegExp.escape = function( value ) {
+    return value.replace(/[\-\[\]{}()*+?.,\\\^$|#\s]/g, "\\$&");
+  }
+
 });
 

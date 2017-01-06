@@ -1,7 +1,7 @@
 angular.module("multiroomApp").factory('Device', function($rootScope, HttpErrorWrapper) {
   return {
 
-    get: function(success, error) {
+    get_all: function(success, error) {
       HttpErrorWrapper.get("/api/devices/get", success, error);
     },
 
@@ -9,12 +9,12 @@ angular.module("multiroomApp").factory('Device', function($rootScope, HttpErrorW
       HttpErrorWrapper.get("/api/devices/refresh", success, error);
     },
 
-    volume_change: function(friendly_name, volume_level, success, error) {
-      HttpErrorWrapper.get("/api/devices/volume_change/" + friendly_name + "/" + volume_level, success, error);
+    volume_change: function(uuid, volume_level, success, error) {
+      HttpErrorWrapper.get("/api/devices/volume_change/" + uuid + "/" + volume_level, success, error);
     },
 
-    select_cast: function(friendly_name, success, error) {
-      HttpErrorWrapper.get("/api/devices/select/" + friendly_name, success, error);
+    select_cast: function(uuid, success, error) {
+      HttpErrorWrapper.get("/api/devices/select/" + uuid, success, error);
     }
   };
 });

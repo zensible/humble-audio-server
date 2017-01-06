@@ -1,5 +1,5 @@
 #top{"ng-controller" => "HomeCtrl"}
-  #media-selector{ "ng-if" => "home.device == null"}
+  #media-selector{ "ng-if" => "home.device == null && home.devices_loaded"}
     %div{ :style => "padding: 20px" }
       %p
         Welcome to Multiroom Audio 1.0
@@ -33,13 +33,15 @@
       %h4
         Music By Folder:
       .folder-name{ "ng-repeat" => "folder in home.folders" }
-        %a{ "ng-click" => "get_media_folder(folder)" }
+        %a{ "ng-click" => "select_folder(folder)" }
           {{folder.basename}}
         %sup{ "ng-if" => "folder.id == home.state_shared.folder"}
           *
 
     // Radio
     #selector2{ "ng-if" => "home.mode == 'radio'" }
+      %h4
+        Radio Stations:
       .mp3-record{ "ng-repeat" => "station in home.radio_stations" }
         .mp3-title.ellipsis
           %a{ "ng-click" => "play_radio(station)"}
@@ -50,7 +52,7 @@
       .mp3-record
         .mp3-title
           Title
-          %a{ "ng-click" => "refresh_media()"}
+          %a.hand{ "ng-click" => "refresh_media()"}
             %img{ :src => "/images/refresh_16.png", :title => "Refresh the media in '{{home.mode}}'" }
         .mp3-artist.ellipsis
           Artist
@@ -61,7 +63,7 @@
         .mp3-length-seconds
           Time
       / works for 'white-noise' and 'music'
-      .mp3-record{ "ng-repeat" => "mp3 in home.media" }
+      .mp3-record{ "ng-repeat" => "mp3 in home.mp3s" }
         .mp3-title.ellipsis
           %div{ "ng-if" => "playlist.current_index == $index", style: "margin-left: -20px; display: inline" }
             %img{ "src" => "/images/sound_16.png", "ng-if" => "!buffering" }
@@ -94,7 +96,7 @@
                 %input.slider{ type: "range", min: "0", max: "1", step: ".05", "ng-click" => "volume_change(device)", "ng-model" => "device.volume_level" }
 
         %td{ :style => "width: 50%" }
-          %img{ :src => "/images/refresh_16.png", title: "Refresh the list of casts/groups", style: "position: absolute; right: 20px" }
+          %img.hand{ "ng-click" => "refresh_devices()", :src => "/images/refresh_16.png", title: "Refresh the list of casts/groups", style: "position: absolute; right: 20px" }
 
           %table{ :style => "width: 100%; table-layout: fixed" }
             %tr{ "ng-repeat" => "device in home.devices.audios" }

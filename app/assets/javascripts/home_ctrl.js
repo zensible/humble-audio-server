@@ -1,83 +1,147 @@
-
 multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $rootScope, Device, Media) {
 
-  window.scope = $scope;
+  function init() {
+    $scope.home = {
+      mode: '',
+      devices: [],
+      device: null,
+      devices_loaded: false,
+      mp3s: [],
+      radio_stations: [],
+      state_local: {
+        player_state: "IDLE",
+        mode: "",
+        repeat: "off",  // off, all, one
+        shuffle: "off",
+        folder: -1,
+        playlist: -1,
+        mp3: {},
+        radio: "",
+        volumes: {}
+      },
+      state_shared: { // shared state
+        player_state: "IDLE",
+        mode: "",
+        repeat: "off",  // off, all, one
+        shuffle: "off",
+        folder: "",
+        playlist: "",
+        mp3: {},
+        radio: "",
+        volumes: {}
+      }
+    }
 
-  var autosize = function() {
-    //$('#top').css('height', ($(window).height()+"px"))
-  }
-  autosize();
+    // Get devices, set current device if any
+    Device.get_all(function(response) {
+      $scope.home.devices = response.data
+      $scope.home.devices_loaded = true
 
-  $(window).resize(function() {
-    autosize()
-  })
+      for (var i = 0; i < $scope.home.devices.groups.length; i++) {
+        var device = $scope.home.devices.groups[i]
+        if (device.uuid == window.cur_cast) {
+          $scope.home.device = device;
+        }
+      }
+      for (var i = 0; i < $scope.home.devices.audios.length; i++) {
+        var device = $scope.home.devices.audios[i]
+        if (device.uuid == window.cur_cast) {
+          $scope.home.device = device;
+        }
+      }
 
-  RegExp.escape = function( value ) {
-    return value.replace(/[\-\[\]{}()*+?.,\\\^$|#\s]/g, "\\$&");
-  }
-
-  $scope.getMedia = function(mode, id, callback) {
-    Media.get(mode, -1, function(response) {
-      /*
-      if (response.data.length == 0) {
-        Media.refresh(mode, function(response) {
-          var stats = response.data['stats']
-          Media.get(mode, function(response) {
-            $scope.home.media = response.data
-          })
-        })
-      } else {
-      */
-      $scope.home.media = response.data
-      $scope.player.init($scope.home.media)
     })
+
+    // Subscribe to state channel
+    App.cable.subscriptions.create('StateChannel', {
+      connected: function() {
+        console.log("Connected to ActionCable")
+      },
+      received: function(data) {
+        console.log("DATAAA", data)
+      },
+      disconnected: function() {
+        console.log("Disconnected!")
+      },
+      status: function() {
+        alert(5)
+        console.log("STATUS")
+      }
+    });
+
+    var mode = localStorage.getItem('mode');
+    if (mode) {
+      $scope.selectMode(mode || 'music')
+    }
   }
 
-  $scope.selectMode = function(mode) {
-    //if ($scope.home.mode == 'mode') { return; }
+  function set_default_music_folder() {
+    var folder_id = localStorage.getItem('folder::music')
+    for (var i = 0; i < $scope.home.folders.length; i++) {
+      var fold = $scope.home.folders[i];
+      if (fold.id == parseInt(folder_id)) {
+        $scope.select_folder(fold)
+      }
+    }
+  }
+
+  $scope.selectMode = function(mode, callback) {
+    localStorage.setItem('mode', mode);
+
     $scope.home.mode = mode
 
-    $scope.home.media = [];
+    $scope.home.mp3s = [];
 
     if (mode == 'white-noise') {
-      $scope.getMedia('white-noise', -1, function() {
-        console.log("DONE")
+      Media.get('white-noise', -1, function(response) {
+        if (response.data.length == 0) {
+          $.notify("No mp3s found in this folder. You may need to populate and/or refresh your media.", "warn")
+        }
+        $scope.home.mp3s = response.data
+        $scope.player.init($scope.home.mp3s)
+        if (callback) { callback() }
       })
     }
     if (mode == 'music') {
       Media.get_folders(function(response) {
-        $scope.home.folders = response.data
+        $scope.home.folders = response.data;
+        if (response.data.length == 0) {
+          $.notify("No mp3s found. You may need to populate and/or refresh your media.", "warn")
+        }
+        set_default_music_folder()
+        if (callback) { callback() }
       })
     }
     if (mode == 'radio') {
       Media.get_radio(function(response) {
         $scope.home.radio_stations = response.data;
+        if ($scope.home.radio_stations.length == 0) {
+          $.notify("No radio stations found. Please configure public/audio/radio.json", "warn")
+        }
         console.log(response)
       })
+      if (callback) { callback() }
     }
   }
 
-  $scope.get_media_folder = function(folder) {
+  $scope.select_folder = function(folder) {
+    if (!folder) { return; }
+    localStorage.setItem('folder::' + $scope.home.mode, folder.id);
+
     var id = folder.id;
     $scope.home.state_local.folder = folder.id;
     Media.get('music', id, function(response) {
-      /*
-      if (response.data.length == 0) {
-        Media.refresh(mode, function(response) {
-          var stats = response.data['stats']
-          Media.get(mode, function(response) {
-            $scope.home.media = response.data
-          })
-        })
-      } else {
-      */
-      $scope.home.media = response.data
-      $scope.player.init($scope.home.media)
+      $scope.home.mp3s = response.data
+      $scope.player.init($scope.home.mp3s)
     })    
   }
 
   $scope.play_radio = function(station) {
-    Media.play({ urls: [ station.url ] }, function(response) {
+    data = {
+      state_local: $scope.home.state_local,
+      playlist: [ { id: -1, url: station.url } ]
+    };
+    Media.play(data, function(response) {
       $scope.buffering = false;
 
       // Buffering complete.
@@ -90,7 +154,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
   }
 
   $scope.play = function(index) {
-    //var mp3 = $scope.home.media[index];
+    //var mp3 = $scope.home.mp3s[index];
 
     public_prefix = dirname(audio_dir)
     url_prefix = 'http://192.168.0.103:3000'
@@ -98,7 +162,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     var regex = new RegExp(RegExp.escape(public_prefix));
 
     var playlist = []
-    var mp3s = $scope.home.media;
+    var mp3s = $scope.home.mp3s;
 
     function add_playlist(mp3) {
       var path = mp3['path'];
@@ -195,7 +259,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       var val = device.volume_level;
       if (device.volume_level == 1) { val = "1.0" }
       if (device.volume_level == 0) { val = "0.0" }
-      Device.volume_change(device.friendly_name, val)
+      Device.volume_change(device.uuid, val)
     }, 100)
   }
 
@@ -218,80 +282,22 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     })
   }
 
+  $scope.refresh_devices = function() {
+    Device.refresh(function(response) {
+      $scope.home.devices = response.data;
+      if (response.data.audios.length == 0 && response.data.audios.groups.length == 0) {
+        $.notify("No chromecast audio devices or groups found!", "error")
+      }
+    })
+  }
+
   $scope.select_cast = function(device) {
-    Device.select_cast(device.friendly_name)
+    Device.select_cast(device.uuid)
     $scope.home.device = device;
   }
 
   var cache = {}
+  init()
 
-  $scope.home = {
-    mode: '',
-    devices: [],
-    selector1: [],
-    selector2: [],
-    media: [],
-    radio_stations: [],
-    device: null,
-    state_local: {
-      player_state: "IDLE",
-      mode: "",
-      repeat: "off",  // off, all, one
-      shuffle: "off",
-      folder: -1,
-      playlist: -1,
-      mp3: {},
-      radio: "",
-      volumes: {}
-    },
-    state_shared: { // shared state
-      player_state: "IDLE",
-      mode: "",
-      repeat: "off",  // off, all, one
-      shuffle: "off",
-      folder: "",
-      playlist: "",
-      mp3: {},
-      radio: "",
-      volumes: {}
-    }
-  }
-
-  Device.get(function(response) {
-    $scope.home.devices = response.data
-
-    for (var i = 0; i < $scope.home.devices.groups.length; i++) {
-      var device = $scope.home.devices.groups[i]
-      if (device.friendly_name == window.cur_cast) {
-        $scope.home.device = device;
-      }
-    }
-    for (var i = 0; i < $scope.home.devices.audios.length; i++) {
-      var device = $scope.home.devices.audios[i]
-      if (device.friendly_name == window.cur_cast) {
-        $scope.home.device = device;
-      }
-    }
-
-  })
-
-  App.cable.subscriptions.create('StateChannel', {
-    connected: function() {
-      console.log("Connected to ActionCable")
-    },
-    received: function(data) {
-      console.log("DATAAA", data)
-    },
-    disconnected: function() {
-      console.log("Disconnected!")
-    },
-    status: function() {
-      alert(5)
-      console.log("STATUS")
-    }
-  });
-
-
-  $scope.selectMode('music')
 });
 

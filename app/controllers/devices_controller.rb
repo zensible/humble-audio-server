@@ -3,7 +3,8 @@ class DevicesController < ApiController
   def refresh
     # Wait until terminal is ready
 
-    @devices = JSON.parse(PyChromecast.run($get_devices))
+    @devices = Device.refresh()
+    render :json => @devices
   end
 
   def get
@@ -11,14 +12,14 @@ class DevicesController < ApiController
   end
 
   def select
-    friendly_name = params[:friendly_name]
-    Device.select(friendly_name)
+    uuid = params[:uuid]
+    Device.select(uuid)
     render :json => { success: true }
   end
 
   def volume_change
-    friendly_name = params[:friendly_name]
-    Device.select(friendly_name)
+    uuid = params[:uuid]
+    Device.select(uuid)
     Device.set_volume(params[:volume_level])
     render :json => { success: true }
   end
