@@ -15,7 +15,6 @@
     window.authenticityToken = "#{form_authenticity_token}";
     window.env = "#{Rails.env}";
     window.railsTest = #{Rails.env.test?};
-    window.cur_cast = "#{@cur_cast}";
     window.audio_dir = "#{$audio_dir}";
 
   = javascript_include_tag 'application'

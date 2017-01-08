@@ -16,7 +16,8 @@ class PyChromecast
   # The reason for this is, as of this writing pychromecast is by far the best library for interacting with casts -- nothing in ruby-land can compare.
   #
   def self.init()
-    arr = PTY.spawn("cd pychromecast && python")
+    # stty cols 600 - sets column width to 600, fixes an issue where longer commands end up garbled in the output
+    arr = PTY.spawn("cd pychromecast && stty cols 600 && python")
 
     $pyout = arr[0]
     $pyin = arr[1]
@@ -40,7 +41,7 @@ import json
 
   def self.run(str, strip_leading_spaces = true, split_lines = true)
     retval = nil
-    $semaphore.synchronize { # So race conditions don't pop up when casting to multiple devices
+    $semaphore.synchronize { # So race conditions don't pop up when casting to multiple devices from multiple threads
       if split_lines
         arr = str.split(/\n/)
       else
@@ -50,16 +51,11 @@ import json
         next if cmd.blank? || cmd.gsub(/\s+/, "").blank?
         cmd = cmd.gsub(/^\s+/, '') if strip_leading_spaces
         puts "= RUN: [#{cmd}]\n\n"
-        STDOUT.flush
         $pyout.flush
         $pyin.puts cmd
-        $pyin.flush
-        $pyout.flush
         #sleep(0.01)
         $pyout.expect(">>>") do |result|
-          $pyout.flush
           retval = parse_result(cmd, result[0])
-        $pyout.flush
           puts "= result1: ***#{retval}***\n\n"
           STDOUT.flush
         end

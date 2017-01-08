@@ -13,36 +13,8 @@ class Sync
       :total => 0
     }
     existing = Mp3.where("mode = '#{mode}'")
-    arr = existing_to_hashes(existing)
 
-    case mode
-    when "music"
-      folders = Folder.all
-      folders_hsh = {}
-      folders.each do |fold|
-        folders_hsh[fold.full_path] = fold
-      end
-      Dir.glob("#{$audio_dir}/music/**").each do |dir|
-        if folders_hsh[dir]
-          fold = folders_hsh[dir]
-        else
-          fold = Folder.create(:full_path => dir, :basename => File.basename(dir))
-        end
-        folder_id = fold.id
-        parse_dir(mode, arr, stats, dir, folder_id)
-      end
-      sql = "
-        DELETE FROM folders WHERE id NOT IN (SELECT folder_id FROM mp3s WHERE mode = 'music')
-      "
-      ActiveRecord::Base.connection.execute(sql)
-    when "white-noise"
-      parse_dir(mode, arr, stats, "#{$audio_dir}/white-noise")
-    end
-
-    stats[:total] = stats[:existing] + stats[:added]
-  end
-
-  def self.existing_to_hashes(existing)
+    # Create hash of mp3s and folders, used for dupe-checking
     hsh_existing_path = {}
     hsh_existing_md5 = {}
     to_delete = []
@@ -54,7 +26,42 @@ class Sync
       end
     end
 
-    return [hsh_existing_path, hsh_existing_md5, to_delete]
+    arr = [hsh_existing_path, hsh_existing_md5, to_delete]
+
+    case mode
+    when "music"
+      folders = Folder.all
+      folders_hsh = {}
+      folders.each do |fold|
+        folders_hsh[fold.full_path] = fold
+      end
+      Dir.glob("#{$audio_dir}/music/**").each do |dir|
+        if Dir.glob(dir + "/*.mp3").length > 0 # Only create records if there are mp3s
+          if folders_hsh[dir]
+            fold = folders_hsh[dir]
+          else
+            fold = Folder.create(:full_path => dir, :basename => File.basename(dir))
+          end
+          folder_id = fold.id
+          parse_dir(mode, arr, stats, dir, folder_id)
+        end
+      end
+      sql = "
+        DELETE FROM folders WHERE id NOT IN (SELECT folder_id FROM mp3s WHERE mode = 'music')
+      "
+      ActiveRecord::Base.connection.execute(sql)
+    when "white-noise"
+      parse_dir(mode, arr, stats, "#{$audio_dir}/white-noise")
+    end
+
+    # File doesn't exist on disk or elsewhere in DB, delete its record
+    to_delete.each do |mp3|
+      mp3.destroy()
+    end
+    stats[:removed] = to_delete.length
+    Rails.logger.warn("WE NEED TO DELETE: #{to_delete}")
+
+    stats[:total] = stats[:existing] + stats[:added]
   end
 
   def self.parse_dir(mode, arr, stats, path, folder_id = nil)
@@ -87,12 +94,6 @@ class Sync
       end
     end
 
-    # File doesn't exist on disk or elsewhere in DB, delete its record
-    to_delete.each do |mp3|
-      mp3.destroy()
-    end
-    stats[:removed] = to_delete.length
-    Rails.logger.warn("WE NEED TO DELETE: #{to_delete}")
   end
 
   def self.get_attributes(mode, path, md5, folder_id)

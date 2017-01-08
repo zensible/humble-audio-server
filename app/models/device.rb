@@ -89,8 +89,7 @@ $populate_casts_var = "for cc in chromecasts:
 
   def cast_status
     str = %Q{
-      cast = #{cast_var}
-      print(cast.status.status_text)
+      print(#{cast_var}.status.status_text)
     }
     PyChromecast.run(str)
   end
@@ -99,8 +98,7 @@ $populate_casts_var = "for cc in chromecasts:
     #  cast = next(cc for cc in chromecasts if cc.device.uuid.urn == "urn:uuid:#{uuid}")
     #  cast.wait()
     str = %Q{
-      cast = #{cast_var}
-      print(cast.media_controller.status.player_state)
+      print(#{cast_var}.media_controller.status.player_state)
     }
     PyChromecast.run(str)
   end

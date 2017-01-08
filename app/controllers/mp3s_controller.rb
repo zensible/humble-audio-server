@@ -68,16 +68,17 @@ class Mp3sController < ApiController
     # It would be easy to play the URLs in sequence, waiting for each one to complete, but Rails needs a response or the browser will time out.
     # So, we fork the process and do the sequential play in the background.
     # 
-    Thread.abort_on_exception=true
+    #Thread.abort_on_exception=true
     Thread.new do
       @index = 0
       while (@index >= 0 && @index < playlist.length)
         puts "Playlist index: #{@index}"
         mp3 = playlist[@index]
 
+        @start = nil
+
         # Notify all web users that we just started playing the mp3 on the given cast
         def play_start(cast_uuid, mp3)
-          puts "START"
           @entry[:mp3_id] = mp3[:id]
           @entry[:mp3_url] = mp3[:url]
 
@@ -86,7 +87,7 @@ class Mp3sController < ApiController
           state_shared.each do |st|
             updated.push(st) unless st["cast_uuid"] == cast_uuid
           end
-          @entry[:player_num] = updated.length
+          @entry[:player_num] = updated.length  # Used to determine the color of the 'playing' icon
           updated.push(@entry)
           str = JSON.dump(updated)
           $redis.set("state_shared", str)
@@ -134,6 +135,8 @@ class Mp3sController < ApiController
 
         # Wait for device to go from playing/paused/idle to buffering
         if wait_for_device_status("BUFFERING", playlist_md5, cast_uuid)
+          @start = Time.now
+
           if wait_for_device_status("IDLE", playlist_md5, cast_uuid)
             # If we get here the song played its entire length. Move on to next song in playlist.
             @index += 1

@@ -47,6 +47,20 @@
             {{folder.basename}}
           %span.play-button{ "ng-if" => "is_playing('folder_id', folder.id)" }
 
+    // Music, books
+    #selector1{ "ng-if" => "home.mode == 'spoken'" }
+      %h4
+        Spoken Word:
+      .folder-record{ "ng-repeat" => "folder in home.folders" }
+        .folder-playing
+          %span.play-button{ "ng-if" => "is_playing('folder_id', folder.id)", "ng-init" => "entry = is_playing('folder_id', folder.id)" }
+            %img{ "ng-src" => "/images/play_device_{{entry.player_num}}.png"}
+
+        .folder-name.ellipsis
+          %a{ "ng-click" => "select_folder(folder)" }
+            {{folder.basename}}
+          %span.play-button{ "ng-if" => "is_playing('folder_id', folder.id)" }
+
     // Radio
     #selector2{ "ng-if" => "home.mode == 'radio'" }
       %h4
@@ -58,7 +72,7 @@
           %span.play-button{ "ng-if" => "is_playing('mp3_url', station.url)" }
 
     // Music / White Noise
-    #selector2{ "ng-if" => "home.mode == 'music' || home.mode == 'white-noise'"}
+    #selector2{ "ng-if" => "home.mode == 'music' || home.mode == 'white-noise' || home.mode == 'spoken'"}
       .mp3-record
         .mp3-playing
 
@@ -100,9 +114,10 @@
             %tr{ "ng-repeat" => "device in home.devices.groups" }
               %td.ellipsis{ :style => "width: 40%;" }
                 %a.ellipsis{ "ng-click" => "select_cast(device)" }
-                  {{device.friendly_name}}
-                  %sup{ "ng-if" => "state_local.cast_uuid == device.uuid" }
-                    *
+                  %span{ "ng-if" => "state_local.cast_uuid == device.uuid", style: "color: #fdb73a" }<
+                    {{device.friendly_name}}
+                  %span{ "ng-if" => "state_local.cast_uuid != device.uuid" }<
+                    {{device.friendly_name}}
                 %span.play-button{ "ng-if" => "is_playing('cast_uuid', device.uuid)", "ng-init" => "entry = is_playing('cast_uuid', device.uuid)" }
                   %img{ "ng-src" => "/images/play_device_{{entry.player_num}}.png"}
 

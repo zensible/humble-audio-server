@@ -9,7 +9,7 @@ Rails.application.routes.draw do
   scope '/api' do
     scope '/devices' do
       get '/refresh' => 'devices#refresh'
-      get '/get' => 'devices#get'
+      get '/get_all' => 'devices#get_all'
       get '/select/:uuid' => 'devices#select'
       get '/volume_change/:uuid/:volume_level' => 'devices#volume_change', :constraints => { :volume_level => /\d\.\d+/ }
     end

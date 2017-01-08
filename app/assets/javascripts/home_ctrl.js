@@ -19,23 +19,20 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       folder_id: -1,
       playlist: -1,
       mp3: {},
-      radio_station: "",
-      volumes: {}
+      radio_station: ""
     }
 
-    $scope.state_shared = { // shared state
-      playing: [],
-      volumes: {}
-    }
+    $scope.state_shared = []
 
     // Get devices, set current device if any
 
-    // Subscribe to state channel
+    // Subscribe to state channel. This shares the state of what's playing on which cast
     App.cable.subscriptions.create('StateChannel', {
       connected: function() {
         console.log("Connected to ActionCable: STATE")
       },
       received: function(data) {
+        console.log("STATE", data)
         $scope.state_shared = JSON.parse(data || "[]")
         $scope.safeApply()
       },
@@ -47,7 +44,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       }
     });
 
-    // Subscribe to state channel
+    // Subscribe to devices channel. This shares the state of the cast list between users: audio casts, groups and their volume levels
     App.cable.subscriptions.create('DeviceChannel', {
       connected: function() {
         console.log("Connected to ActionCable: DEVICE")
@@ -62,20 +59,6 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
           $scope.state_local.cast_uuid = localStorage.getItem('cast_uuid');
         }
 
-        /*
-        for (var i = 0; i < $scope.home.devices.groups.length; i++) {
-          var device = $scope.home.devices.groups[i]
-          if (device.uuid == window.cur_cast) {
-            $scope.home.device = device;
-          }
-        }
-        for (var i = 0; i < $scope.home.devices.audios.length; i++) {
-          var device = $scope.home.devices.audios[i]
-          if (device.uuid == window.cur_cast) {
-            $scope.home.device = device;
-          }
-        }
-        */
         var max = $scope.home.devices.groups.length;
         if ($scope.home.devices.audios.length > max) { max = $scope.home.devices.audios.length; }
         $('#cast-select').css("height", (24 * 4) + "px")
@@ -97,17 +80,6 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
   }
 
   $scope.is_playing = function(type, val) {
-    //console.log("type", type, "val", val)
-       /*
-[{
-  "cast_uuid": "1bb851ea-5b0a-fce7-f395-16e1e13a86b9",
-  "mode": "music",
-  "folder_id": 225,
-  "radio_station": "",
-  "mp3_id": 2508,
-  "mp3_url": "http://192.168.0.103:3000/audio/music/!flerg/Mellow%20Gold%20-%2001%20-%20loser.mp3"
-}]
-*/    
     var shared = $scope.state_shared;
     for (var i = 0; i < shared.length; i++) {
       //console.log(type, shared[type], val)
@@ -341,8 +313,6 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
   $scope.select_cast = function(device) {
     $scope.state_local.cast_uuid = device.uuid;
     localStorage.setItem('cast_uuid', device.uuid);
-    //Device.select_cast(device.uuid)
-    //$scope.home.device = device;
   }
 
   var cache = {}

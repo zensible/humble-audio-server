@@ -1,8 +1,6 @@
 class HomeController < ApplicationController
 
-
   def index
-    @cur_cast = $redis.get('cur_cast')
   end
 
   def template

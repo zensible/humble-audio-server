@@ -7,7 +7,7 @@ class DevicesController < ApiController
     render :json => @devices
   end
 
-  def get
+  def get_all
     render :json => Device.get_all()
   end
 
