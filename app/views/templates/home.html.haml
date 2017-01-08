@@ -11,29 +11,35 @@
       %p
         %a{ "ng-click" => "selectMode('presets')"}
           Presets
-        %span.play-button{ "ng-if" => "is_playing('mode', 'presets')" }
+        %span.play-button{ "ng-if" => "is_playing('mode', 'presets')", "ng-init" => "entry = is_playing('mode', 'presets')" }
+          %img{ "ng-src" => "/images/play_device_{{entry.player_num}}.png"}
       %p
         %a{ "ng-click" => "selectMode('playlists')"}
           Playlists
-        %span.play-button{ "ng-if" => "is_playing('mode', 'playlists')" }
+        %span.play-button{ "ng-if" => "is_playing('mode', 'playlists')", "ng-init" => "entry = is_playing('mode', 'playlists')" }
+          %img{ "ng-src" => "/images/play_device_{{entry.player_num}}.png"}
       %p
         %a{ "ng-click" => "selectMode('music')"}
           Music
-        %span.play-button{ "ng-if" => "is_playing('mode', 'music')" }
+        %span.play-button{ "ng-if" => "is_playing('mode', 'music')", "ng-init" => "entry = is_playing('mode', 'music')" }
+          %img{ "ng-src" => "/images/play_device_{{entry.player_num}}.png"}
       %p
         %a{ "ng-click" => "selectMode('radio')"}
           Radio
-        %span.play-button{ "ng-if" => "is_playing('mode', 'radio')" }
+        %span.play-button{ "ng-if" => "is_playing('mode', 'radio')", "ng-init" => "entry = is_playing('mode', 'radio')" }
+          %img{ "ng-src" => "/images/play_device_{{entry.player_num}}.png"}
       %p
         %a{ "ng-click" => "selectMode('spoken')"}
           Spoken
-        %span.play-button{ "ng-if" => "is_playing('mode', 'spoken')" }
+        %span.play-button{ "ng-if" => "is_playing('mode', 'spoken')", "ng-init" => "entry = is_playing('mode', 'spoken')" }
+          %img{ "ng-src" => "/images/play_device_{{entry.player_num}}.png"}
       %p
         %a{ "ng-click" => "selectMode('white-noise')"}
           White Noise
-        %span.play-button{ "ng-if" => "is_playing('mode', 'white-noise')" }
+        %span.play-button{ "ng-if" => "is_playing('mode', 'white-noise')", "ng-init" => "entry = is_playing('mode', 'white-noise')" }
+          %img{ "ng-src" => "/images/play_device_{{entry.player_num}}.png"}
 
-    // Music, books
+    // Music
     #selector1{ "ng-if" => "home.mode == 'music'" }
       %h4
         Music By Folder:
@@ -47,7 +53,7 @@
             {{folder.basename}}
           %span.play-button{ "ng-if" => "is_playing('folder_id', folder.id)" }
 
-    // Music, books
+    // Spoken word
     #selector1{ "ng-if" => "home.mode == 'spoken'" }
       %h4
         Spoken Word:
@@ -60,6 +66,21 @@
           %a{ "ng-click" => "select_folder(folder)" }
             {{folder.basename}}
           %span.play-button{ "ng-if" => "is_playing('folder_id', folder.id)" }
+
+    // Presets
+    #selector2{ "ng-if" => "home.mode == 'presets'" }
+      %h4
+        Presets:
+      %p{ "ng-if" => "state_shared && state_shared.length > 0"}
+        %a{ "ng-click" => "preset_create()" }
+          Create Preset Based on Current Playlist
+      %p{ "ng-if" => "!state_shared || state_shared.length == 0"}
+        Create Preset Based on Current Playlist
+
+      .mp3-record{ "ng-repeat" => "preset in home.presets", style: "width: 500px" }
+        .mp3-title.ellipsis
+          %a{ "ng-click" => "play_preset(preset.id)"}
+            {{preset.name}}
 
     // Radio
     #selector2{ "ng-if" => "home.mode == 'radio'" }

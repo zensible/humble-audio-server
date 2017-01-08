@@ -9,6 +9,19 @@ Brew: brew install taglib
 MacPorts: sudo port install taglib
 
 
+1. Hook up hardware as usual
+1.1. Test with spotify or another app to make sure casts and groups play music
+
+2. Give computer a static IP
+
+
+= Troubleshooting
+
+1. No sound
+
+* Make sure it works w/ spotify or another app
+* Check the rails log. If the player says its status is 'IDLE', rather than 'PLAYING' or 'BUFFERING' then the cast isn't able to hit the web server.
+
 
 = Alternate Audio Directory
 
@@ -38,4 +51,6 @@ music   presets.json  radio.json  spoken    white-noise
 2. In your browser, refresh all your media
 
 You should now see all of your audio appear in the app.
+
+
 

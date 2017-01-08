@@ -17,7 +17,6 @@ class Device
       #{cast_var}.wait()
     }
     PyChromecast.run(str)
-    $redis.set("cur_cast", @uuid)
   end
 
   # Get all devices from cache

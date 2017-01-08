@@ -12,7 +12,15 @@ Rails.application.configure do
   # Show full error reports.
   config.consider_all_requests_local = true
 
-  config.action_cable.url = "ws://192.168.0.103:3000/cable"
+  begin
+    ip = Socket.ip_address_list.detect{|intf| intf.ipv4_private?}
+    ip = ip.ip_address
+    host = "#{ip}:#{Rails::Server.new.options[:Port]}"
+  rescue NameError => e
+    puts "Error: couldn't get hostname for websockets, using localhost"
+    host = "localhost"
+  end
+  config.action_cable.url = "ws://#{host}/cable"
   config.action_cable.allowed_request_origins = [/http:\/\/*/, /https:\/\/*/]
 
   # Enable/disable caching. By default caching is disabled.

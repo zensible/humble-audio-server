@@ -14,6 +14,13 @@ Rails.application.routes.draw do
       get '/volume_change/:uuid/:volume_level' => 'devices#volume_change', :constraints => { :volume_level => /\d\.\d+/ }
     end
 
+    scope '/presets' do
+      post '/create' => 'presets#create'
+      get '/get_all' => 'presets#index'
+      get '/destroy/:id' => 'presets#destroy'
+      get '/play/:id' => 'presets#play'
+    end
+
     scope '/mp3s' do
       get '/get/:mode/:id' => 'mp3s#get'
       get '/get_folders' => 'mp3s#get_folders'

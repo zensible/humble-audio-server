@@ -1,4 +1,4 @@
-multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $rootScope, Device, Media) {
+multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $rootScope, Device, Media, Preset) {
 
   function init() {
     $scope.home = {
@@ -12,13 +12,10 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
 
     // 
     $scope.state_local = {
-      player_state: "IDLE",
       mode: "",
       repeat: "off",  // off, all, one
       shuffle: "off",
       folder_id: -1,
-      playlist: -1,
-      mp3: {},
       radio_station: ""
     }
 
@@ -108,6 +105,16 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
 
     $scope.home.mp3s = [];
 
+    if (mode == 'presets') {
+      Preset.get_all(function(response) {
+        $scope.home.presets = response.data;
+        if ($scope.home.presets.length == 0) {
+          $.notify("No presets found. Try playing some audio and click", "warn")
+        }
+        console.log(response)
+      })
+      if (callback) { callback() }
+    }
     if (mode == 'white-noise') {
       Media.get('white-noise', -1, function(response) {
         if (response.data.length == 0) {
@@ -154,7 +161,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
 
   $scope.play_radio = function(station) {
     $scope.state_local.mode = 'radio'
-    $scope.state_local.radio_station = station
+    $scope.state_local.radio_station = station.url
     data = {
       state_local: $scope.state_local,
       playlist: [ { id: -1, url: station.url } ]
@@ -175,7 +182,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     //var mp3 = $scope.home.mp3s[index];
 
     public_prefix = dirname(audio_dir)
-    url_prefix = 'http://192.168.0.103:3000'
+    url_prefix = window.http_address
 
     var regex = new RegExp(RegExp.escape(public_prefix));
 
@@ -280,6 +287,18 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       if (device.volume_level == 0) { val = "0.0" }
       Device.volume_change(device.uuid, val)
     }, 100)
+  }
+
+  $scope.preset_create = function() {
+    name = window.prompt("Please enter a playlist name", "");
+
+    Preset.create({ "name": name }, function(response) {
+      console.log("response", response)
+    })
+  }
+
+  $scope.play_preset = function(id) {
+    Preset.play(id)
   }
 
   var dirname = $scope.dirname = function(str) {

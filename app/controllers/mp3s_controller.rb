@@ -37,7 +37,11 @@ class Mp3sController < ApiController
   end
 
   def play
-    playlist = params[:playlist]
+    playlist_params = params[:playlist]
+    playlist = []
+    playlist_params.each do |pl|
+      playlist.push(pl.to_unsafe_h())
+    end
     state_local = params[:state_local]
     cast_uuid = params[:state_local][:cast_uuid]
 
@@ -45,11 +49,18 @@ class Mp3sController < ApiController
       cast_uuid: cast_uuid,
       mode: state_local[:mode],
       folder_id: state_local[:folder_id],
-      radio_station: state_local[:radio_station]
+      radio_station: state_local[:radio_station],
+      shuffle: state_local[:shuffle],
+      repeat: state_local[:repeat]
     }
 
-    playlist_md5 = Digest::MD5.hexdigest(JSON.dump(playlist))
-    $redis.hset("cur_playlist", cast_uuid, playlist_md5)
+    playlist_json = JSON.dump(playlist)
+    #playlist_md5 = Digest::MD5.hexdigest(playlist_json + JSON.dump(@entry))
+    $redis.hset("cur_playlist", cast_uuid, playlist_json)
+    #$redis.hset("cur_playlist_md5", cast_uuid, playlist_md5)
+
+    @time_started = Time.now.to_i.to_s
+    $redis.hset("device_play_started", cast_uuid, @time_started)
 
     if state_local[:shuffle] == "on"
       clicked = playlist.shift # We want the clicked mp3 to play first, all else is shuffled
@@ -66,7 +77,7 @@ class Mp3sController < ApiController
     # pychromecast doesn't support queuing mp3s, so we if we want to sequentially play a playlist we have to implement the queue ourselves
     #
     # It would be easy to play the URLs in sequence, waiting for each one to complete, but Rails needs a response or the browser will time out.
-    # So, we fork the process and do the sequential play in the background.
+    # So, we run this in a thread and do the sequential play in the background.
     # 
     #Thread.abort_on_exception=true
     Thread.new do
@@ -108,20 +119,19 @@ class Mp3sController < ApiController
           #abort "done"
         end
 
-        #Device.play_url(mp3[:url])
         @device.play_url(mp3[:url])
         sleep(0.5)
         play_start(cast_uuid, mp3)
         sleep(buffering_pause - 0.5)
 
-        def wait_for_device_status(str, playlist_md5, cast_uuid)
-          Rails.logger.info "(((( STR: [#{str}])))"
+        def wait_for_device_status(str, cast_uuid)
+          puts "(((( Wait for status: #{str} )))"
           player_state = ""
           while (player_state != str)
             player_state = @device.player_status()
-            Rails.logger.info "(((( player_state: [#{player_state}])))"
+            puts "(((( #{@time_started} - player_state: [#{player_state}])))"
             cast_state = @device.cast_status
-            play_stop(cast_uuid) if $redis.hget("cur_playlist", cast_uuid) != playlist_md5 || player_state == "UNKNOWN"  # A user played a different playlist for this cast or cast went down
+            play_stop(cast_uuid) if $redis.hget("device_play_started", cast_uuid) != @time_started || player_state == "UNKNOWN"  # A user played a different playlist for this cast or cast went down
             mov = $redis.hget("playlist_move", cast_uuid)
             if !mov.blank?
               $redis.hset("playlist_move", cast_uuid, "")
@@ -134,10 +144,10 @@ class Mp3sController < ApiController
         end
 
         # Wait for device to go from playing/paused/idle to buffering
-        if wait_for_device_status("BUFFERING", playlist_md5, cast_uuid)
+        if wait_for_device_status("BUFFERING", cast_uuid)
           @start = Time.now
 
-          if wait_for_device_status("IDLE", playlist_md5, cast_uuid)
+          if wait_for_device_status("IDLE", cast_uuid)
             # If we get here the song played its entire length. Move on to next song in playlist.
             @index += 1
           end
