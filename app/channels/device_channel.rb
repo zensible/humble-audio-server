@@ -1,11 +1,11 @@
-class StateChannel < ApplicationCable::Channel
+class DeviceChannel < ApplicationCable::Channel
   # Called when the consumer has successfully
   # become a subscriber of this channel.
   def subscribed
-    stream_from "state"
+    stream_from "device"
     sleep 0.5 # Seems to be necessary to make the following work reliably
-    Rails.logger.info("==== SUBSCRIBED STATE")
-    ActionCable.server.broadcast "state", $redis.get("state_shared")
+    Rails.logger.info("==== SUBSCRIBED DEVICE")
+    ActionCable.server.broadcast "device", $redis.get("devices")
   end
 
   def connect

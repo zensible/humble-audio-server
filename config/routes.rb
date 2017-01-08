@@ -19,11 +19,11 @@ Rails.application.routes.draw do
       get '/get_folders' => 'mp3s#get_folders'
       get '/refresh/:mode' => 'mp3s#refresh'
       post '/play' => 'mp3s#play'
-      get '/stop' => 'mp3s#stop'
-      get '/pause' => 'mp3s#pause'
-      get '/resume' => 'mp3s#resume'
-      get '/next' => 'mp3s#next'
-      get '/prev' => 'mp3s#prev'
+      get '/stop/:cast_uuid' => 'mp3s#stop'
+      get '/pause/:cast_uuid' => 'mp3s#pause'
+      get '/resume/:cast_uuid' => 'mp3s#resume'
+      get '/next/:cast_uuid' => 'mp3s#next'
+      get '/prev/:cast_uuid' => 'mp3s#prev'
     end
   end
 

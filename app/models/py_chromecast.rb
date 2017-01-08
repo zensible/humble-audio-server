@@ -38,29 +38,42 @@ import json
     Device.refresh()
   end
 
-  def self.run(str)
+  def self.run(str, strip_leading_spaces = true, split_lines = true)
     retval = nil
-    str.split(/\n/).each do |cmd|
-      next if cmd.blank? || cmd.gsub(/\s+/, "").blank?
-      cmd = cmd.gsub(/^\s+/, '')
-      puts "= RUN: [#{cmd}]"
-      STDOUT.flush
-      $pyin.puts cmd
-      #sleep(0.01)
-      $pyout.expect(">>>") do |result|
-        retval = parse_result(cmd, result[0])
-        puts "= result1: ***#{retval}***"
-        STDOUT.flush
+    $semaphore.synchronize { # So race conditions don't pop up when casting to multiple devices
+      if split_lines
+        arr = str.split(/\n/)
+      else
+        arr = [ str ]
       end
-    end
+      arr.each do |cmd|
+        next if cmd.blank? || cmd.gsub(/\s+/, "").blank?
+        cmd = cmd.gsub(/^\s+/, '') if strip_leading_spaces
+        puts "= RUN: [#{cmd}]\n\n"
+        STDOUT.flush
+        $pyout.flush
+        $pyin.puts cmd
+        $pyin.flush
+        $pyout.flush
+        #sleep(0.01)
+        $pyout.expect(">>>") do |result|
+          $pyout.flush
+          retval = parse_result(cmd, result[0])
+        $pyout.flush
+          puts "= result1: ***#{retval}***\n\n"
+          STDOUT.flush
+        end
+      end
+    }
     return retval
   end  
 
   def self.parse_result(cmd, str)
     #puts "BEFORE: [[#{str}]] cmd: [[#{cmd}]]"
     # Trim off trailing >>> and preceding command so we return only output
-    str = str.gsub(/\r*\n>>>/, "")
+    str = str.gsub(/\r?\n>>>/, "")
     if str.match(/#{Regexp.escape('Traceback (most recent call last)')}/)
+      # ToDo: deal with errors
     end
     str = str.gsub(/^\s?#{Regexp.escape(cmd)}/, "")
     str = str.gsub(/^\r?/, "")

@@ -1,12 +1,12 @@
 #top{"ng-controller" => "HomeCtrl"}
-  #media-selector{ "ng-if" => "home.device == null && home.devices_loaded"}
+  #media-selector{ "ng-if" => "state_local.cast_uuid == null && home.devices_loaded"}
     %div{ :style => "padding: 20px" }
       %p
         Welcome to Multiroom Audio 1.0
       %p
         Please select a Chromecast audio device below
 
-  #media-selector{ "ng-if" => "home.device != null"}
+  #media-selector{ "ng-if" => "state_local.cast_uuid != null"}
     #mode-select.ellipsis
       %p
         %a{ "ng-click" => "selectMode('presets')"}
@@ -34,10 +34,14 @@
         %span.play-button{ "ng-if" => "is_playing('mode', 'white-noise')" }
 
     // Music, books
-    #selector1{ "ng-if" => "home.mode == 'music'", style: "white-space: nowrap; text-overflow: ellipsis; overflow-x: hidden" }
+    #selector1{ "ng-if" => "home.mode == 'music'" }
       %h4
         Music By Folder:
       .folder-record{ "ng-repeat" => "folder in home.folders" }
+        .folder-playing
+          %span.play-button{ "ng-if" => "is_playing('folder_id', folder.id)", "ng-init" => "entry = is_playing('folder_id', folder.id)" }
+            %img{ "ng-src" => "/images/play_device_{{entry.player_num}}.png"}
+
         .folder-name.ellipsis
           %a{ "ng-click" => "select_folder(folder)" }
             {{folder.basename}}
@@ -47,14 +51,17 @@
     #selector2{ "ng-if" => "home.mode == 'radio'" }
       %h4
         Radio Stations:
-      .mp3-record{ "ng-repeat" => "station in home.radio_stations" }
+      .mp3-record{ "ng-repeat" => "station in home.radio_stations", style: "width: 500px" }
         .mp3-title.ellipsis
           %a{ "ng-click" => "play_radio(station)"}
             {{station.name}}
+          %span.play-button{ "ng-if" => "is_playing('mp3_url', station.url)" }
 
     // Music / White Noise
     #selector2{ "ng-if" => "home.mode == 'music' || home.mode == 'white-noise'"}
       .mp3-record
+        .mp3-playing
+
         .mp3-title
           Title
           %a.hand{ "ng-click" => "refresh_media()"}
@@ -69,11 +76,12 @@
           Time
       / works for 'white-noise' and 'music'
       .mp3-record{ "ng-repeat" => "mp3 in home.mp3s" }
+        .mp3-playing
+          %span.play-button{ "ng-if" => "is_playing('mp3_id', mp3.id)", "ng-init" => "entry = is_playing('mp3_id', mp3.id)" }
+            %img{ "ng-src" => "/images/play_device_{{entry.player_num}}.png"}
         .mp3-title.ellipsis
           %a{ "ng-click" => "play($index)"}
             {{mp3.title || mp3.filename}}
-
-          %span.play-button{ "ng-if" => "is_playing('mp3_id', mp3.id)" }
         .mp3-artist.ellipsis
           {{mp3.artist || ' - ' }}
         .mp3-album.ellipsis
@@ -85,8 +93,6 @@
 
 
   #cast-select
-    %div{ "ng-if" => "is_playing('mode', 'music')" }
-      SDFLKJSDLKFJ
     %table{ :style => "width: 100%" }
       %tr
         %td{ :style => "width: 50%; vertical-align: top" }
@@ -95,9 +101,12 @@
               %td.ellipsis{ :style => "width: 40%;" }
                 %a.ellipsis{ "ng-click" => "select_cast(device)" }
                   {{device.friendly_name}}
-                  %sup{ "ng-if" => "home.device == device" }
+                  %sup{ "ng-if" => "state_local.cast_uuid == device.uuid" }
                     *
-              %td.ellipsis{ :style => "width: 60%; float: right" }
+                %span.play-button{ "ng-if" => "is_playing('cast_uuid', device.uuid)", "ng-init" => "entry = is_playing('cast_uuid', device.uuid)" }
+                  %img{ "ng-src" => "/images/play_device_{{entry.player_num}}.png"}
+
+              %td.ellipsis{ :style => "width: 60%; padding-right: 40px" }
                 %input.slider{ type: "range", min: "0", max: "1", step: ".05", "ng-click" => "volume_change(device)", "ng-model" => "device.volume_level" }
 
         %td{ :style => "width: 50%; vertical-align: top" }
@@ -106,10 +115,14 @@
           %table{ :style => "width: 100%; table-layout: fixed" }
             %tr{ "ng-repeat" => "device in home.devices.audios" }
               %td.ellipsis{ :style => "width: 40%;" }
-                %a.ellipsis{ "ng-click" => "select_cast(device)" }
-                  {{device.friendly_name}}
-                  %sup{ "ng-if" => "home.device == device" }
-                    *
+                %a.ellipsis{ "ng-click" => "select_cast(device)" }<
+                  %span{ "ng-if" => "state_local.cast_uuid == device.uuid", style: "color: #fdb73a" }<
+                    {{device.friendly_name}}
+                  %span{ "ng-if" => "state_local.cast_uuid != device.uuid" }<
+                    {{device.friendly_name}}
+                %span.play-button{ "ng-if" => "is_playing('cast_uuid', device.uuid)", "ng-init" => "entry = is_playing('cast_uuid', device.uuid)" }
+                  %img{ "ng-src" => "/images/play_device_{{entry.player_num}}.png"}
+
               %td.ellipsis{ :style => "width: 60%; padding-right: 40px" }
                 %input.slider{ type: "range", min: "0", max: "1", step: ".05", "ng-click" => "volume_change(device)", "ng-model" => "device.volume_level" }
 

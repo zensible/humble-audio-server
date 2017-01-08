@@ -5,6 +5,10 @@ import pychromecast
 chromecasts = pychromecast.get_chromecasts()
 [cc.device.friendly_name for cc in chromecasts]
 
+casts_by_uuid = {}
+for cc in chromecasts:
+  casts_by_uuid[cc.uuid.urn[9:]] = cc
+
 cast = next(cc for cc in chromecasts if cc.device.friendly_name == "Kitchen")
 # Wait for cast device to be ready
 cast.wait()

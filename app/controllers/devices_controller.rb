@@ -13,14 +13,17 @@ class DevicesController < ApiController
 
   def select
     uuid = params[:uuid]
-    Device.select(uuid)
+    dev = Device.new(uuid)
+    dev.select()
     render :json => { success: true }
   end
 
   def volume_change
-    uuid = params[:uuid]
-    Device.select(uuid)
-    Device.set_volume(params[:volume_level])
+    dev = Device.new(params[:uuid])
+    dev.select()
+    dev.set_volume(params[:volume_level].to_f)
+    # Note: the above broadcasts the volume changes to anyone connected to the web app
+
     render :json => { success: true }
   end
 

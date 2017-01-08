@@ -29,34 +29,13 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     }
 
     // Get devices, set current device if any
-    Device.get_all(function(response) {
-      $scope.home.devices = response.data
-      $scope.home.devices_loaded = true
-
-      for (var i = 0; i < $scope.home.devices.groups.length; i++) {
-        var device = $scope.home.devices.groups[i]
-        if (device.uuid == window.cur_cast) {
-          $scope.home.device = device;
-        }
-      }
-      for (var i = 0; i < $scope.home.devices.audios.length; i++) {
-        var device = $scope.home.devices.audios[i]
-        if (device.uuid == window.cur_cast) {
-          $scope.home.device = device;
-        }
-      }
-      var max = $scope.home.devices.groups.length;
-      if ($scope.home.devices.audios.length > max) { max = $scope.home.devices.audios.length; }
-      $('#cast-select').css("height", (24 * 4) + "px")
-    })
 
     // Subscribe to state channel
     App.cable.subscriptions.create('StateChannel', {
       connected: function() {
-        console.log("Connected to ActionCable")
+        console.log("Connected to ActionCable: STATE")
       },
       received: function(data) {
-        console.log("got state: " + data)
         $scope.state_shared = JSON.parse(data || "[]")
         $scope.safeApply()
       },
@@ -64,7 +43,49 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
         console.log("Disconnected!")
       },
       status: function() {
-        alert(5)
+        console.log("STATUS")
+      }
+    });
+
+    // Subscribe to state channel
+    App.cable.subscriptions.create('DeviceChannel', {
+      connected: function() {
+        console.log("Connected to ActionCable: DEVICE")
+      },
+      received: function(data) {
+        console.log('device', JSON.parse(data))
+        $scope.home.devices = JSON.parse(data || "{}")
+
+        $scope.home.devices_loaded = true
+
+        if (localStorage.getItem('cast_uuid')) {
+          $scope.state_local.cast_uuid = localStorage.getItem('cast_uuid');
+        }
+
+        /*
+        for (var i = 0; i < $scope.home.devices.groups.length; i++) {
+          var device = $scope.home.devices.groups[i]
+          if (device.uuid == window.cur_cast) {
+            $scope.home.device = device;
+          }
+        }
+        for (var i = 0; i < $scope.home.devices.audios.length; i++) {
+          var device = $scope.home.devices.audios[i]
+          if (device.uuid == window.cur_cast) {
+            $scope.home.device = device;
+          }
+        }
+        */
+        var max = $scope.home.devices.groups.length;
+        if ($scope.home.devices.audios.length > max) { max = $scope.home.devices.audios.length; }
+        $('#cast-select').css("height", (24 * 4) + "px")
+
+        $scope.safeApply()
+      },
+      disconnected: function() {
+        console.log("Disconnected!")
+      },
+      status: function() {
         console.log("STATUS")
       }
     });
@@ -76,7 +97,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
   }
 
   $scope.is_playing = function(type, val) {
-    console.log("type", type, "val", val)
+    //console.log("type", type, "val", val)
        /*
 [{
   "cast_uuid": "1bb851ea-5b0a-fce7-f395-16e1e13a86b9",
@@ -89,10 +110,10 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
 */    
     var shared = $scope.state_shared;
     for (var i = 0; i < shared.length; i++) {
-      console.log(type, shared[type], val)
+      //console.log(type, shared[type], val)
       var cast = shared[i];
       if (cast[type] == val) {
-        return true;
+        return cast;
       }
     }
     return false;
@@ -160,6 +181,8 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
   }
 
   $scope.play_radio = function(station) {
+    $scope.state_local.mode = 'radio'
+    $scope.state_local.radio_station = station
     data = {
       state_local: $scope.state_local,
       playlist: [ { id: -1, url: station.url } ]
@@ -230,11 +253,11 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
   }
 
   $scope.prev = function() {
-    Media.prev()
+    Media.prev($scope.state_local.cast_uuid)
   }
 
   $scope.next = function() {
-    Media.next()
+    Media.next($scope.state_local.cast_uuid)
   }
 
   $scope.toggleRepeat = function() {
@@ -260,17 +283,17 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
   }
 
   $scope.stop = function() {
-    Media.stop()
+    Media.stop($scope.state_local.cast_uuid)
   }
 
   $scope.pause = function() {
-    Media.pause(function(response) {
+    Media.pause($scope.state_local.cast_uuid, function(response) {
       $scope.player.pause()
     })
   }
 
   $scope.resume = function() {
-    Media.resume(function(response) {
+    Media.resume($scope.state_local.cast_uuid, function(response) {
       $scope.player.resume()
     })
   }
@@ -316,8 +339,10 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
   }
 
   $scope.select_cast = function(device) {
-    Device.select_cast(device.uuid)
-    $scope.home.device = device;
+    $scope.state_local.cast_uuid = device.uuid;
+    localStorage.setItem('cast_uuid', device.uuid);
+    //Device.select_cast(device.uuid)
+    //$scope.home.device = device;
   }
 
   var cache = {}

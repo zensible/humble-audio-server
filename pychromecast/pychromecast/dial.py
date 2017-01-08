@@ -62,6 +62,8 @@ def get_device_status(host):
         device_info_el = status_el.find(XML_NS_UPNP_DEVICE + "device")
         api_version_el = status_el.find(XML_NS_UPNP_DEVICE + "specVersion")
 
+        #print(req.text.encode("UTF-8"))
+
         friendly_name = _read_xml_element(device_info_el, XML_NS_UPNP_DEVICE,
                                           "friendlyName", "Unknown Chromecast")
         model_name = _read_xml_element(device_info_el, XML_NS_UPNP_DEVICE,

@@ -17,24 +17,24 @@ angular.module("multiroomApp").factory('Media', function($rootScope, HttpErrorWr
       HttpErrorWrapper.post("/api/mp3s/play/", hsh, success, error);
     },
 
-    stop: function(success, error) {
-      HttpErrorWrapper.get("/api/mp3s/stop/", success, error);
+    stop: function(cast_uuid, success, error) {
+      HttpErrorWrapper.get("/api/mp3s/stop/" + cast_uuid, success, error);
     },
 
-    pause: function(success, error) {
-      HttpErrorWrapper.get("/api/mp3s/pause/", success, error);
+    pause: function(cast_uuid, success, error) {
+      HttpErrorWrapper.get("/api/mp3s/pause/" + cast_uuid, success, error);
     },
 
-    resume: function(success, error) {
-      HttpErrorWrapper.get("/api/mp3s/resume", success, error);
+    resume: function(cast_uuid, success, error) {
+      HttpErrorWrapper.get("/api/mp3s/resume/" + cast_uuid, success, error);
     },
 
-    next: function(success, error) {
-      HttpErrorWrapper.get("/api/mp3s/next", success, error);
+    next: function(cast_uuid, success, error) {
+      HttpErrorWrapper.get("/api/mp3s/next/" + cast_uuid, success, error);
     },
 
-    prev: function(success, error) {
-      HttpErrorWrapper.get("/api/mp3s/prev", success, error);
+    prev: function(cast_uuid, success, error) {
+      HttpErrorWrapper.get("/api/mp3s/prev/" + cast_uuid, success, error);
     },
 
     get_radio: function(success, error) {
