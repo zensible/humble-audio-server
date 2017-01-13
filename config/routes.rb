@@ -23,7 +23,7 @@ Rails.application.routes.draw do
 
     scope '/mp3s' do
       get '/get/:mode/:id' => 'mp3s#get'
-      get '/get_folders' => 'mp3s#get_folders'
+      get '/get_folders/:mode/:folder_id' => 'mp3s#get_folders'
       get '/refresh/:mode' => 'mp3s#refresh'
       post '/play' => 'mp3s#play'
       get '/stop/:cast_uuid' => 'mp3s#stop'

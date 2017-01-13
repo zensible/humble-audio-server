@@ -11,6 +11,8 @@ class Mp3sController < ApiController
 
     if mode == "music"
       mp3s = Mp3.where("mode = 'music' AND folder_id = '#{id}'").order("track_nr, artist, album, title, filename")
+    elsif mode == "spoken"
+      mp3s = Mp3.where("mode = 'spoken' AND folder_id = '#{id}'").order("track_nr, artist, album, title, filename")
     elsif mode == "white-noise"
       mp3s = Mp3.where("mode = 'white-noise'").order("title")
     end
@@ -19,7 +21,9 @@ class Mp3sController < ApiController
   end
 
   def get_folders
-    render :json => Folder.all.order("basename")
+    mode = params[:mode]
+    folder_id = params[:folder_id]
+    render :json => Folder.all.order("basename").where("mode = '#{mode}' AND parent_folder_id = '#{folder_id}'")
   end
 
   #def cur_cast
@@ -62,6 +66,15 @@ class Mp3sController < ApiController
     @time_started = Time.now.to_i.to_s
     $redis.hset("device_play_started", cast_uuid, @time_started)
 
+    @device = Device.new(cast_uuid)
+
+    # Wait until any other threads die
+    #player_state = ""
+    #while (player_state != 'IDLE')
+    #  player_state = @device.player_status()
+    #  sleep(0.5) # Poll device every half second
+    #end
+
     if state_local[:shuffle] == "on"
       clicked = playlist.shift # We want the clicked mp3 to play first, all else is shuffled
       playlist.shuffle!
@@ -70,7 +83,6 @@ class Mp3sController < ApiController
 
     buffering_pause = 3.0  # Magic number here: number of seconds to wait for device to go from buffering to playing. We could use the wait_for_device_status() function, but sadly the device starts playing about 1s before the status updates to PLAYING so this isn't an option.
 
-    @device = Device.new(cast_uuid)
 
     # What's happening here since it's non-obvious:
     #
@@ -81,15 +93,10 @@ class Mp3sController < ApiController
     # 
     #Thread.abort_on_exception=true
     Thread.new do
-      @index = 0
-      while (@index >= 0 && @index < playlist.length)
-        puts "Playlist index: #{@index}"
-        mp3 = playlist[@index]
 
-        @start = nil
-
-        # Notify all web users that we just started playing the mp3 on the given cast
-        def play_start(cast_uuid, mp3)
+      # Notify all web users that we just started playing the mp3 on the given cast
+      def play_start(cast_uuid, mp3)
+        $semaphore.synchronize {
           @entry[:mp3_id] = mp3[:id]
           @entry[:mp3_url] = mp3[:url]
 
@@ -103,10 +110,13 @@ class Mp3sController < ApiController
           str = JSON.dump(updated)
           $redis.set("state_shared", str)
           ActionCable.server.broadcast "state", str
-        end
+        }
+      end
 
-        def play_stop(cast_uuid)
-          puts "STOP"
+      def play_stop(cast_uuid)
+        $semaphore.synchronize {
+          # Tell front end we're stopping
+          puts "STOP #{cast_uuid}"
           state_shared = JSON.load($redis.get("state_shared") || "[]")
           updated = []
           state_shared.each do |st|
@@ -115,33 +125,43 @@ class Mp3sController < ApiController
           str = JSON.dump(updated)
           $redis.set("state_shared", str)
           ActionCable.server.broadcast "state", str
-          Thread.exit
-          #abort "done"
-        end
 
+          # Actually stop playback
+          Device.new(cast_uuid).stop()
+
+          Thread.exit
+        }
+      end
+
+      def wait_for_device_status(str, cast_uuid)
+        player_state = ""
+        while (player_state != str)
+          puts "Waiting for...#{str}"
+          player_state = @device.player_status()
+          cast_state = @device.cast_status
+          puts "== STATE: #{$redis.hget("device_play_started", cast_uuid)} -- #{@time_started}"
+          play_stop(cast_uuid) if $redis.hget("device_play_started", cast_uuid) != @time_started || player_state == "UNKNOWN"  # A user played a different playlist for this cast or cast went down
+          mov = $redis.hget("playlist_move", cast_uuid)
+          if !mov.blank?
+            $redis.hset("playlist_move", cast_uuid, "")
+            @index += mov.to_i  # Either forward or back in playlist (1 or -1)
+            return false
+          end
+          sleep(1) # Poll device every half second
+        end
+        return true
+      end
+
+      @index = 0
+      while (@index >= 0 && @index < playlist.length)
+        puts "Playlist index: #{@index}"
+        mp3 = playlist[@index]
+
+        @start = nil
         @device.play_url(mp3[:url])
         sleep(0.5)
         play_start(cast_uuid, mp3)
         sleep(buffering_pause - 0.5)
-
-        def wait_for_device_status(str, cast_uuid)
-          puts "(((( Wait for status: #{str} )))"
-          player_state = ""
-          while (player_state != str)
-            player_state = @device.player_status()
-            puts "(((( #{@time_started} - player_state: [#{player_state}])))"
-            cast_state = @device.cast_status
-            play_stop(cast_uuid) if $redis.hget("device_play_started", cast_uuid) != @time_started || player_state == "UNKNOWN"  # A user played a different playlist for this cast or cast went down
-            mov = $redis.hget("playlist_move", cast_uuid)
-            if !mov.blank?
-              $redis.hset("playlist_move", cast_uuid, "")
-              @index += mov.to_i  # Either forward or back in playlist (1 or -1)
-              return false
-            end
-            sleep(0.5) # Poll device every half second
-          end
-          return true
-        end
 
         # Wait for device to go from playing/paused/idle to buffering
         if wait_for_device_status("BUFFERING", cast_uuid)
@@ -156,7 +176,7 @@ class Mp3sController < ApiController
         if state_local[:repeat] == "one"
           @index = 0
         end
-        if @index >= playlist.length
+        if @index >= playlist.length # Reached the end of the playlist
           if state_local[:repeat] == "all"
             @index = 0
           else
@@ -165,6 +185,7 @@ class Mp3sController < ApiController
         end
       end
     end
+
     sleep(buffering_pause)
     render :json => { success: true }
   end

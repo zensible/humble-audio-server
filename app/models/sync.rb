@@ -29,29 +29,20 @@ class Sync
     arr = [hsh_existing_path, hsh_existing_md5, to_delete]
 
     case mode
-    when "music"
+    when "music", "spoken"
       folders = Folder.all
       folders_hsh = {}
       folders.each do |fold|
         folders_hsh[fold.full_path] = fold
       end
-      Dir.glob("#{$audio_dir}/music/**").each do |dir|
-        if Dir.glob(dir + "/*.mp3").length > 0 # Only create records if there are mp3s
-          if folders_hsh[dir]
-            fold = folders_hsh[dir]
-          else
-            fold = Folder.create(:full_path => dir, :basename => File.basename(dir))
-          end
-          folder_id = fold.id
-          parse_dir(mode, arr, stats, dir, folder_id)
-        end
-      end
-      sql = "
-        DELETE FROM folders WHERE id NOT IN (SELECT folder_id FROM mp3s WHERE mode = 'music')
-      "
-      ActiveRecord::Base.connection.execute(sql)
+
+      recursive_sync_folder("#{$audio_dir}/#{mode}", -1, mode, folders_hsh, arr, stats)
+      #sql = "
+      #  DELETE FROM folders WHERE id NOT IN (SELECT folder_id FROM mp3s)
+      #"
+      #ActiveRecord::Base.connection.execute(sql)
     when "white-noise"
-      parse_dir(mode, arr, stats, "#{$audio_dir}/white-noise")
+      parse_dir_mp3(mode, arr, stats, "#{$audio_dir}/white-noise")
     end
 
     # File doesn't exist on disk or elsewhere in DB, delete its record
@@ -64,7 +55,21 @@ class Sync
     stats[:total] = stats[:existing] + stats[:added]
   end
 
-  def self.parse_dir(mode, arr, stats, path, folder_id = nil)
+  def self.recursive_sync_folder(path, parent_id, mode, folders_hsh, arr, stats)
+    Dir.glob(path + "/*").each do |dir|
+      next unless File.directory? dir
+      if folders_hsh[dir]
+        fold = folders_hsh[dir]
+      else
+        fold = Folder.create(:parent_folder_id => parent_id, :full_path => dir, :basename => File.basename(dir), :mode => mode)
+      end
+      folder_id = fold.id
+      parse_dir_mp3(mode, arr, stats, dir, folder_id)
+      recursive_sync_folder(dir, folder_id, mode, folders_hsh, arr, stats)
+    end
+  end
+
+  def self.parse_dir_mp3(mode, arr, stats, path, folder_id = nil)
     hsh_existing_path = arr[0]
     hsh_existing_md5 = arr[1]
     to_delete = arr[2]

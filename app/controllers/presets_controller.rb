@@ -25,13 +25,21 @@ class PresetsController < ApplicationController
   end
 
   def play
+    @time_started = Time.now.to_i.to_s
+
     # First, stop everything currently playing
-    shared = JSON.load($redis.get("state_shared") || "[]") || []
-    shared.each do |sh|
-      cast_uuid = sh["cast_uuid"]
-      $redis.hset("device_play_started", cast_uuid, "-1")
+    devices = JSON.load(Device.get_all())
+    devices['groups'].each do |dev|
+      $redis.hset("device_play_started", dev['uuid'], @time_started)
     end
-    sleep 1
+    devices['audios'].each do |dev|
+      $redis.hset("device_play_started", dev['uuid'], @time_started)
+    end
+
+    while(!$redis.get("state_shared").blank? && $redis.get("state_shared") != '[]') do
+      puts "waiting... #{$redis.get("state_shared")}"
+      sleep(1)
+    end
 
     preset = Preset.find(params[:id])
     initheader = { 'Content-Type' => 'application/json;charset=UTF-8' }

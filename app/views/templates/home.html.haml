@@ -40,7 +40,7 @@
           %img{ "ng-src" => "/images/play_device_{{entry.player_num}}.png"}
 
     // Music
-    #selector1{ "ng-if" => "home.mode == 'music'" }
+    #selector1{ "ng-if" => "state_local.mode == 'music'" }
       %h4
         Music By Folder:
       .folder-record{ "ng-repeat" => "folder in home.folders" }
@@ -54,7 +54,7 @@
           %span.play-button{ "ng-if" => "is_playing('folder_id', folder.id)" }
 
     // Spoken word
-    #selector1{ "ng-if" => "home.mode == 'spoken'" }
+    #selector1{ "ng-if" => "state_local.mode == 'spoken'" }
       %h4
         Spoken Word:
       .folder-record{ "ng-repeat" => "folder in home.folders" }
@@ -68,22 +68,42 @@
           %span.play-button{ "ng-if" => "is_playing('folder_id', folder.id)" }
 
     // Presets
-    #selector2{ "ng-if" => "home.mode == 'presets'" }
+    #selector2{ "ng-if" => "state_local.mode == 'presets'" }
       %h4
         Presets:
       %p{ "ng-if" => "state_shared && state_shared.length > 0"}
         %a{ "ng-click" => "preset_create()" }
-          Create Preset Based on Current Playlist
+          Create Preset
       %p{ "ng-if" => "!state_shared || state_shared.length == 0"}
-        Create Preset Based on Current Playlist
+        Start casting in order to save a preset
 
-      .mp3-record{ "ng-repeat" => "preset in home.presets", style: "width: 500px" }
-        .mp3-title.ellipsis
+      .preset-record{ "ng-repeat" => "preset in home.presets" }
+        .preset-title.ellipsis
+          Preset Name:
+        .preset-schedule
+          Schedule: days, start time, stop time
+        .preset-delete
+
+      .preset-record{ "ng-repeat" => "preset in home.presets" }
+        .preset-title.ellipsis
           %a{ "ng-click" => "play_preset(preset.id)"}
             {{preset.name}}
+        .preset-schedule
+          %input.schedule_days{ "ng-model" => "preset.schedule_days", :placeholder => "Daily" }
+          %input.schedule_start{ "type" => "time", "ng-model" => "preset.schedule_start" }
+          %input.schedule_end{ "type" => "time", "ng-model" => "preset.schedule_end" }
+        .preset-delete
+          DEL
+
+      %br
+      %div{ style: "width: 500px" }
+        Presets allow you to save the current play configuration (devices playing, their playlists, shuffle/repeat etc) and play them again later with a single click. You may also schedule them to run automatically at a given time on days of the week.
+
+      %p{ "ng-if" => "home.presets.length > 0" }
+        Schedule days: M TU W TH F SA SU. Daily if left blank.
 
     // Radio
-    #selector2{ "ng-if" => "home.mode == 'radio'" }
+    #selector2{ "ng-if" => "state_local.mode == 'radio'" }
       %h4
         Radio Stations:
       .mp3-record{ "ng-repeat" => "station in home.radio_stations", style: "width: 500px" }
@@ -93,14 +113,14 @@
           %span.play-button{ "ng-if" => "is_playing('mp3_url', station.url)" }
 
     // Music / White Noise
-    #selector2{ "ng-if" => "home.mode == 'music' || home.mode == 'white-noise' || home.mode == 'spoken'"}
+    #selector2{ "ng-if" => "state_local.mode == 'music' || state_local.mode == 'white-noise' || state_local.mode == 'spoken'"}
       .mp3-record
         .mp3-playing
 
         .mp3-title
           Title
           %a.hand{ "ng-click" => "refresh_media()"}
-            %img{ :src => "/images/refresh_16.png", :title => "Refresh the media in '{{home.mode}}'" }
+            %img{ :src => "/images/refresh_16.png", :title => "Refresh the media in '{{state_local.mode}}'" }
         .mp3-artist.ellipsis
           Artist
         .mp3-album.ellipsis

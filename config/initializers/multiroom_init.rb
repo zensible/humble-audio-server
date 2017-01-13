@@ -2,6 +2,7 @@ require 'thread'
 require 'socket'
 
 $semaphore = Mutex.new # See: app/models/py_chromecast.rb
+$threads = []
 
 # Initialize chromecast API and get a list of available cast devices
 

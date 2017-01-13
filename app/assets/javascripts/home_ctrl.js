@@ -101,7 +101,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
   $scope.selectMode = function(mode, callback) {
     localStorage.setItem('mode', mode);
 
-    $scope.home.mode = mode
+    $scope.state_local.mode = mode
 
     $scope.home.mp3s = [];
 
@@ -125,8 +125,8 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
         if (callback) { callback() }
       })
     }
-    if (mode == 'music') {
-      Media.get_folders(function(response) {
+    if (mode == 'music' || mode == 'spoken') {
+      Media.get_folders(mode, -1, function(response) {
         $scope.home.folders = response.data;
         if (response.data.length == 0) {
           $.notify("No mp3s found. You may need to populate and/or refresh your media.", "warn")
@@ -149,13 +149,25 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
 
   $scope.select_folder = function(folder) {
     if (!folder) { return; }
-    localStorage.setItem('folder::' + $scope.home.mode, folder.id);
+    localStorage.setItem('folder::' + $scope.state_local.mode, folder.id);
 
     var id = folder.id;
     $scope.state_local.folder_id = folder.id;
-    Media.get('music', id, function(response) {
-      $scope.home.mp3s = response.data
-      $scope.player.init($scope.home.mp3s)
+    $scope.state_local.folder = folder;
+    Media.get($scope.state_local.mode, id, function(response) {
+      if (response.data.length > 0) {
+        $scope.home.mp3s = response.data
+        $scope.player.init($scope.home.mp3s)
+      } else {
+        Media.get_folders($scope.state_local.mode, id, function(response) {
+          $scope.home.folders = response.data;
+          if (response.data.length == 0) {
+            $.notify("No mp3s found. You may need to populate and/or refresh your media.", "warn")
+          }
+          set_default_music_folder()
+          if (callback) { callback() }
+        })        
+      }
     })    
   }
 
@@ -214,7 +226,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     $scope.playlist.current_index = index;
     $scope.playlist.current_item = item;
 
-    var mode = $scope.home.mode;
+    var mode = $scope.state_local.mode;
     $scope.state_local.mode = mode
     data = {
       state_local: $scope.state_local,
@@ -315,8 +327,8 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
   init_player($scope, $rootScope);
 
   $scope.refresh_media = function() {
-    Media.refresh($scope.home.mode, function() {
-      $scope.selectMode($scope.home.mode);
+    Media.refresh($scope.state_local.mode, function() {
+      $scope.selectMode($scope.state_local.mode);
     })
   }
 

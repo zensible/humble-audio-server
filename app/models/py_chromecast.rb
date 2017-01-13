@@ -50,7 +50,7 @@ import json
       arr.each do |cmd|
         next if cmd.blank? || cmd.gsub(/\s+/, "").blank?
         cmd = cmd.gsub(/^\s+/, '') if strip_leading_spaces
-        puts "= RUN: [#{cmd}]\n\n"
+        puts "= RUN: [#{cmd}]\n"
         $pyout.flush
         $pyin.puts cmd
         #sleep(0.01)
