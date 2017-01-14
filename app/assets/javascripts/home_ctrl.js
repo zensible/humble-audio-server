@@ -56,8 +56,19 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
           $scope.state_local.cast_uuid = localStorage.getItem('cast_uuid');
         }
 
-        var max = $scope.home.devices.groups.length;
-        if ($scope.home.devices.audios.length > max) { max = $scope.home.devices.audios.length; }
+        var num_groups = 0;
+        var num_audios = 0;
+        for (var i = 0; i < $scope.home.devices.length; i++) {
+          var dev = $scope.home.devices[i];
+          if (dev['cast_type'] == 'group') {
+            num_groups += 1;
+          } else {
+            num_audios += 1;
+          }
+        }
+
+        var max = num_groups;
+        if (num_audios > max) { max = num_audios; }
         $('#cast-select').css("height", (24 * 4) + "px")
 
         $scope.safeApply()
@@ -90,11 +101,10 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
 
   function set_default_music_folder() {
     var folder_id = localStorage.getItem('folder::music')
-    for (var i = 0; i < $scope.home.folders.length; i++) {
-      var fold = $scope.home.folders[i];
-      if (fold.id == parseInt(folder_id)) {
-        $scope.select_folder(fold)
-      }
+    if (folder_id) {
+      $scope.select_folder(folder_id);
+    } else {
+      $scope.select_folder(-1);
     }
   }
 
@@ -147,28 +157,35 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     }
   }
 
-  $scope.select_folder = function(folder) {
-    if (!folder) { return; }
-    localStorage.setItem('folder::' + $scope.state_local.mode, folder.id);
 
-    var id = folder.id;
-    $scope.state_local.folder_id = folder.id;
-    $scope.state_local.folder = folder;
-    Media.get($scope.state_local.mode, id, function(response) {
+  $scope.get_folder_by_id = function(folder_id) {
+    Media.get_folders($scope.state_local.mode, folder_id, function(response) {
+      $scope.home.folders = response.data;
+      $scope.state_local.folder_id = folder_id;
+    })
+  }
+
+  $scope.cur_folder = function() {
+    for (var i = 0; i < $scope.home.folders.length; i++) {
+      var fol = $scope.home.folders[i];
+      if (fol.id == $scope.state_local.folder_id) {
+        return fol;
+      }      
+    }
+  }
+
+  $scope.select_folder = function(folder_id) {
+    localStorage.setItem('folder::' + $scope.state_local.mode, folder_id);
+
+    $scope.state_local.folder_id = folder_id;
+    Media.get($scope.state_local.mode, folder_id, function(response) {
       if (response.data.length > 0) {
         $scope.home.mp3s = response.data
         $scope.player.init($scope.home.mp3s)
       } else {
-        Media.get_folders($scope.state_local.mode, id, function(response) {
-          $scope.home.folders = response.data;
-          if (response.data.length == 0) {
-            $.notify("No mp3s found. You may need to populate and/or refresh your media.", "warn")
-          }
-          set_default_music_folder()
-          if (callback) { callback() }
-        })        
+        $scope.home.mp3s = []
       }
-    })    
+    })
   }
 
   $scope.play_radio = function(station) {
@@ -327,6 +344,8 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
   init_player($scope, $rootScope);
 
   $scope.refresh_media = function() {
+    $.notify("Beginning sync. This can take several minutes depending on how many new MP3s are found.", "error")
+
     Media.refresh($scope.state_local.mode, function() {
       $scope.selectMode($scope.state_local.mode);
     })

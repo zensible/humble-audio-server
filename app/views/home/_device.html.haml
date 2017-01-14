@@ -1,0 +1,13 @@
+%td.ellipsis{ :style => "width: 40%;" }
+  %a.ellipsis{ "ng-click" => "select_cast(device)" }
+    %span{ "ng-if" => "state_local.cast_uuid == device.uuid", style: "color: #fdb73a" }<
+      {{device.friendly_name}}
+    %span{ "ng-if" => "state_local.cast_uuid != device.uuid" }<
+      {{device.friendly_name}}
+  %span.play-button{ "ng-if" => "device.player_status == 'PLAYING' || device.player_status == 'BUFFERING'" }
+    %img{ "ng-src" => "/images/play_device_{{device.num_casting}}.png"}
+  %span.play-button{ "ng-if" => "device.player_status == 'PAUSED'" }
+    %img{ "ng-src" => "/images/pause2_20.png"}
+
+%td.ellipsis{ :style => "width: 60%; padding-right: 40px" }
+  %input.slider{ type: "range", min: "0", max: "1", step: ".05", "ng-click" => "volume_change(device)", "ng-model" => "device.volume_level" }

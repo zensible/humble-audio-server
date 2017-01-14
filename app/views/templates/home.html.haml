@@ -43,13 +43,22 @@
     #selector1{ "ng-if" => "state_local.mode == 'music'" }
       %h4
         Music By Folder:
-      .folder-record{ "ng-repeat" => "folder in home.folders" }
+        %a.hand{ "ng-click" => "refresh_media()"}
+          %img{ :src => "/images/refresh_16.png", :title => "Refresh the media in '{{state_local.mode}}'" }
+
+      .folder-record{ "ng-if" => "state_local.folder_id > -1" }
+        .folder-playing
+
+        .folder-name.ellipsis
+          %a{ "ng-click" => "select_folder(cur_folder().parent_folder_id)" }
+            [ Parent Directory ]
+      .folder-record{ "ng-repeat" => "folder in home.folders", "ng-if" => "folder.parent_folder_id == state_local.folder_id" }
         .folder-playing
           %span.play-button{ "ng-if" => "is_playing('folder_id', folder.id)", "ng-init" => "entry = is_playing('folder_id', folder.id)" }
             %img{ "ng-src" => "/images/play_device_{{entry.player_num}}.png"}
 
         .folder-name.ellipsis
-          %a{ "ng-click" => "select_folder(folder)" }
+          %a{ "ng-click" => "select_folder(folder.id)" }
             {{folder.basename}}
           %span.play-button{ "ng-if" => "is_playing('folder_id', folder.id)" }
 
@@ -57,6 +66,8 @@
     #selector1{ "ng-if" => "state_local.mode == 'spoken'" }
       %h4
         Spoken Word:
+        %a.hand{ "ng-click" => "refresh_media()"}
+          %img{ :src => "/images/refresh_16.png", :title => "Refresh the media in '{{state_local.mode}}'" }
       .folder-record{ "ng-repeat" => "folder in home.folders" }
         .folder-playing
           %span.play-button{ "ng-if" => "is_playing('folder_id', folder.id)", "ng-init" => "entry = is_playing('folder_id', folder.id)" }
@@ -114,13 +125,16 @@
 
     // Music / White Noise
     #selector2{ "ng-if" => "state_local.mode == 'music' || state_local.mode == 'white-noise' || state_local.mode == 'spoken'"}
-      .mp3-record
+      %h3{ "ng-if" => "state_local.folder_id != -1" }
+        {{cur_folder().basename}}:
+
+      .mp3-record{ "ng-if" => "!home.mp3s.length" }
+        No tracks found
+      .mp3-record{ "ng-if" => "home.mp3s.length" }
         .mp3-playing
 
         .mp3-title
           Title
-          %a.hand{ "ng-click" => "refresh_media()"}
-            %img{ :src => "/images/refresh_16.png", :title => "Refresh the media in '{{state_local.mode}}'" }
         .mp3-artist.ellipsis
           Artist
         .mp3-album.ellipsis
@@ -148,39 +162,22 @@
 
 
   #cast-select
+    %script#mySnippet{:type => "text/ng-template"}
+
+
     %table{ :style => "width: 100%" }
       %tr
         %td{ :style => "width: 50%; vertical-align: top" }
           %table{ :style => "width: 100%; table-layout: fixed" }
-            %tr{ "ng-repeat" => "device in home.devices.groups" }
-              %td.ellipsis{ :style => "width: 40%;" }
-                %a.ellipsis{ "ng-click" => "select_cast(device)" }
-                  %span{ "ng-if" => "state_local.cast_uuid == device.uuid", style: "color: #fdb73a" }<
-                    {{device.friendly_name}}
-                  %span{ "ng-if" => "state_local.cast_uuid != device.uuid" }<
-                    {{device.friendly_name}}
-                %span.play-button{ "ng-if" => "is_playing('cast_uuid', device.uuid)", "ng-init" => "entry = is_playing('cast_uuid', device.uuid)" }
-                  %img{ "ng-src" => "/images/play_device_{{entry.player_num}}.png"}
-
-              %td.ellipsis{ :style => "width: 60%; padding-right: 40px" }
-                %input.slider{ type: "range", min: "0", max: "1", step: ".05", "ng-click" => "volume_change(device)", "ng-model" => "device.volume_level" }
+            %tr{ "ng-repeat" => "device in home.devices", "ng-if" => "device.cast_type == 'group'" }
+              = render :partial => 'device'
 
         %td{ :style => "width: 50%; vertical-align: top" }
           %img.hand{ "ng-click" => "refresh_devices()", :src => "/images/refresh_16.png", title: "Refresh the list of casts/groups", style: "position: absolute; right: 20px" }
 
           %table{ :style => "width: 100%; table-layout: fixed" }
-            %tr{ "ng-repeat" => "device in home.devices.audios" }
-              %td.ellipsis{ :style => "width: 40%;" }
-                %a.ellipsis{ "ng-click" => "select_cast(device)" }<
-                  %span{ "ng-if" => "state_local.cast_uuid == device.uuid", style: "color: #fdb73a" }<
-                    {{device.friendly_name}}
-                  %span{ "ng-if" => "state_local.cast_uuid != device.uuid" }<
-                    {{device.friendly_name}}
-                %span.play-button{ "ng-if" => "is_playing('cast_uuid', device.uuid)", "ng-init" => "entry = is_playing('cast_uuid', device.uuid)" }
-                  %img{ "ng-src" => "/images/play_device_{{entry.player_num}}.png"}
-
-              %td.ellipsis{ :style => "width: 60%; padding-right: 40px" }
-                %input.slider{ type: "range", min: "0", max: "1", step: ".05", "ng-click" => "volume_change(device)", "ng-model" => "device.volume_level" }
+            %tr{ "ng-repeat" => "device in home.devices", "ng-if" => "device.cast_type == 'audio'" }
+              = render :partial => 'device'
 
   #playbar
     #playerControl.g-z-index-header.m-visible

@@ -28,7 +28,7 @@ class PresetsController < ApplicationController
     @time_started = Time.now.to_i.to_s
 
     # First, stop everything currently playing
-    devices = JSON.load(Device.get_all())
+    devices = Device.get_all()
     devices['groups'].each do |dev|
       $redis.hset("device_play_started", dev['uuid'], @time_started)
     end

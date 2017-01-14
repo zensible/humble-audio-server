@@ -1,15 +1,41 @@
 class Device
   require 'benchmark'
 
-  attr_accessor :sides
-  @uuid = ""
+  attr_accessor :uuid, :cast_type, :friendly_name, :volume_level, :status_text, :model_name, :state_local, :playlist, :playlist_index
 
-  def initialize(uuid)
-    @uuid = uuid
+  @uuid = ""
+  @cast_type = ""
+  @friendly_name = ""
+  @volume_level = ""
+  @status_text = ""
+  @model_name = ""
+  @state_local = ""
+  @playlist = []
+  @playlist_index = 0
+
+  def initialize(hsh)
+    @uuid = hsh["uuid"]
+    @cast_type = hsh["cast_type"]
+    @friendly_name = hsh["friendly_name"]
+    @volume_level = hsh["volume_level"]
+    @status_text = hsh["status_text"]
+    @model_name = hsh["model_name"]
+    @state_local = hsh["state_local"] || {}
+    @playlist = hsh["playlist"] || []
+    @playlist_index = 0
   end
 
   def cast_var()
     "casts_by_uuid['#{@uuid}']"
+  end
+
+  def children
+    cur = {
+      '5a7082bf-0f52-4d1c-8453-58bdf657c0fa' => [ '1bb851ea-5b0a-fce7-f395-16e1e13a86b9', 'a8a9ee5a-26df-595c-c566-c46b19006f7f' ],
+      '8f0c4659-3ef2-4155-bdcf-da6176c41f62' => [ '72af5e77-b9c9-150a-9372-f613c16698b8', 'ab9b03ea-ebd7-1526-6024-315edbe09a18' ],
+      'ebdea152-4479-41c8-af85-5b3b0231c9e2' => [ '72af5e77-b9c9-150a-9372-f613c16698b8', 'ab9b03ea-ebd7-1526-6024-315edbe09a18', '1bb851ea-5b0a-fce7-f395-16e1e13a86b9', 'a8a9ee5a-26df-595c-c566-c46b19006f7f' ]
+    }
+    return cur[@uuid] || []
   end
 
   def select()
@@ -20,14 +46,15 @@ class Device
   end
 
   # Get all devices from cache
-  def self.get_all()
-    devices = $redis.get("devices")
-    if devices.blank? # Redis got cleared or some such, repopulate devices
-      self.refresh()
-      devices = $redis.get("devices")
-    end
-    return devices
-  end
+  #def self.get_all()
+  #  str = $redis.get("devices") 
+  #  if str.blank? # Redis got cleared or some such, repopulate devices
+  #    self.refresh()
+  #    str = $redis.get("devices")
+  #  end
+  #  # {"uuid"=>"ebdea152-4479-41c8-af85-5b3b0231c9e2", "cast_type"=>"group", "friendly_name"=>"ALL", "volume_level"=>0.8125, "status_text"=>"", "model_name"=>"Google Cast Group"}
+  #  return JSON.load(devices)
+  #end
 
   # Refresh list of devices and save to cache
   def self.refresh()
@@ -57,33 +84,138 @@ $populate_casts_var = "for cc in chromecasts:
 "
     PyChromecast.run($populate_casts_var, false, false)
 
-
     PyChromecast.run("print(casts_by_uuid)")
 
-    all = JSON.parse(all)
-    devices = {
-      groups: [],
-      audios: []
-    }
-    found = false
-    # Filter out non-audio chromecasts if any
-    all.each do |dev|
-      if dev['cast_type'] == 'audio'
-        found = true
-        devices[:audios].push(dev)
-      end
-      if dev['cast_type'] == 'group'
-        found = true
-        devices[:groups].push(dev)
-      end
-    end
-    devices[:groups] = devices[:groups].sort_by { |hsh| hsh["friendly_name"] }
-    devices[:audios] = devices[:audios].sort_by { |hsh| hsh["friendly_name"] }
-    if !found
+    devs = JSON.parse(all)
+    if devs.length == 0
       raise "No chromecast audio devices found on the network! Please set up your chromecasts and try again."
     end
-    $redis.set("devices", JSON.dump(devices))
-    devices
+    $redis.set("devices", JSON.dump(devs))
+
+    $devices = []
+    devs.each do |hsh|
+      $devices.push(Device.new(hsh)) if hsh["cast_type"] == "group" || hsh["cast_type"] == "audio"
+    end
+
+    stop_all() # Since the threads which monitored the casts will have died if we're here, we have no idea what they're playing. Stop all casts from playing for sanity's sake.
+
+    buffering_pause = 3
+
+    $devices.each do |device|
+      uuid = device.uuid
+      $threads[uuid] = Thread.new do
+        begin
+          while(true) do
+            cmd = ""
+            $semaphore.synchronize {
+              cmd = $redis.hget("thread_command", uuid)
+              puts "uuid: #{uuid}, cmd: #{cmd}"
+            }
+
+            case cmd
+            when "play" # See: mp3s_controller.rb#play
+              device.playlist_index = 0
+              device.play_at_index()
+            when "wait_for_idle"
+              # When the cast goes from BUFFERING/PLAYING to IDLE, that means the song has ended or couldn't be played. Move on to the next item in the playlist
+              if device.player_status() == "IDLE"
+                continue_playing = true
+                device.playlist_index += 1
+                if device.state_local[:repeat] == "one"
+                  device.playlist_index = 0
+                end
+                if device.playlist_index >= device.playlist.length # Reached the end of the playlist
+                  if device.state_local[:repeat] == "all"
+                    device.playlist_index = 0
+                  else # Repeat isn't on, just stop playing
+                    continue_playing = false
+                    Device.broadcast() # Inform user playlist is done playing
+                  end
+                end
+                device.play_at_index() if continue_playing
+              end
+            when "next"
+              device.playlist_index += 1
+              device.playlist_index = 0 if device.playlist_index >= device.playlist.length
+              device.play_at_index()
+            when "prev"
+              device.playlist_index -= 1
+              device.playlist_index = device.playlist.length - 1 if device.playlist_index < 0
+              device.play_at_index()
+            end
+            sleep 1
+          end
+        rescue Exception => ex
+          puts ex.inspect
+        end
+      end
+    end
+
+  end
+
+  def play_at_index()
+    puts "Playlist index: #{@playlist_index}"
+    mp3 = @playlist[@playlist_index]
+
+    play_url(mp3[:url])
+    sleep(0.5)
+    wait_for_device_status('BUFFERING')
+    Device.broadcast()  # Inform users this cast is buffering
+    wait_for_device_status('PLAYING')
+    Device.broadcast()  # Inform users this cast is playing
+
+    $redis.hset("thread_command", @uuid, "wait_for_idle")
+  end
+
+  def wait_for_device_status(str, interval = 0.5)
+    player_state = ""
+    while (player_state != str)
+      puts "Waiting for...#{str}"
+      player_state = player_status()
+      #cast_state = @device.cast_status
+      #puts "== STATE: #{$redis.hget("device_play_started", cast_uuid)} -- #{@time_started}"
+      #play_stop(cast_uuid) if $redis.hget("device_play_started", cast_uuid) != @time_started || player_state == "UNKNOWN"  # A user played a different playlist for this cast or cast went down
+      #mov = $redis.hget("playlist_move", cast_uuid)
+      #if !mov.blank?
+      #  $redis.hset("playlist_move", cast_uuid, "")
+      #  @index += mov.to_i  # Either forward or back in playlist (1 or -1)
+      #  return false
+      #end
+      sleep(interval) # Poll device every half second
+    end
+    return true
+  end
+
+  def self.get_by_uuid(uuid)
+    $devices.each do |dev|
+      return dev if dev.uuid == uuid
+    end
+    nil
+  end
+
+  def self.stop_all(broadc = false)
+    $devices.each do |dev|
+      dev.stop()
+      $redis.hset("thread_command", dev.uuid, "")
+    end
+
+    all_stopped = false
+    reps = 0
+    max_reps = 0.5 * 2 * 30 # Wait a max of 30 seconds for all devices to stop playing
+    while !all_stopped
+      all_stopped = true
+      $devices.each do |dev|
+        stat = dev.player_status
+        all_stopped = false if stat != "IDLE" && stat != "UNKNOWN"
+      end
+      sleep 0.5
+      reps += 1
+      if reps >= max_reps
+        raise "Could not stop all devices!"
+      end
+    end
+
+    Device.broadcast() if broadc
   end
 
   def cast_status
@@ -134,6 +266,10 @@ $populate_casts_var = "for cc in chromecasts:
     #}
   end
 
+  def play()
+
+  end
+
   def stop()
     str = %Q{
       #{cast_var}.media_controller.stop()
@@ -146,6 +282,11 @@ $populate_casts_var = "for cc in chromecasts:
       #{cast_var}.media_controller.pause()
     }
     PyChromecast.run(str)
+    puts "=== 001"
+    wait_for_device_status("PAUSED", 0.1)
+    puts "=== 002"
+    Device.broadcast()
+    puts "=== 003"
   end
 
   def resume()
@@ -153,6 +294,8 @@ $populate_casts_var = "for cc in chromecasts:
       #{cast_var}.media_controller.play()
     }
     PyChromecast.run(str)
+    wait_for_device_status("PLAYING", 0.1)
+    Device.broadcast()
   end
 
   def set_volume(level)
@@ -161,27 +304,36 @@ $populate_casts_var = "for cc in chromecasts:
     }
     PyChromecast.run(str)
 
-    devices = JSON.load($redis.get("devices"))
+    @volume_level = level.to_f
 
-    groups = devices["groups"]
-    groups.each do |grp|
-      if grp["uuid"] == @uuid
-        grp["volume_level"] = level
-      end
-    end
-    audios = devices["audios"]
-    audios.each do |aud|
-      if aud["uuid"] == @uuid
-        aud["volume_level"] = level
-      end
-    end
+    Device.broadcast()
+  end
 
-    data = {
-      audios: audios,
-      groups: groups
+  def to_h
+    {
+      uuid: @uuid,
+      cast_type: @cast_type,
+      friendly_name: @friendly_name,
+      volume_level: @volume_level,
+      status_text: @status_text,
+      model_name: @model_name,
+      state_local: @state_local,
+      player_status: player_status()
     }
-    $redis.set("devices", JSON.dump(data))
-    ActionCable.server.broadcast "device", $redis.get("devices")
+  end
+
+  def self.broadcast()
+    arr = []
+    num_casting = -1
+    $devices.each do |dev|
+      hsh = dev.to_h()
+      if hsh[:player_status] == 'BUFFERING' || hsh[:player_status] == 'PLAYING'
+        num_casting += 1
+        hsh[:num_casting] = num_casting
+      end
+      arr.push(hsh)
+    end
+    ActionCable.server.broadcast "device", JSON.dump(arr)
   end
 
 end

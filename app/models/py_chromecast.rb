@@ -3,6 +3,10 @@ class PyChromecast
   require 'expect'
   require 'pty'
 
+  # Required to avoid "A copy of Device has been removed from the module tree but is still active!" error
+  require 'device'
+  require 'mp3'
+
   # Initializes the pychromecast API.
   # 
   # In order to make this python lib place nice with ruby/rails, I had to do something tricky and odd, though it has proven to be rock solid.

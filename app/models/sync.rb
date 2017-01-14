@@ -30,10 +30,14 @@ class Sync
 
     case mode
     when "music", "spoken"
-      folders = Folder.all
+      folders = Folder.where("mode = '#{mode}'")
       folders_hsh = {}
       folders.each do |fold|
-        folders_hsh[fold.full_path] = fold
+        if Dir.exist? fold.full_path
+          folders_hsh[fold.full_path] = fold
+        else # Folder was removed or renamed, remove from DB. A new folder record will be created if it was renamed
+          fold.destroy()
+        end
       end
 
       recursive_sync_folder("#{$audio_dir}/#{mode}", -1, mode, folders_hsh, arr, stats)
@@ -55,8 +59,13 @@ class Sync
     stats[:total] = stats[:existing] + stats[:added]
   end
 
+  def self.escape_glob(s)
+    s.gsub(/[\\\{\}\[\]\*\?]/) { |x| "\\"+x }
+  end
+
   def self.recursive_sync_folder(path, parent_id, mode, folders_hsh, arr, stats)
-    Dir.glob(path + "/*").each do |dir|
+    puts "recursive_sync_folder: #{path}"
+    Dir.glob(escape_glob(path) + "/*").each do |dir|
       next unless File.directory? dir
       if folders_hsh[dir]
         fold = folders_hsh[dir]
@@ -70,10 +79,12 @@ class Sync
   end
 
   def self.parse_dir_mp3(mode, arr, stats, path, folder_id = nil)
+    puts "parse_dir_mp3: #{path}/*.mp3"
     hsh_existing_path = arr[0]
     hsh_existing_md5 = arr[1]
     to_delete = arr[2]
-    Dir.glob(path + "/*.mp3").each do |dir|
+    Dir.glob(escape_glob(path) + "/*.mp3").each do |dir|
+      puts "MP3: #{dir}"
       if hsh_existing_path[dir]
         stats[:existing] += 1
         #puts "Already in DB: #{dir}"

@@ -2,12 +2,14 @@ require 'thread'
 require 'socket'
 
 $semaphore = Mutex.new # See: app/models/py_chromecast.rb
-$threads = []
+$threads = {}
+$devices = [] # Global array of devices
 
 # Initialize chromecast API and get a list of available cast devices
 
 unless ENV["RAILS_ENV"].nil? || ENV["RAILS_ENV"] == 'test' || !!@rake # Don't run for rake tasks, tests etc
   PyChromecast.init()
+
 end
 
 # Set audio directory and $http_address
