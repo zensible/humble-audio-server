@@ -361,6 +361,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
   }
 
   $scope.select_cast = function(device) {
+    $scope.home.device = device;
     $scope.state_local.cast_uuid = device.uuid;
     localStorage.setItem('cast_uuid', device.uuid);
   }

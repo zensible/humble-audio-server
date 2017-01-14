@@ -51,7 +51,7 @@
 
         .folder-name.ellipsis
           %a{ "ng-click" => "select_folder(cur_folder().parent_folder_id)" }
-            [ Parent Directory ]
+            ^-- Back
       .folder-record{ "ng-repeat" => "folder in home.folders", "ng-if" => "folder.parent_folder_id == state_local.folder_id" }
         .folder-playing
           %span.play-button{ "ng-if" => "is_playing('folder_id', folder.id)", "ng-init" => "entry = is_playing('folder_id', folder.id)" }
@@ -180,7 +180,7 @@
               = render :partial => 'device'
 
   #playbar
-    #playerControl.g-z-index-header.m-visible
+    #playerControl.g-z-index-header.m-visible{ "ng-if" => "home.device.player_status != 'IDLE' && home.device.player_status != 'UNKNOWN'" }
       #playerControl__inner
 
         #jquery_jplayer_1.jp-jplayer
@@ -209,3 +209,4 @@
                   #playbackChrono__progressHandle.sc-ir{:style => "left: 16px;"}
                 #playbackChrono__duration
                   %span{"aria-hidden" => "true"}
+    }
