@@ -8,16 +8,15 @@ class PresetsController < ApplicationController
   end
 
   def create
-    shared = JSON.load($redis.get("state_shared") || "[]") || []
     arr = []
-    shared.each_with_index do |sh|
-      cast_uuid = sh["cast_uuid"]
-      playlist = JSON.load($redis.hget("cur_playlist", cast_uuid))
-      parameters = {
-        playlist: playlist,
-        state_local: sh
-      }
-      arr.push(parameters)
+    $devices.each do |dev|
+      if dev.player_status == 'PLAYING'
+        parameters = {
+          playlist: dev.playlist,
+          state_local: dev.state_local
+        }
+        arr.push(parameters)
+      end
     end
     Preset.create(:name => params[:name], :preset => JSON.dump(arr))
 

@@ -79,6 +79,7 @@ print(len(chromecasts))
     PyChromecast.run($init_casts_by_uuid)
 
 $populate_casts_var = "for cc in chromecasts:
+  cc.wait()
   casts_by_uuid[cc.uuid.urn[9:]] = cc
 
 "
@@ -114,6 +115,17 @@ $populate_casts_var = "for cc in chromecasts:
 
             case cmd
             when "play" # See: mp3s_controller.rb#play
+              # User clicked play
+
+              if device.cast_type == "group"
+                device.children.each do |child_uuid|
+                  puts "====+++++ CHILD #{child_uuid}"
+                  child = Device.get_by_uuid(child_uuid)
+                  child.stop()
+                end
+                Device.broadcast()
+              end
+
               device.playlist_index = 0
               device.play_at_index()
             when "wait_for_idle"
@@ -146,7 +158,11 @@ $populate_casts_var = "for cc in chromecasts:
             sleep 1
           end
         rescue Exception => ex
-          puts ex.inspect
+          puts "================EXCEPTION==============
+
+#{ex.inspect}
+
+================/EXCEPTION=============="
         end
       end
     end
@@ -157,32 +173,41 @@ $populate_casts_var = "for cc in chromecasts:
     puts "Playlist index: #{@playlist_index}"
     mp3 = @playlist[@playlist_index]
 
+    @state_local[:mp3_id] = mp3[:id]
+    @state_local[:mp3_url] = mp3[:url]
+
     play_url(mp3[:url])
     sleep(0.5)
-    wait_for_device_status('BUFFERING')
-    Device.broadcast()  # Inform users this cast is buffering
-    wait_for_device_status('PLAYING')
-    Device.broadcast()  # Inform users this cast is playing
+    if wait_for_device_status('BUFFERING')
+      if wait_for_device_status('PLAYING')
+        $redis.hset("thread_command", @uuid, "wait_for_idle")
+      else
+        $redis.hset("thread_command", @uuid, "")
+      end
+    else
+      $redis.hset("thread_command", @uuid, "")
+    end
 
-    $redis.hset("thread_command", @uuid, "wait_for_idle")
   end
 
   def wait_for_device_status(str, interval = 0.5)
     player_state = ""
-    while (player_state != str)
+    max_wait = 10 # Max # of seconds of waiting then we give up
+    reps = 0
+    while (player_state != str && reps * interval < max_wait)
+      reps += 1
       puts "Waiting for...#{str}"
       player_state = player_status()
-      #cast_state = @device.cast_status
-      #puts "== STATE: #{$redis.hget("device_play_started", cast_uuid)} -- #{@time_started}"
-      #play_stop(cast_uuid) if $redis.hget("device_play_started", cast_uuid) != @time_started || player_state == "UNKNOWN"  # A user played a different playlist for this cast or cast went down
-      #mov = $redis.hget("playlist_move", cast_uuid)
-      #if !mov.blank?
-      #  $redis.hset("playlist_move", cast_uuid, "")
-      #  @index += mov.to_i  # Either forward or back in playlist (1 or -1)
-      #  return false
-      #end
       sleep(interval) # Poll device every half second
     end
+    if reps * interval >= max_wait # Timed out waiting for status
+      puts "+++==++===++== STOP"
+      stop()
+      sleep 1
+      Device.broadcast()  # Inform users this cast is playing
+      return false
+    end
+    Device.broadcast()  # Inform users this cast is buffering
     return true
   end
 
@@ -275,6 +300,13 @@ $populate_casts_var = "for cc in chromecasts:
       #{cast_var}.media_controller.stop()
     }
     PyChromecast.run(str)
+
+    # This clears what's playing on front-end
+    @state_local['mode'] = ""
+    @state_local['folder_id'] = nil
+    @state_local['mp3_url'] = ""
+    @state_local['mp3_id'] = nil
+    @state_local['radio_station'] = nil
   end
 
   def pause()
@@ -282,11 +314,8 @@ $populate_casts_var = "for cc in chromecasts:
       #{cast_var}.media_controller.pause()
     }
     PyChromecast.run(str)
-    puts "=== 001"
     wait_for_device_status("PAUSED", 0.1)
-    puts "=== 002"
     Device.broadcast()
-    puts "=== 003"
   end
 
   def resume()
