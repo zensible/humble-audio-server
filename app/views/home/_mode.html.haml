@@ -1,0 +1,4 @@
+%a{ "ng-click" => "select_mode(mode)"}<
+  {{mode | modeName}}
+%span.play-button{ "ng-if" => "is_playing('mode', mode)", "ng-init" => "entry = is_playing('mode', mode)" }
+  %img{ "ng-src" => "/images/play_device_{{entry.num_casting}}.png"}

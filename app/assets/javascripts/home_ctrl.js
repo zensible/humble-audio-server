@@ -53,7 +53,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
 
         var max = num_groups;
         if (num_audios > max) { max = num_audios; }
-        $('#cast-select').css("height", (24 * max) + "px")
+        $('#cast-select').css("height", (2.8 * max) + "vw")
 
         $scope.safeApply()
       },

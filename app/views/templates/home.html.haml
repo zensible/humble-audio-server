@@ -8,64 +8,8 @@
 
   #media-selector{ "ng-if" => "home.device"}
     #mode-select.ellipsis
-      %p
-        %a{ "ng-click" => "select_mode('presets')"}
-          Presets
-        %span.play-button{ "ng-if" => "is_playing('mode', 'presets')", "ng-init" => "entry = is_playing('mode', 'presets')" }
-          %img{ "ng-src" => "/images/play_device_{{entry.num_casting}}.png"}
-      %p
-        %a{ "ng-click" => "select_mode('playlists')"}
-          Playlists
-        %span.play-button{ "ng-if" => "is_playing('mode', 'playlists')", "ng-init" => "entry = is_playing('mode', 'playlists')" }
-          %img{ "ng-src" => "/images/play_device_{{entry.num_casting}}.png"}
-      %p
-        %a{ "ng-click" => "select_mode('music')"}
-          Music
-        %span.play-button{ "ng-if" => "is_playing('mode', 'music')", "ng-init" => "entry = is_playing('mode', 'music')" }
-          %img{ "ng-src" => "/images/play_device_{{entry.num_casting}}.png"}
-      %p
-        %a{ "ng-click" => "select_mode('radio')"}
-          Radio
-        %span.play-button{ "ng-if" => "is_playing('mode', 'radio')", "ng-init" => "entry = is_playing('mode', 'radio')" }
-          %img{ "ng-src" => "/images/play_device_{{entry.num_casting}}.png"}
-      %p
-        %a{ "ng-click" => "select_mode('spoken')"}
-          Spoken
-        %span.play-button{ "ng-if" => "is_playing('mode', 'spoken')", "ng-init" => "entry = is_playing('mode', 'spoken')" }
-          %img{ "ng-src" => "/images/play_device_{{entry.num_casting}}.png"}
-      %p
-        %a{ "ng-click" => "select_mode('white-noise')"}
-          White Noise
-        %span.play-button{ "ng-if" => "is_playing('mode', 'white-noise')", "ng-init" => "entry = is_playing('mode', 'white-noise')" }
-          %img{ "ng-src" => "/images/play_device_{{entry.num_casting}}.png"}
-
-    // Music
-    #selector1{ "ng-if" => "home.mode == 'music' || home.mode == 'spoken'" }
-      %h4
-        %span{ "ng-if" => "home.mode == 'music'"}
-          Music By Folder:
-        %span{ "ng-if" => "home.mode == 'spoken'"}
-          Spoken Word:
-        %a.hand{ "ng-click" => "refresh_media()"}
-          %img{ :src => "/images/refresh_16.png", :title => "Refresh the media in '{{home.mode}}'" }
-
-      .folder-record{ "ng-if" => "home.folder_id > -1" }
-        .folder-playing
-
-        .folder-name.ellipsis
-          %a{ "ng-click" => "select_folder(home.folder.parent_folder_id)" }
-            ^-- Back
-      .folder-record{ "ng-repeat" => "folder in home.folders", "ng-if" => "folder.parent_folder_id == home.folder_id" }
-        .folder-playing
-          %span.play-button{ "ng-if" => "is_playing('folder_id', folder.id)", "ng-init" => "entry = is_playing('folder_id', folder.id)" }
-            %img{ "ng-src" => "/images/play_device_{{entry.num_casting}}.png"}
-
-        .folder-name.ellipsis
-          %a{ "ng-click" => "select_folder(folder.id)" }
-            {{folder.basename}}
-          %span.play-button{ "ng-if" => "is_playing('folder_id', folder.id)" }
-      %br
-      %br
+      %p{ "ng-repeat" => "mode in [ 'presets', 'music', 'radio', 'spoken', 'white-noise' ]"}
+        = render :partial => 'mode'
 
     // Presets
     #selector2{ "ng-if" => "home.mode == 'presets'" }
@@ -120,30 +64,40 @@
       %br
       %br
 
-    // Radio
-    #selector2{ "ng-if" => "home.mode == 'radio'" }
-      %h4
-        Radio Stations:
-      .mp3-record{ "ng-repeat" => "station in home.radio_stations", style: "width: 500px" }
-        .mp3-playing
-          %span.play-button{ "ng-if" => "is_playing('mp3_url', station.url)", "ng-init" => "entry = is_playing('mp3_url', station.url)" }
-            %img{ "ng-src" => "/images/play_device_{{entry.num_casting}}.png"}
-        .mp3-title.ellipsis
-          %a{ "ng-click" => "play_radio(station)"}
-            {{station.name}}
-      %br
-
     // Music / White Noise
     #selector2{ "ng-if" => "home.mode == 'music' || home.mode == 'white-noise' || home.mode == 'spoken'"}
-      %h3{ "ng-if" => "(home.mode == 'music' || home.mode == 'spoken') && home.folder_id != -1" }
-        {{home.folder.basename}}:
+      %h4
+        %span{ "ng-if" => "home.mode == 'music'"}
+          MUSIC:
+        %span{ "ng-if" => "home.mode == 'spoken'"}
+          SPOKEN:
+        %span{ "ng-if" => "home.mode == 'white-noise'"}
+          WHITE NOISE:
         %a.hand{ "ng-click" => "refresh_media()"}
           %img{ :src => "/images/refresh_16.png", :title => "Refresh the media in '{{home.mode}}'" }
 
-      %h3{ "ng-if" => "home.mode == 'white-noise'" }
-        White Noise:
-        %a.hand{ "ng-click" => "refresh_media()"}
-          %img{ :src => "/images/refresh_16.png", :title => "Refresh the media in '{{home.mode}}'" }
+      %h3{ "ng-if" => "(home.mode == 'music' || home.mode == 'spoken') && home.folder_id != -1" }
+        {{home.folder.basename}}:
+
+      %h3{ "ng-if" => "(home.mode == 'music' || home.mode == 'spoken') && home.folder_id == -1" }
+        Home:
+
+      .folder-record{ "ng-if" => "home.folder_id > -1 && mode != 'white-noise'" }
+        .folder-playing
+
+        .folder-name.ellipsis
+          %a{ "ng-click" => "select_folder(home.folder.parent_folder_id)" }
+            ^-- Back
+
+      .folder-record{ "ng-repeat" => "folder in home.folders", "ng-if" => "folder.parent_folder_id == home.folder_id" }
+        .folder-playing
+          %span.play-button{ "ng-if" => "is_playing('folder_id', folder.id)", "ng-init" => "entry = is_playing('folder_id', folder.id)" }
+            %img{ "ng-src" => "/images/play_device_{{entry.num_casting}}.png"}
+
+        .folder-name.ellipsis
+          %a{ "ng-click" => "select_folder(folder.id)" }
+            {{folder.basename}}
+          %span.play-button{ "ng-if" => "is_playing('folder_id', folder.id)" }
 
       .mp3-record{ "ng-if" => "!home.mp3s.length" }
         No tracks found
@@ -179,6 +133,18 @@
       %br
       %br
 
+    // Radio
+    #selector2{ "ng-if" => "home.mode == 'radio'" }
+      %h4
+        Radio Stations:
+      .mp3-record{ "ng-repeat" => "station in home.radio_stations", style: "width: 500px" }
+        .mp3-playing
+          %span.play-button{ "ng-if" => "is_playing('mp3_url', station.url)", "ng-init" => "entry = is_playing('mp3_url', station.url)" }
+            %img{ "ng-src" => "/images/play_device_{{entry.num_casting}}.png"}
+        .mp3-title.ellipsis
+          %a{ "ng-click" => "play_radio(station)"}
+            {{station.name}}
+      %br
 
   #cast-select
     %script#mySnippet{:type => "text/ng-template"}

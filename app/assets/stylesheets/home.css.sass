@@ -30,34 +30,13 @@ html, body, #view
 
       #mode-select
         width: 166px
-        font-size: 20px
+        font-size: 2.5vw
         padding-top: 4px
         padding-left: 8px
 
         margin-bottom: 1px
         border-right: 1px solid
 
-      #selector1
-        flex: 1 1 30%
-        overflow-y: visible
-
-        padding-left: 4px
-
-        white-space: nowrap
-        text-overflow: ellipsis
-        overflow-x: hidden
-
-        .folder-record
-          padding: 2px 8px 2px 8px
-          font-size: 18px
-
-          display: flex
-          flex-direction: row
-
-          .folder-playing
-            width: 20px
-          .folder-name
-            flex: 12 12
 
       #selector2
         flex: 3 1 70%
@@ -68,7 +47,18 @@ html, body, #view
         white-space: nowrap
         text-overflow: ellipsis
         overflow-x: hidden
-        font-size: 18px
+        font-size: 2vw
+
+        .folder-record
+          padding: 2px 8px 2px 8px
+
+          display: flex
+          flex-direction: row
+
+          .folder-playing
+            width: 20px
+          .folder-name
+            flex: 12 12
 
         .mp3-record
           padding: 2px 8px 2px 8px
@@ -77,7 +67,7 @@ html, body, #view
           .mp3-playing
             flex: 1 1
           .mp3-title
-            flex: 12 12
+            flex: 16 16
           .mp3-artist
             flex: 8 8
           .mp3-album
@@ -86,6 +76,7 @@ html, body, #view
             flex: 2 2
           .mp3-length-seconds
             flex: 2 2
+
         .preset-record
           padding: 2px 8px 2px 8px
           display: flex
@@ -102,6 +93,7 @@ html, body, #view
 
 
     #cast-select
+      font-size: 1.5vw
       //flex: 1 1 20%
       background: #FFF
       //position: fixed
@@ -113,14 +105,19 @@ html, body, #view
     #playbar
       height: 50px
 
-@media screen and (max-width: 700px)
+
+@media screen and (max-width: 410px)
+  .mp3-artist
+    display: none
+
+@media screen and (max-width: 500px)
   .mp3-album
     display: none
 
-@media screen and (max-width: 800px)
+@media screen and (max-width: 700px)
   .mp3-year
     display: none
 
-@media screen and (max-width: 1000px)
+@media screen and (max-width: 900px)
   .mp3-length-seconds
     display: none
