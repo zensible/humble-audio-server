@@ -166,7 +166,14 @@
   //{ "ng-if" => "home.device.player_status != 'IDLE' && home.device.player_status != 'UNKNOWN'" }
   #playbar{ "ng-cloak" => "" }
     #cur-song
-      Cur song name
+      #song-name.ellipsis
+        %span{ "ng-if" => "home.device.state_local.mp3.title" }
+          {{home.device.state_local.mp3.title}}
+          ({{home.device.state_local.mp3.artist}})
+        %span{ "ng-if" => "!home.device.state_local.mp3.title" }
+          &nbsp;
+      #song-artist.ellipsis
+        {{home.device.friendly_name}}
     #play-controls
       .play-control.play-control-large.hand{ "ng-click" => "prev()", title: "Play previous", "ng-class" => "{ 'disabled': player.playlistIndex == 0 }" }
         %img{ :src => "/images/previous_16.png" }

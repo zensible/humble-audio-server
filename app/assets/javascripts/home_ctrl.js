@@ -36,7 +36,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
           for (var i = 0; i < $scope.home.devices.length; i++) {
             var dev = $scope.home.devices[i];
             if (dev['uuid'] == default_cast_uuid) {
-              $scope.select_cast(dev)
+              $scope.select_cast(dev, 'auto')
             }
           }
         }
@@ -80,7 +80,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     for (var i = 0; i < devices.length; i++) {
       var dev = devices[i];
       if (dev.player_status != "IDLE" && dev.player_status != "UNKNOWN") {
-        console.log("dev.state_local[type]", dev.state_local[type], "type", type, "val", val)
+        //console.log("dev.state_local[type]", dev.state_local[type], "type", type, "val", val)
         if (dev.state_local[type] == val) {
           //console.log("YES")
           return dev;
@@ -117,7 +117,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
           $.notify("No mp3s found in this folder. You may need to populate and/or refresh your media.", "warn")
         }
         $scope.home.mp3s = response.data
-        $scope.player.init($scope.home.mp3s)
+        //$scope.player.init($scope.home.mp3s)
         if (callback) { callback() }
       })
     }
@@ -171,7 +171,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     Media.get($scope.home.mode, folder_id, function(response) {
       if (response.data.length > 0) {
         $scope.home.mp3s = response.data
-        $scope.player.init($scope.home.mp3s)
+        //$scope.player.init($scope.home.mp3s)
       } else {
         $scope.home.mp3s = []
       }
@@ -225,7 +225,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       add_playlist(mp3s[i])
     }
 
-    $scope.player.pause()
+    //$scope.player.pause()
     $scope.buffering = true;
 
     if ($scope.home.mode != "spoken" && $scope.home.mode != "music") {
@@ -235,9 +235,11 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     }
 
     // Buffering begins...
+    /*
     var item = $scope.playlist.items[index];
     $scope.playlist.current_index = index;
     $scope.playlist.current_item = item;
+    */
 
     data = {
       state_local: get_state_local(),
@@ -247,7 +249,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     Media.play(data, function(response) {
       $scope.buffering = false;
       // Buffering complete.
-      $scope.player.play(index, 0, function() { })
+      //$scope.player.play(index, 0, function() { })
       // Show progress bar
       console.log("resp", response)
       console.log("playing!")
@@ -273,7 +275,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       $scope.buffering = false;
 
       // Buffering complete.
-      $scope.player.playing = true;
+      //$scope.player.playing = true;
 
       // Show progress bar
       console.log("resp", response)
@@ -402,10 +404,33 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     })
   }
 
-  $scope.select_cast = function(device) {
+  $scope.select_cast = function(device, auto_manual) {
     $scope.home.device = device;
     $scope.home.repeat = device.state_local.repeat;
     $scope.home.shuffle = device.state_local.shuffle;
+
+    var setup_cast_ui = function(dev) {
+      if (dev.state_local && dev.state_local.start) {
+        var sl = dev.state_local
+        $scope.player.reset(sl['mp3']['length_seconds'] * 1000, sl['elapsed'] * 1000)
+        $scope.player.play()
+      } else {
+        $scope.player.reset(0, 0)
+        $scope.player.stop()
+      }
+    }
+
+    // select_cast was initiated by receiving websocket update. Info should be the very latest
+    if (auto_manual == 'auto') {
+      setup_cast_ui(device);
+    }
+
+    // select_cast was initiated by clicking a cast in the UI. Its elapsed time will be stale, so get an update from the back-end
+    if (auto_manual == 'manual') {
+      Device.select_cast(device.uuid, function(response) {
+        setup_cast_ui(response.data)
+      })
+    }
 
     localStorage.setItem('cast_uuid', device.uuid);
   }

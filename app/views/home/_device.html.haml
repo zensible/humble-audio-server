@@ -1,5 +1,5 @@
 %td.ellipsis{ :style => "width: 40%;" }
-  %a.ellipsis{ "ng-click" => "select_cast(device)" }
+  %a.ellipsis{ "ng-click" => "select_cast(device, 'manual')" }
     %span{ "ng-if" => "home.device.uuid == device.uuid", style: "color: #fdb73a" }<
       {{device.friendly_name}}
     %span{ "ng-if" => "home.device.uuid != device.uuid" }<

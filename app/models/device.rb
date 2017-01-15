@@ -178,14 +178,26 @@ $populate_casts_var = "for cc in chromecasts:
     puts "Playlist index: #{@playlist_index}"
     mp3 = @playlist[@playlist_index]
 
-    @state_local[:mp3_id] = mp3[:id]
-    @state_local[:mp3_url] = mp3[:url]
+    mp3_obj = Mp3.find_by_id(mp3[:id])
+
+    @state_local[:mp3] = mp3_obj.to_h
 
     play_url(mp3[:url])
     sleep(0.5)
+
     if wait_for_device_status('BUFFERING', 0.5, MAX_BUFFERING_WAIT) # Wait 10 seconds to go from IDLE/UNKNOWN -> BUFFERING
+      Device.broadcast()
+
       if wait_for_device_status('PLAYING', 0.5, MAX_PLAYING_WAIT) # Wait 5 seconds to go from BUFFERING -> PLAYING
         $redis.hset("thread_command", @uuid, "wait_for_idle") # Wait indefinitely for "IDLE" status a.k.a. MP3 has stopped playing
+
+        @state_local[:elapsed] = 0
+        @state_local[:start] = Time.now().to_i
+        @state_local[:paused_start] = 0
+        @state_local[:paused_time] = 0
+
+        Device.broadcast()
+
         return true
       else
         # Could not get MP3
@@ -218,7 +230,6 @@ $populate_casts_var = "for cc in chromecasts:
     if reps * interval >= max_wait # Timed out waiting for status
       return false
     end
-    Device.broadcast()  # Inform users this cast is buffering
     return true
   end
 
@@ -302,6 +313,9 @@ $populate_casts_var = "for cc in chromecasts:
     }
     PyChromecast.run(str)
     wait_for_device_status("PAUSED", 0.1)
+
+    @state_local[:paused_start] = Time.now().to_f
+
     Device.broadcast()
   end
 
@@ -311,6 +325,9 @@ $populate_casts_var = "for cc in chromecasts:
     }
     PyChromecast.run(str)
     wait_for_device_status("PLAYING", 0.1)
+
+    @state_local[:paused_time] += Time.now().to_f - @state_local[:paused_start]
+
     Device.broadcast()
   end
 
@@ -326,6 +343,9 @@ $populate_casts_var = "for cc in chromecasts:
   end
 
   def to_h
+    if @state_local[:start]
+      @state_local[:elapsed] = Time.now().to_f - @state_local[:start] - @state_local[:paused_time]
+    end
     {
       uuid: @uuid,
       cast_type: @cast_type,
@@ -334,7 +354,8 @@ $populate_casts_var = "for cc in chromecasts:
       status_text: @status_text,
       model_name: @model_name,
       state_local: @state_local,
-      player_status: player_status()
+      player_status: player_status(),
+      playbar: @play_status
     }
   end
 

@@ -12,6 +12,7 @@ Rails.application.routes.draw do
       get '/get_all' => 'devices#get_all'
       get '/select/:uuid' => 'devices#select'
       get '/volume_change/:uuid/:volume_level' => 'devices#volume_change', :constraints => { :volume_level => /\d\.\d+/ }
+      get '/play_status/:uuid' => 'devices#play_status'
     end
 
     scope '/presets' do
