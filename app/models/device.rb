@@ -178,9 +178,21 @@ $populate_casts_var = "for cc in chromecasts:
     puts "Playlist index: #{@playlist_index}"
     mp3 = @playlist[@playlist_index]
 
-    mp3_obj = Mp3.find_by_id(mp3[:id])
-
-    @state_local[:mp3] = mp3_obj.to_h
+    if mp3[:id] == -1
+      mp3_obj = {
+        mode: '',
+        title: '',
+        filename: '',
+        length_seconds: 0,
+        artist: '',
+        album: ''
+      }
+    else
+      mp3_obj = Mp3.find_by_id(mp3[:id]).to_h
+    end
+    @state_local[:mp3] = mp3_obj
+    @state_local[:mp3_id] = mp3[:id]
+    @state_local[:mp3_url] = mp3[:url]
 
     play_url(mp3[:url])
     sleep(0.5)
@@ -304,6 +316,7 @@ $populate_casts_var = "for cc in chromecasts:
     @state_local['folder_id'] = nil
     @state_local['mp3_url'] = ""
     @state_local['mp3_id'] = nil
+    @state_local['mp3'] = {}
     @state_local['radio_station'] = nil
   end
 

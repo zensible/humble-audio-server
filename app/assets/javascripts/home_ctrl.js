@@ -190,8 +190,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       mode: $scope.home.mode,
       repeat: $scope.home.repeat,
       shuffle: $scope.home.shuffle,
-      folder_id: $scope.home.folder_id,
-      radio_station: $scope.home.radio_station
+      folder_id: $scope.home.folder_id
     }
   }
 
@@ -262,13 +261,15 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
    */
   $scope.play_radio = function(station) {
     $scope.home.mode = 'radio'
-    $scope.home.radio_station = station.url
+    //$scope.home.radio_station = station
     $scope.home.folder_id = -1
     $scope.home.folder = null
     $scope.home.folders = []
 
+    var sl = get_state_local();
+    sl['radio_station'] = station;
     data = {
-      state_local: get_state_local(),
+      state_local: sl,
       playlist: [ { id: -1, url: station.url } ]
     };
     Media.play(data, function(response) {
@@ -410,11 +411,12 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     $scope.home.shuffle = device.state_local.shuffle;
 
     var setup_cast_ui = function(dev) {
-      if (dev.state_local && dev.state_local.start) {
+      if (dev.state_local && dev.state_local.start && dev.player_status == "PLAYING") {
         var sl = dev.state_local
         $scope.player.reset(sl['mp3']['length_seconds'] * 1000, sl['elapsed'] * 1000)
         $scope.player.play()
       } else {
+        // Nothing is playing or song is buffering
         $scope.player.reset(0, 0)
         $scope.player.stop()
       }

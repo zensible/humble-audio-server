@@ -3,6 +3,7 @@ class Mp3 < ApplicationRecord
     return {
       mode: self.mode,
       title: self.title,
+      filename: self.filename,
       length_seconds: self.length_seconds,
       artist: self.artist,
       album: self.album

@@ -24,6 +24,8 @@ var init_player = function($scope, $rootScope) {
 
     $('#time-passed span').text(msToMinSec(elapsedMs));
     $('#playback-duration span').text(msToMinSec(lenMs));    
+    $('#progress-bar').css('width', '0px');
+    clearInterval($scope.player.interval);
   }
 
   var isPaused = false;
@@ -54,10 +56,9 @@ var init_player = function($scope, $rootScope) {
 
         $('#time-passed span').text(msToMinSec($scope.player.progress));
 
-        $('#progress-bar').css('width', Math.ceil(($scope.player.progress / $scope.player.total) * 100) + "%");
+        $('#progress-bar').css('width', (parseFloat($scope.player.progress) / parseFloat($scope.player.total) * 100.0) + "%");
 
         if ($scope.player.progress >= $scope.player.total) {
-
           $('#progress-bar').css('width', '0px');
           clearInterval($scope.player.interval);
         }
