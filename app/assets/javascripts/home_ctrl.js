@@ -1,5 +1,7 @@
 multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $rootScope, Device, Media, Preset) {
 
+  window.scope = $scope;
+
   function init() {
     $scope.home = {
       devices: [],
@@ -53,7 +55,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
 
         var max = num_groups;
         if (num_audios > max) { max = num_audios; }
-        $('#cast-select').css("height", (2.8 * max) + "vw")
+        $('#cast-select').css("height", (30 * max) + "px")
 
         $scope.safeApply()
       },
@@ -78,7 +80,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     for (var i = 0; i < devices.length; i++) {
       var dev = devices[i];
       if (dev.player_status != "IDLE" && dev.player_status != "UNKNOWN") {
-        //console.log("dev.state_local[type]", dev.state_local[type], "type", type, "val", val)
+        console.log("dev.state_local[type]", dev.state_local[type], "type", type, "val", val)
         if (dev.state_local[type] == val) {
           //console.log("YES")
           return dev;
@@ -226,6 +228,12 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     $scope.player.pause()
     $scope.buffering = true;
 
+    if ($scope.home.mode != "spoken" && $scope.home.mode != "music") {
+      $scope.home.folder_id = -1
+      $scope.home.folder = null
+      $scope.home.folders = []
+    }
+
     // Buffering begins...
     var item = $scope.playlist.items[index];
     $scope.playlist.current_index = index;
@@ -253,6 +261,9 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
   $scope.play_radio = function(station) {
     $scope.home.mode = 'radio'
     $scope.home.radio_station = station.url
+    $scope.home.folder_id = -1
+    $scope.home.folder = null
+    $scope.home.folders = []
 
     data = {
       state_local: get_state_local(),
