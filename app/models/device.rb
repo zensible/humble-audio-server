@@ -32,8 +32,8 @@ class Device
   def children
     cur = {
       '5a7082bf-0f52-4d1c-8453-58bdf657c0fa' => [ '1bb851ea-5b0a-fce7-f395-16e1e13a86b9', 'a8a9ee5a-26df-595c-c566-c46b19006f7f' ],
-      '8f0c4659-3ef2-4155-bdcf-da6176c41f62' => [ '72af5e77-b9c9-150a-9372-f613c16698b8', 'ab9b03ea-ebd7-1526-6024-315edbe09a18' ],
-      'ebdea152-4479-41c8-af85-5b3b0231c9e2' => [ '72af5e77-b9c9-150a-9372-f613c16698b8', 'ab9b03ea-ebd7-1526-6024-315edbe09a18', '1bb851ea-5b0a-fce7-f395-16e1e13a86b9', 'a8a9ee5a-26df-595c-c566-c46b19006f7f' ]
+      '8f0c4659-3ef2-4155-bdcf-da6176c41f62' => [ '72af5e77-b9c9-150a-9372-f613c16698b8' ],
+      'ebdea152-4479-41c8-af85-5b3b0231c9e2' => [ '72af5e77-b9c9-150a-9372-f613c16698b8', 'a8a9ee5a-26df-595c-c566-c46b19006f7f', '1bb851ea-5b0a-fce7-f395-16e1e13a86b9' ]
     }
     return cur[@uuid] || []
   end
@@ -231,7 +231,7 @@ $populate_casts_var = "for cc in chromecasts:
       all_stopped = true
       $devices.each do |dev|
         stat = dev.player_status
-        all_stopped = false if stat != "IDLE" && stat != "UNKNOWN"
+        all_stopped = false if stat == "PLAYING"
       end
       sleep 0.5
       reps += 1

@@ -9,19 +9,11 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       radio_stations: [],
       mode: "",
       folder_id: -1,
+      folder: {},
       radio_station: "",
       repeat: "off",
       shuffle: "off"
     }
-
-/*
-    $scope.state_local = {
-      repeat: "off",  // off, all, one
-      shuffle: "off",
-      folder_id: -1,
-      radio_station: ""
-    }
-*/
 
     // Get devices, set current device if any
 
@@ -75,13 +67,13 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
 
     var mode = localStorage.getItem('mode');
     if (mode) {
-      $scope.selectMode(mode || 'music')
+      $scope.select_mode(mode || 'music')
     }
   }
 
+  // Determine if a given mode/folder/mp3 is being played. Works by checking device.state_local[fieldname] against 'val'.
+  // This is used to show the play buttons throughout the GUI
   $scope.is_playing = function(type, val) {
-    if (type != 'mode') {
-    }
     var devices = $scope.home.devices;
     for (var i = 0; i < devices.length; i++) {
       var dev = devices[i];
@@ -96,16 +88,10 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     return false;
   }
 
-  function set_default_folder(mode) {
-    var folder_id = localStorage.getItem('folder::' + mode)
-    if (folder_id) {
-      $scope.select_folder(folder_id);
-    } else {
-      $scope.select_folder(-1);
-    }
-  }
-
-  $scope.selectMode = function(mode, callback) {
+  /*
+   * User clicked one of the 'modes' in the leftmost column: Presets, Music, Radio etc
+   */
+  $scope.select_mode = function(mode, callback) {
     localStorage.setItem('mode', mode);
 
     $scope.home.mode = mode
@@ -122,6 +108,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       })
       if (callback) { callback() }
     }
+    // White noise mode is essentially a single directory, as opposed to mult-level like music/spokens
     if (mode == 'white-noise') {
       Media.get('white-noise', -1, function(response) {
         if (response.data.length == 0) {
@@ -132,13 +119,21 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
         if (callback) { callback() }
       })
     }
+    // These modes share a multi-level directory structure
     if (mode == 'music' || mode == 'spoken') {
       Media.get_folders(mode, -1, function(response) {
         $scope.home.folders = response.data;
         if (response.data.length == 0) {
           $.notify("No mp3s found. You may need to populate and/or refresh your media.", "warn")
         }
-        set_default_folder(mode)
+
+        var folder_id = localStorage.getItem('folder::' + mode)
+        if (folder_id) {
+          $scope.select_folder(folder_id);
+        } else {
+          $scope.select_folder(-1);
+        }
+
         if (callback) { callback() }
       })
     }
@@ -154,27 +149,23 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     }
   }
 
-
-  $scope.get_folder_by_id = function(folder_id) {
-    Media.get_folders($scope.home.mode, folder_id, function(response) {
-      $scope.home.folders = response.data;
-      $scope.home.folder_id = folder_id;
-    })
-  }
-
-  $scope.cur_folder = function() {
-    for (var i = 0; i < $scope.home.folders.length; i++) {
-      var fol = $scope.home.folders[i];
-      if (fol.id == $scope.home.folder_id) {
-        return fol;
-      }      
-    }
-  }
-
+  /*
+   * In music/spoken mode, user clicked a folder name or 'Back' in #selector1
+   *
+   * Alternatively, called by select_mode to select the most recently-selected folder
+   */
   $scope.select_folder = function(folder_id) {
     localStorage.setItem('folder::' + $scope.home.mode, folder_id);
 
     $scope.home.folder_id = folder_id;
+    $scope.home.folder = {};
+    for (var i = 0; i < $scope.home.folders.length; i++) {
+      var fol = $scope.home.folders[i];
+      if (fol.id == $scope.home.folder_id) {
+        $scope.home.folder = fol;
+      }      
+    }
+
     Media.get($scope.home.mode, folder_id, function(response) {
       if (response.data.length > 0) {
         $scope.home.mp3s = response.data
@@ -185,11 +176,14 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     })
   }
 
-  $scope.play_radio = function(station) {
-    $scope.home.mode = 'radio'
-    $scope.home.radio_station = station.url
-
-    var state_local = {
+  /*
+   * The UI state when a user clicked an MP3 to play it.
+   * 
+   * This gets attached to the device (see mp3s_controller.rb#play) so that cast's background thread knows how to repeat etc.
+   * It is also broadcast to all other users via websockets (see device.rb#broadcast), to be used by the front-end UI for showing play buttons on the appropriate cast/mode/folder/mp3 entry
+   */
+  function get_state_local() {
+    return {
       cast_uuid: $scope.home.device.uuid,
       mode: $scope.home.mode,
       repeat: $scope.home.repeat,
@@ -197,26 +191,13 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       folder_id: $scope.home.folder_id,
       radio_station: $scope.home.radio_station
     }
-
-    data = {
-      state_local: state_local,
-      playlist: [ { id: -1, url: station.url } ]
-    };
-    Media.play(data, function(response) {
-      $scope.buffering = false;
-
-      // Buffering complete.
-      $scope.player.playing = true;
-
-      // Show progress bar
-      console.log("resp", response)
-      console.log("playing!")
-    })    
   }
 
+  /*
+   * The user has clicked an MP3 in #selector2, in music/spoken/white-noise mode.
+   * Construct a playlist of mp3 ids/urls and send it and the user's current UI state to mp3s_controller.rb#play
+   */
   $scope.play = function(index) {
-    //var mp3 = $scope.home.mp3s[index];
-
     public_prefix = dirname(audio_dir)
     url_prefix = window.http_address
 
@@ -250,16 +231,8 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     $scope.playlist.current_index = index;
     $scope.playlist.current_item = item;
 
-    var state_local = {
-      cast_uuid: $scope.home.device.uuid,
-      mode: $scope.home.mode,
-      repeat: $scope.home.repeat,
-      shuffle: $scope.home.shuffle,
-      folder_id: $scope.home.folder_id,
-      radio_station: $scope.home.radio_station
-    }
     data = {
-      state_local: state_local,
+      state_local: get_state_local(),
       playlist: playlist
     };
 
@@ -273,10 +246,40 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     })
   }
 
+  /*
+   * The user has clicked a radio station in #selector2 in radio mode.
+   * Construct a playlist of that station's mp3 url and send it and the user's current UI state to mp3s_controller.rb#play
+   */
+  $scope.play_radio = function(station) {
+    $scope.home.mode = 'radio'
+    $scope.home.radio_station = station.url
+
+    data = {
+      state_local: get_state_local(),
+      playlist: [ { id: -1, url: station.url } ]
+    };
+    Media.play(data, function(response) {
+      $scope.buffering = false;
+
+      // Buffering complete.
+      $scope.player.playing = true;
+
+      // Show progress bar
+      console.log("resp", response)
+      console.log("playing!")
+    })    
+  }
+
+  /*
+   * Go back one entry in the playlist
+   */
   $scope.prev = function() {
     Media.prev($scope.home.device.uuid)
   }
 
+  /*
+   * Go forward one entry in the playlist
+   */
   $scope.next = function() {
     Media.next($scope.home.device.uuid)
   }
@@ -295,6 +298,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     }
   }
 
+
   $scope.toggleShuffle = function() {
     if ($scope.home.shuffle == "on") {
       $scope.home.shuffle = "off";
@@ -303,9 +307,11 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     }
   }
 
+  /*
   $scope.stop = function() {
     Media.stop($scope.home.device.uuid)
   }
+  */
 
   $scope.pause = function() {
     Media.pause($scope.home.device.uuid, function(response) {
@@ -371,7 +377,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     $.notify("Beginning sync. This can take several minutes depending on how many new MP3s are found.", "error")
 
     Media.refresh($scope.home.mode, function() {
-      $scope.selectMode($scope.home.mode);
+      $scope.select_mode($scope.home.mode);
     })
   }
 

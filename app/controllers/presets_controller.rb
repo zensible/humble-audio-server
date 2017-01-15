@@ -28,6 +28,7 @@ class PresetsController < ApplicationController
 
     # First, stop everything currently playing
     Device.stop_all(true)
+    sleep 1
 
     preset = Preset.find(params[:id])
     initheader = { 'Content-Type' => 'application/json;charset=UTF-8' }
@@ -35,7 +36,7 @@ class PresetsController < ApplicationController
     play = JSON.load(preset.preset)
     play.each_with_index do |pl, cast_num|
 
-      fn = Rails.root.join("tmp/#{cast_num}.preset")
+      fn = Rails.root.join("tmp/#{preset.id}.#{cast_num}.preset")
       File.write(fn, JSON.dump(pl))
       cmd = "curl -v -X POST -H \"Content-Type: application/json;charset=UTF-8\" --data-binary \"@#{fn}\" #{$http_address}/api/mp3s/play > out.txt"
 
