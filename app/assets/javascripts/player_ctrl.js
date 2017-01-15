@@ -78,8 +78,8 @@ var init_player = function($scope, $rootScope) {
     $scope.player.total = lenMs;
     $scope.player.progress = startMs;
 
-    $('#playbackChrono__timePassed span').text(msToMinSec(startMs));
-    $('#playbackChrono__duration span').text(msToMinSec(lenMs));
+    $('#time-passed span').text(msToMinSec(startMs));
+    $('#playback-duration span').text(msToMinSec(lenMs));
   }
 
   $scope.player.export = function() {
@@ -100,13 +100,13 @@ var init_player = function($scope, $rootScope) {
         $scope.player.progress += updateMs;
         $scope.playlist.current_item.position_ms = $scope.player.progress;
 
-        $('#playbackChrono__timePassed span').text(msToMinSec($scope.player.progress));
+        $('#time-passed span').text(msToMinSec($scope.player.progress));
 
-        $('#playbackChrono__progressBar').css('width', Math.ceil(($scope.player.progress / $scope.player.total) * 100) + "%");
+        $('#progress-bar').css('width', Math.ceil(($scope.player.progress / $scope.player.total) * 100) + "%");
 
         if ($scope.player.progress >= $scope.player.total) {
 
-          $('#playbackChrono__progressBar').css('width', '0px');
+          $('#progress-bar').css('width', '0px');
           clearInterval($scope.player.interval);
         }
       }
@@ -140,7 +140,7 @@ var init_player = function($scope, $rootScope) {
     //if (!cursorPlay.playing) { return; }
     var offsetX = evt.offsetX;
     var tot = $scope.player.total;
-    var maxWid = $('#playbackChrono__progressWrapper').width();
+    var maxWid = $('#progress-wrapper').width();
     var mult = offsetX / maxWid;
     var seekMs = mult * tot;
 

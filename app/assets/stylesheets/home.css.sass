@@ -104,6 +104,69 @@ html, body, #view
 
     #playbar
       height: 50px
+      display: flex
+      flex-direction: row
+
+      #cur-song
+        width: 200px
+      #play-controls
+        width: 160px
+        .play-control
+          line-height: 46px
+
+          border: 0
+          position: relative
+          float: left
+          &.disabled 
+            opacity: .3
+            cursor: default
+        .play-control-small
+          padding: 0px 4px 0px 4px
+        .play-control-large
+          padding: 0px 8px 0px 8px
+
+      #progress
+        flex: 11 11
+
+        #progress-wrapper 
+          float: left
+          line-height: 46px
+          position: relative
+          width: 100%
+          padding: 10px 0
+          margin: 13px 10px 0
+
+        #progress-background 
+          width: 100%
+          height: 1px
+          background-color: #ccc
+          position: absolute
+
+        #progress-bar 
+          position: absolute
+          width: 0px
+          height: 1px
+          background-color: #0075bf
+
+      #time-passed
+        width: 60px
+        height: 46px
+        color: #0075bf
+        text-align: right
+        float: left
+        line-height: 46px
+
+      #playback-duration 
+        width: 60px
+        height: 46px
+        float: left
+        line-height: 46px
+        color: #333
+        text-align: right
+        padding-right: 8px
+
+      #stop-all
+        width: 50px
 
 
 @media screen and (max-width: 410px)

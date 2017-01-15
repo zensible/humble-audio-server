@@ -163,33 +163,35 @@
             %tr{ "ng-repeat" => "device in home.devices", "ng-if" => "device.cast_type == 'audio'" }
               = render :partial => 'device'
 
-  #playbar
-    #playerControl.g-z-index-header.m-visible{ "ng-if" => "home.device.player_status != 'IDLE' && home.device.player_status != 'UNKNOWN'" }
-      #playerControl__inner
+  //{ "ng-if" => "home.device.player_status != 'IDLE' && home.device.player_status != 'UNKNOWN'" }
+  #playbar{ "ng-cloak" => "" }
+    #cur-song
+      Cur song name
+    #play-controls
+      .play-control.play-control-large.hand{ "ng-click" => "prev()", title: "Play previous", "ng-class" => "{ 'disabled': player.playlistIndex == 0 }" }
+        %img{ :src => "/images/previous_16.png" }
+      .play-control.play-control-large.hand{"ng-show" => "!player.playing", "ng-click" => "resume()", title: "Play current" }
+        %img{ :src => "/images/play2_20.png" }
+      .play-control.play-control-large.hand{"ng-show" => "player.playing", "ng-click" => "pause()", title: "Pause current"}
+        %img{ :src => "/images/pause2_20.png" }
+      .play-control.play-control-large.hand{ "ng-click" => "next()", title: "Skip to next", "ng-class" => "{ 'disabled': player.playlistIndex == player.playlist.length - 1 }" }
+        %img{ :src => "/images/next_16.png" }
+      .play-control.play-control-small.hand{ "ng-click" => "toggleRepeat()", title: "Enable/disable repeat" }
+        %img{ "ng-src" => "/images/repeat_{{home.repeat}}_16.png" }
+      .play-control.play-control-small.hand{ "ng-click" => "toggleShuffle()", title: "Enable/disable shuffle" }
+        %img{ "ng-src" => "/images/shuffle_{{home.shuffle}}_16.png" }
 
-        #jquery_jplayer_1.jp-jplayer
+    #time-passed
+      %span 0:00
 
-        #playerControl__wrapper.l-container.l-fullwidth
-          %ul#playerControl__controls.sc-list-nostyle.g-dark.sc-clearfix
+    #progress
+      #progress-wrapper.hand{ "ng-click" => "player.seek($event)" }
+        #progress-background
+        #progress-bar{:style => "width: 0%;"}
+        #progress-handle.sc-ir{:style => "left: 16px;"}
 
-            %li{ style: "float: left; width: 50px;" }
-              %img{ "ng-src" => "{{ playlist.current_item['img50'] }}" }
-            %li#playerControl__playPauseSkip
-              %button#player-prev.skipControl.playerControl__icon.sc-ir.skipControl__previous{ "ng-click" => "prev()", title: "Play previous", "ng-class" => "{ 'disabled': player.playlistIndex == 0 }" }
-              %button#player.play.playControl.playerControl__icon.sc-ir{"ng-show" => "!player.playing", "ng-click" => "resume()", :title => "Play current", title: "Play current" }
-              %button#player-pause.pauseControl.playerControl__icon.sc-ir{"ng-show" => "player.playing", "ng-click" => "pause()", "ng-cloak" => "", :title => "Pause current", title: "Pause current"}
-              %button#player-next.skipControl.playerControl__icon.sc-ir.skipControl__next{ "ng-click" => "next()", title: "Skip to next", "ng-class" => "{ 'disabled': player.playlistIndex == player.playlist.length - 1 }" }
+    #playback-duration
+      %span
 
-              %button#repeat-toggle.skipControl.playerControl__icon.sc-ir{ "ng-click" => "toggleRepeat()", title: "Enable/disable repeat", :class => "skipControl__repeat_{{home.repeat}}" }
-              %button#repeat-toggle.skipControl.playerControl__icon.sc-ir{ "ng-click" => "toggleShuffle()", title: "Enable/disable shuffle", :class => "skipControl__shuffle_{{home.shuffle}}" }
+    #stop-all
 
-            %li#playerControl__timeline.sc-clearfix
-              #playbackChrono.sc-clearfix.is-scrubbable.has-sound
-                #playbackChrono__timePassed
-                  %span{"aria-hidden" => "true"} 0:00
-                #playbackChrono__progressWrapper.hand{ "ng-click" => "player.seek($event)" }
-                  #playbackChrono__progressBackground
-                  #playbackChrono__progressBar{:style => "width: 0%;"}
-                  #playbackChrono__progressHandle.sc-ir{:style => "left: 16px;"}
-                #playbackChrono__duration
-                  %span{"aria-hidden" => "true"}
