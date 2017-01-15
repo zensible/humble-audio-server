@@ -339,12 +339,13 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
 
   $scope.preset_create = function() {
     name = window.prompt("Please enter a playlist name", "");
-
-    Preset.create({ "name": name }, function(response) {
-      Preset.get_all(function(response) {
-        $scope.home.presets = response.data;
+    if (name) {
+      Preset.create({ "name": name }, function(response) {
+        Preset.get_all(function(response) {
+          $scope.home.presets = response.data;
+        })
       })
-    })
+    }
   }
 
   $scope.play_preset = function(id) {

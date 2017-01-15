@@ -64,14 +64,17 @@
           %a{ "ng-click" => "select_folder(folder.id)" }
             {{folder.basename}}
           %span.play-button{ "ng-if" => "is_playing('folder_id', folder.id)" }
+      %br
+      %br
 
     // Presets
     #selector2{ "ng-if" => "home.mode == 'presets'" }
       %h4
         Presets:
       %p{ "ng-if" => "is_anything_playing()"}
-        %a{ "ng-click" => "preset_create()" }
+        %a{ "ng-click" => "preset_create()" }<
           Create Preset
+        &nbsp;based the currently playing casts + playlists
       %p{ "ng-if" => "!is_anything_playing()"}
         Start casting in order to save a preset
 
@@ -86,19 +89,36 @@
         .preset-title.ellipsis
           %a{ "ng-click" => "play_preset(preset.id)"}
             {{preset.name}}
+          &nbsp;
+          %a{ "ng-click" => "rename_preset(preset.id)", style: "font-size: 10px" }
+            (rename)
         .preset-schedule
           %input.schedule_days{ "ng-model" => "preset.schedule_days", :placeholder => "Daily" }
           %input.schedule_start{ "type" => "time", "ng-model" => "preset.schedule_start" }
           %input.schedule_end{ "type" => "time", "ng-model" => "preset.schedule_end" }
+          %a{ "ng-click" => "save_preset_schedule(preset.id)"}
+            SAVE
         .preset-delete
-          DEL
+          %a{ "ng-click" => "delete_preset(preset.id)"}
+            DEL
 
       %br
+      %h4
+        Scheduling Help:
       %div{ style: "width: 500px" }
-        Presets allow you to save the current play configuration (devices playing, their playlists, shuffle/repeat etc) and play them again later with a single click. You may also schedule them to run automatically at a given time on days of the week.
+        You can schedule presets to start/stop at certain days and times.
 
       %p{ "ng-if" => "home.presets.length > 0" }
-        Schedule days: M TU W TH F SA SU. Daily if left blank.
+        Days format: M TU W TH F SA SU.
+        %ul
+          %li
+            Example: "M W F" (minus the quotes) for Monday + Wednesday + Friday
+          %li
+            Example: "SA SU" for the weekend
+          %li
+            If blank will run daily
+      %br
+      %br
 
     // Radio
     #selector2{ "ng-if" => "home.mode == 'radio'" }
@@ -111,6 +131,7 @@
         .mp3-title.ellipsis
           %a{ "ng-click" => "play_radio(station)"}
             {{station.name}}
+      %br
 
     // Music / White Noise
     #selector2{ "ng-if" => "home.mode == 'music' || home.mode == 'white-noise' || home.mode == 'spoken'"}
@@ -155,6 +176,8 @@
           {{mp3.year || ' - '}}
         .mp3-length-seconds
           {{mp3.length_seconds | secondsToDateTime | date:'H:mm:ss' }}
+      %br
+      %br
 
 
   #cast-select

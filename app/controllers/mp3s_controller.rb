@@ -61,10 +61,10 @@ class Mp3sController < ApiController
     device = Device.get_by_uuid(cast_uuid)
 
     # If you're playing a radio station and try to play it again, don't restart playback to avoid a gap in audio while it's re-buffering
-    if state_local[:mode] == "radio" && device.state_local[:radio_station] == playlist[0]['url']
-      puts "== Already playing this station!"
-      render :json => { success: true } and return
-    end
+    #if state_local[:mode] == "radio" && device.state_local[:radio_station] == playlist[0]['url']
+    #  puts "== Already playing this station!"
+    #  render :json => { success: true } and return
+    #end
 
     device.state_local = state_local.to_unsafe_h
     device.playlist = playlist

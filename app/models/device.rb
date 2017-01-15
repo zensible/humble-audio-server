@@ -169,7 +169,12 @@ $populate_casts_var = "for cc in chromecasts:
 
   end
 
-  def play_at_index()
+  MAX_BUFFERING_WAIT = 10
+  MAX_PLAYING_WAIT = 8
+  RETRY_WAIT = 5
+  MAX_RETRIES = 3
+
+  def play_at_index(retry_num = 0)
     puts "Playlist index: #{@playlist_index}"
     mp3 = @playlist[@playlist_index]
 
@@ -178,21 +183,31 @@ $populate_casts_var = "for cc in chromecasts:
 
     play_url(mp3[:url])
     sleep(0.5)
-    if wait_for_device_status('BUFFERING')
-      if wait_for_device_status('PLAYING')
-        $redis.hset("thread_command", @uuid, "wait_for_idle")
+    if wait_for_device_status('BUFFERING', 0.5, MAX_BUFFERING_WAIT) # Wait 10 seconds to go from IDLE/UNKNOWN -> BUFFERING
+      if wait_for_device_status('PLAYING', 0.5, MAX_PLAYING_WAIT) # Wait 5 seconds to go from BUFFERING -> PLAYING
+        $redis.hset("thread_command", @uuid, "wait_for_idle") # Wait indefinitely for "IDLE" status a.k.a. MP3 has stopped playing
+        return true
       else
-        $redis.hset("thread_command", @uuid, "")
+        # Could not get MP3
+        Rails.logger.warn("= 102 = Could not retrieve buffer for mp3 within #{MAX_PLAYING_WAIT}. Waiting #{RETRY_WAIT} seconds and retrying. Retry ##{retry_num + 1} of #{MAX_RETRIES} for #{mp3[:url]}")
+        sleep(RETRY_WAIT)  # Wait 5 seconds and try again
+        if retry_num < MAX_RETRIES
+          return play_at_index(retry_num + 1)
+        else
+          Rails.logger.error("= 101 = Tried #{MAX_RETRIES} times and couldn't go from BUFFERING to PLAYING - give up and cancel play")
+          $redis.hset("thread_command", @uuid, "")
+          return false
+        end
       end
     else
+      Rails.logger.error("= 103 = Couldn't download/buffer mp3 in #{MAX_BUFFERING_WAIT} seconds. Canceling play.")
       $redis.hset("thread_command", @uuid, "")
+      return false
     end
-
   end
 
-  def wait_for_device_status(str, interval = 0.5)
+  def wait_for_device_status(str, interval = 0.5, max_wait = 5)
     player_state = ""
-    max_wait = 10 # Max # of seconds of waiting then we give up
     reps = 0
     while (player_state != str && reps * interval < max_wait)
       reps += 1
@@ -201,10 +216,6 @@ $populate_casts_var = "for cc in chromecasts:
       sleep(interval) # Poll device every half second
     end
     if reps * interval >= max_wait # Timed out waiting for status
-      puts "+++==++===++== STOP"
-      stop()
-      sleep 1
-      Device.broadcast()  # Inform users this cast is playing
       return false
     end
     Device.broadcast()  # Inform users this cast is buffering
@@ -265,30 +276,6 @@ $populate_casts_var = "for cc in chromecasts:
     }
     PyChromecast.run(str)
 
-    #str = %Q{
-    #  print(mc.status.player_state)
-    #}
-
-    # Magic number here. Should wait for device state PLAYING, however the change from status BUFFERING to PLAYING seems to be about 1 second longer than when the playback actually begins on the device
-
-    #sleep 3
-    #puts Benchmark.measure {
-    #  player_state = ""
-    #  cnt = 0
-    #  while(player_state != "BUFFERING" && cnt < 20)
-    #    puts "1 #{player_state}"
-    #    player_state = PyChromecast.run(str)
-    #    puts "1.1 #{player_state}"
-    #    sleep(0.25)
-    #  end
-
-    #  cnt = 0
-    #  while(player_state == "BUFFERING" && cnt < 20)
-    #    puts "2 #{player_state}"
-    #    player_state = PyChromecast.run(str)
-    #    sleep(0.1)
-    #  end
-    #}
   end
 
   def play()
