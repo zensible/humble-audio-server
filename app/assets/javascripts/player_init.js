@@ -1,4 +1,4 @@
-var init_player = function($scope, $rootScope) {
+var init_player = function($scope, $rootScope, Media, Device) {
 
   $scope.player = {
     interval: null,
@@ -6,16 +6,6 @@ var init_player = function($scope, $rootScope) {
     progress: 0,
     playing: false
   };
-
-  $scope.player.pause = function() {
-    $scope.player.playing = false;
-    isPaused = true;
-  }
-
-  $scope.player.resume = function() {
-    $scope.player.playing = true;
-    isPaused = false;
-  }
 
   $scope.player.reset = function(lenMs, elapsedMs) {
     console.log("lenms", lenMs, "elapsedMs", elapsedMs)
@@ -74,4 +64,80 @@ var init_player = function($scope, $rootScope) {
     $scope.player.playing = false;
     $scope.safeApply();
   }
+
+
+  /*
+   * Go back one entry in the playlist
+   */
+  $scope.prev = function() {
+    Media.prev($scope.home.device.uuid)
+  }
+
+  /*
+   * Go forward one entry in the playlist
+   */
+  $scope.next = function() {
+    Media.next($scope.home.device.uuid)
+  }
+
+  $scope.toggleRepeat = function() {
+    switch ($scope.home.repeat) {
+      case "off":
+        $scope.home.repeat = "all";
+        break;
+      case "all":
+        $scope.home.repeat = "one";
+        break;
+      case "one":
+        $scope.home.repeat = "off";
+        break;
+    }
+    var dev = $scope.home.device;
+    Device.repeat_change(dev.uuid, $scope.home.repeat, function() {
+      console.log("Repeat change successful")
+    })
+  }
+
+
+  $scope.toggleShuffle = function() {
+    if ($scope.home.shuffle == "on") {
+      $scope.home.shuffle = "off";
+    } else {
+      $scope.home.shuffle = "on";
+    }
+    var dev = $scope.home.device;
+    Device.shuffle_change(dev.uuid, $scope.home.shuffle, function() {
+      console.log("Shuffle change successful")
+    })
+  }
+
+  /*
+  $scope.stop = function() {
+    Media.stop($scope.home.device.uuid)
+  }
+  */
+
+  $scope.pause = function() {
+    Media.pause($scope.home.device.uuid, function(response) {
+      $scope.player.pause()
+    })
+  }
+
+  $scope.resume = function() {
+    Media.resume($scope.home.device.uuid, function(response) {
+      $scope.player.resume()
+    })
+  }
+
+  $scope.player.pause = function() {
+    $scope.player.playing = false;
+    isPaused = true;
+  }
+
+  $scope.player.resume = function() {
+    $scope.player.playing = true;
+    isPaused = false;
+  }
+
+
 };

@@ -28,8 +28,23 @@ class DevicesController < ApiController
     end
 
     dev.set_volume(params[:volume_level].to_f)
-
     # Note: the above broadcasts the volume changes to anyone connected to the web app
+
+    render :json => { success: true }
+  end
+
+  def shuffle_change
+    dev = Device.get_by_uuid(params[:uuid])
+
+    dev.set_shuffle(params[:shuffle])
+
+    render :json => { success: true }
+  end
+
+  def repeat_change
+    dev = Device.get_by_uuid(params[:uuid])
+
+    dev.set_repeat(params[:repeat])
 
     render :json => { success: true }
   end

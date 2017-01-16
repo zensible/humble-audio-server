@@ -5,6 +5,7 @@ class CreateFolders < ActiveRecord::Migration[5.0]
       t.string :full_path
       t.string :mode
       t.string :basename
+      t.string :bookmark
     end
   end
 end

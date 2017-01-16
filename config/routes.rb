@@ -12,6 +12,8 @@ Rails.application.routes.draw do
       get '/get_all' => 'devices#get_all'
       get '/select/:uuid' => 'devices#select'
       get '/volume_change/:uuid/:volume_level' => 'devices#volume_change', :constraints => { :volume_level => /\d\.\d+/ }
+      get '/shuffle_change/:uuid/:shuffle' => 'devices#shuffle_change'
+      get '/repeat_change/:uuid/:repeat' => 'devices#repeat_change'
       get '/play_status/:uuid' => 'devices#play_status'
     end
 

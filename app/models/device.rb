@@ -355,6 +355,18 @@ $populate_casts_var = "for cc in chromecasts:
     Device.broadcast()
   end
 
+  def set_shuffle(shuffle)
+    @state_local[:shuffle] = shuffle
+
+    Device.broadcast()
+  end
+
+  def set_repeat(repeat)
+    @state_local[:repeat] = repeat
+
+    Device.broadcast()
+  end
+
   def to_h
     if @state_local[:start]
       @state_local[:elapsed] = Time.now().to_f - @state_local[:start] - @state_local[:paused_time]

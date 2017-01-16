@@ -77,12 +77,26 @@ class Mp3sController < ApiController
   def stop
     device = Device.get_by_uuid(params[:cast_uuid])
     device.stop()
+    save_bookmark(device)
     render :json => { success: true }
+  end
+
+  def save_bookmark(device)
+    if device.state_local && device.state_local[:mp3_id] && device.state_local[:mode] == "spoken"
+      mp3 = Mp3.find_by_id(device.state_local[:mp3_id])
+      fold = Folder.find_by_id(mp3.folder_id)
+      fold.bookmark = JSON.dump(
+        elapsed: device.to_h()[:state_local]["elapsed"],
+        id: device.state_local[:mp3_id]
+      )
+      fold.save
+    end
   end
 
   def pause
     device = Device.get_by_uuid(params[:cast_uuid])
     device.pause()
+    save_bookmark(device)
     render :json => { success: true }
   end
 

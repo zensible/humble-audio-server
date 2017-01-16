@@ -89,7 +89,7 @@
           %a{ "ng-click" => "select_folder(home.folder.parent_folder_id)" }
             ^-- Back
 
-      .folder-record{ "ng-repeat" => "folder in home.folders", "ng-if" => "folder.parent_folder_id == home.folder_id" }
+      .folder-record{ "ng-repeat" => "folder in home.folders", "ng-if" => "folder.parent_folder_id == home.folder_id && home.mode != 'white-noise'" }
         .folder-playing
           %span.play-button{ "ng-if" => "is_playing('folder_id', folder.id)", "ng-init" => "entry = is_playing('folder_id', folder.id)" }
             %img{ "ng-src" => "/images/play_device_{{entry.num_casting}}.png"}
@@ -99,8 +99,9 @@
             {{folder.basename}}
           %span.play-button{ "ng-if" => "is_playing('folder_id', folder.id)" }
 
-      .mp3-record{ "ng-if" => "!home.mp3s.length" }
-        No tracks found
+      .mp3-record{ "ng-if" => "!home.mp3s.length && !home.folders.length" }
+        No tracks or folders found
+
       .mp3-record{ "ng-if" => "home.mp3s.length" }
         .mp3-playing
 
@@ -114,6 +115,22 @@
           Year
         .mp3-length-seconds
           Time
+
+      .mp3-record{ "ng-if" => "home.mode == 'spoken' && home.folder.bookmark"}
+        .mp3-playing
+          &nbsp;
+        .mp3-title.ellipsis
+          %a{ "ng-click" => "play_bookmark()" }
+            Bookmark: 01blablah: 73s
+        .mp3-artist.ellipsis
+          &nbsp;
+        .mp3-album.ellipsis
+          &nbsp;
+        .mp3-year
+          &nbsp;
+        .mp3-length-seconds
+          &nbsp;
+
       / works for 'white-noise' and 'music'
       .mp3-record{ "ng-repeat" => "mp3 in home.mp3s" }
         .mp3-playing
@@ -164,7 +181,7 @@
               = render :partial => 'device'
 
   //{ "ng-if" => "home.device.player_status != 'IDLE' && home.device.player_status != 'UNKNOWN'" }
-  #playbar{ "ng-cloak" => "" }
+  #playbar
     #cur-song
       #song-name.ellipsis
         %span{ "ng-if" => "player.playing" }

@@ -255,6 +255,10 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     })
   }
 
+  $scope.play_bookmark = function() {
+
+  }
+
   /*
    * The user has clicked a radio station in #selector2 in radio mode.
    * Construct a playlist of that station's mp3 url and send it and the user's current UI state to mp3s_controller.rb#play
@@ -284,64 +288,12 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     })    
   }
 
-  /*
-   * Go back one entry in the playlist
-   */
-  $scope.prev = function() {
-    Media.prev($scope.home.device.uuid)
-  }
-
-  /*
-   * Go forward one entry in the playlist
-   */
-  $scope.next = function() {
-    Media.next($scope.home.device.uuid)
-  }
-
-  $scope.toggleRepeat = function() {
-    switch ($scope.home.repeat) {
-      case "off":
-        $scope.home.repeat = "all";
-        break;
-      case "all":
-        $scope.home.repeat = "one";
-        break;
-      case "one":
-        $scope.home.repeat = "off";
-        break;
-    }
-  }
-
-
-  $scope.toggleShuffle = function() {
-    if ($scope.home.shuffle == "on") {
-      $scope.home.shuffle = "off";
-    } else {
-      $scope.home.shuffle = "on";
-    }
-  }
-
-  /*
-  $scope.stop = function() {
-    Media.stop($scope.home.device.uuid)
-  }
-  */
-
-  $scope.pause = function() {
-    Media.pause($scope.home.device.uuid, function(response) {
-      $scope.player.pause()
-    })
-  }
-
-  $scope.resume = function() {
-    Media.resume($scope.home.device.uuid, function(response) {
-      $scope.player.resume()
-    })
-  }
-
   var timer;
 
   $scope.volume_change = function(device) {
+    if (!device) {
+      return;
+    }
     clearTimeout(timer);
     timer = setTimeout(function() {
       var val = device.volume_level;
@@ -377,7 +329,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
      return base;
   }
 
-  init_player($scope, $rootScope);
+  init_player($scope, $rootScope, Media, Device);
 
   $scope.is_anything_playing = function() {
     for (var i = 0; i < $scope.home.devices.length; i++) {
@@ -407,8 +359,14 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
 
   $scope.select_cast = function(device, auto_manual) {
     $scope.home.device = device;
-    $scope.home.repeat = device.state_local.repeat;
-    $scope.home.shuffle = device.state_local.shuffle;
+
+    // These are not necessarily set if no one has played to this cast yet since the server startedf
+    if (device.state_local && device.state_local.repeat) {
+      $scope.home.repeat = device.state_local.repeat;
+    }
+    if (device.state_local && device.state_local.shuffle) {
+      $scope.home.shuffle = device.state_local.shuffle;
+    }
 
     var setup_cast_ui = function(dev) {
       if (dev.state_local && dev.state_local.start && dev.player_status == "PLAYING") {
