@@ -3,22 +3,49 @@ angular.module("multiroomApp").factory('HttpErrorWrapper', function($rootScope, 
 
     get: function(url, success, error) {
       error || (error = $rootScope.showDefaultError);
-      return $http.get(url).then(success, error);
+      $rootScope.loading = true;
+      return $http.get(url).then(function(response) {
+        $rootScope.loading = false;
+        success(response)
+      }, function(response) {
+        $rootScope.loading = false;
+        error(response)
+      });
     },
 
     post: function(url, data, success, error) {
       error || (error = $rootScope.showDefaultError);
-      return $http.post(url, data).then(success, error);
+      $rootScope.loading = true;
+      return $http.post(url, data).then(function(response) {
+        $rootScope.loading = false;
+        success(response)
+      }, function(response) {
+        $rootScope.loading = false;
+        error(response)
+      });
     },
 
     put: function(url, data, config, success, error) {
       error || (error = $rootScope.showDefaultError);
-      return $http.put(url, data, config).then(success, error);
+      $rootScope.loading = true;
+      return $http.put(url, data, config).then(function(response) {
+        $rootScope.loading = false;
+        success(response)
+      }, function(response) {
+        $rootScope.loading = false;
+        error(response)
+      });
     },
 
     "delete": function(url, success, error) {
       error || (error = $rootScope.showDefaultError);
-      return $http["delete"](url).then(success, error);
+      return $http["delete"](url).then(function(response) {
+        $rootScope.loading = false;
+        success(response)
+      }, function(response) {
+        $rootScope.loading = false;
+        error(response)
+      });
     }
   };
 });

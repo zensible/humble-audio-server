@@ -1,4 +1,19 @@
-html, body, #view
+
+$bg_media: #002240
+$fg_media: #FFF
+$mode_media: #fb5461
+$link_media: #ffee80
+$folder_media: #39d900
+
+$bg_devices: #003564
+$fg_devices: #80ffb5
+
+$bg_playbar: #00498a
+$fg_playbar: #FFBB5F
+
+$selected_device: #ffee80
+
+html, body, #view, #content
   height: 100%
 
   .hand
@@ -15,6 +30,31 @@ html, body, #view
     width: 16px
     height: 16px
 
+  #content
+    background: $bg_media
+
+    #loading
+      width: 200px
+      height: 200px
+      position: absolute
+      top: 0
+      bottom: 0
+      left: 0
+      right: 0
+      margin: auto
+      .uil-default-css
+        transform: scale(0.4)
+
+    #loading-small
+      width: 50px
+      height: 50px
+      position: absolute
+      top: -50px
+      bottom: 0
+      right: 120px
+      .uil-default-css
+        transform: scale(0.4)
+
   #top
     height: 100%
     width: 100%
@@ -22,6 +62,11 @@ html, body, #view
     flex-direction: column
 
     #media-selector
+      background: $bg_media
+      color: $fg_media
+      a
+        color: $link_media
+
       flex: 5 5 80%
       min-height: 40px
 
@@ -29,6 +74,8 @@ html, body, #view
       flex-direction: row
 
       #mode-select
+        a
+          color: $mode_media
         width: 166px
         font-size: 1.6em
         padding-top: 4px
@@ -47,10 +94,13 @@ html, body, #view
         white-space: nowrap
         text-overflow: ellipsis
         overflow-x: hidden
-        font-size: 1.3em
+        font-size: 1.2em
+        line-height: 1.5em
 
         .folder-record
           padding: 2px 8px 2px 8px
+          font-size: 1.3em
+          line-height: 1.6em
 
           display: flex
           flex-direction: row
@@ -59,13 +109,18 @@ html, body, #view
             width: 20px
           .folder-name
             flex: 12 12
+            a
+              color: $folder_media
+          .folder-name.back
+            a
+              color: $fg_devices
 
         .mp3-record
           padding: 2px 8px 2px 8px
           display: flex
           flex-direction: row
           .mp3-playing
-            flex: 1 1
+            width: 20px
           .mp3-title
             flex: 16 16
           .mp3-artist
@@ -93,19 +148,32 @@ html, body, #view
 
 
     #cast-select
-      font-size: 1.2em
-      //flex: 1 1 20%
-      background: #FFF
-      //position: fixed
-      //bottom: 50px
-      //#overflow-y: auto
+      background: $bg_devices
+      color: $fg_devices
+      a
+        color: $fg_devices
+      .selected
+        color: $selected_device
+
+      border-top: 1px solid
+      font-size: 1.3em
+      line-height: 1.7em
+      a
       td
         padding: 1px 2px 1px 2px
 
     #playbar
-      height: 50px
+      background: $bg_playbar
+      color: $fg_playbar
+      a
+        color: $fg_playbar
+
+      height: 54px
       display: flex
       flex-direction: row
+      border-top: 1px solid
+      padding-left: 4px
+      padding-top: 4px
 
       #cur-song
         width: 250px
@@ -114,7 +182,8 @@ html, body, #view
           font-weight: bold
         #current-cast-name
           font-size: 1em
-          color: #f9bb00
+          color: $selected_device
+
       #play-controls
         width: 160px
         .play-control

@@ -1,222 +1,227 @@
-#top{"ng-controller" => "HomeCtrl"}
-  #media-selector{ "ng-if" => "!home.device && home.devices_loaded"}
-    %div{ :style => "padding: 20px" }
-      %p
-        Welcome to Multiroom Audio 1.0
-      %p
-        Please select a Chromecast audio device below
+#content{"ng-controller" => "HomeCtrl" }
+  %span#loading{ "ng-if" => "!loaded" }
+    = render :partial => 'loading'
 
-  #media-selector{ "ng-if" => "home.device"}
-    #mode-select.ellipsis
-      %p{ "ng-repeat" => "mode in [ 'presets', 'music', 'radio', 'spoken', 'white-noise' ]"}
-        = render :partial => 'mode'
+  #top{ "ng-if" => "loaded" }
+    #loading-small{ "ng-if" => "loading" }
+      = render :partial => 'loading'
 
-    // Presets
-    #selector2{ "ng-if" => "home.mode == 'presets'" }
-      %h4
-        Presets:
-      %p{ "ng-if" => "is_anything_playing()"}
-        %a{ "ng-click" => "preset_create()" }<
-          Create Preset
-        &nbsp;based the currently playing casts + playlists
-      %p{ "ng-if" => "!is_anything_playing()"}
-        Start casting in order to save a preset
+    #media-selector{ "ng-if" => "!home.device && home.devices_loaded"}
+      %div{ :style => "padding: 20px" }
+        %p
+          Welcome to Multiroom Audio 1.0
+        %p
+          Please select a Chromecast audio device below
 
-      .preset-record
-        .preset-title.ellipsis
-          Preset Name:
-        .preset-schedule
-          Schedule: days, start time, stop time
-        .preset-delete
+    #media-selector{ "ng-if" => "home.device"}
+      #mode-select.ellipsis
+        %p{ "ng-repeat" => "mode in [ 'presets', 'music', 'radio', 'spoken', 'white-noise' ]"}
+          = render :partial => 'mode'
 
-      .preset-record{ "ng-repeat" => "preset in home.presets" }
-        .preset-title.ellipsis
-          %a{ "ng-click" => "play_preset(preset.id)"}
-            {{preset.name}}
-          &nbsp;
-          %a{ "ng-click" => "rename_preset(preset.id)", style: "font-size: 10px" }
-            (rename)
-        .preset-schedule
-          %input.schedule_days{ "ng-model" => "preset.schedule_days", :placeholder => "Daily" }
-          %input.schedule_start{ "type" => "time", "ng-model" => "preset.schedule_start" }
-          %input.schedule_end{ "type" => "time", "ng-model" => "preset.schedule_end" }
-          %a{ "ng-click" => "save_preset_schedule(preset.id)"}
-            SAVE
-        .preset-delete
-          %a{ "ng-click" => "delete_preset(preset.id)"}
-            DEL
+      // Presets
+      #selector2{ "ng-if" => "home.mode == 'presets'" }
+        %h4
+          Presets:
+        %p{ "ng-if" => "is_anything_playing()"}
+          %a{ "ng-click" => "preset_create()" }<
+            Create Preset
+          &nbsp;based the currently playing casts + playlists
+        %p{ "ng-if" => "!is_anything_playing()"}
+          Start casting in order to save a preset
 
-      %br
-      %h4
-        Scheduling Help:
-      %div{ style: "width: 500px" }
-        You can schedule presets to start/stop at certain days and times.
+        .preset-record
+          .preset-title.ellipsis
+            Preset Name:
+          .preset-schedule
+            Schedule: days, start time, stop time
+          .preset-delete
 
-      %p{ "ng-if" => "home.presets.length > 0" }
-        Days format: M TU W TH F SA SU.
-        %ul
-          %li
-            Example: "M W F" (minus the quotes) for Monday + Wednesday + Friday
-          %li
-            Example: "SA SU" for the weekend
-          %li
-            If blank will run daily
-      %br
-      %br
+        .preset-record{ "ng-repeat" => "preset in home.presets" }
+          .preset-title.ellipsis
+            %a{ "ng-click" => "play_preset(preset.id)"}
+              {{preset.name}}
+            &nbsp;
+            %a{ "ng-click" => "rename_preset(preset.id)", style: "font-size: 10px" }
+              (rename)
+          .preset-schedule
+            %input.schedule_days{ "ng-model" => "preset.schedule_days", :placeholder => "Daily" }
+            %input.schedule_start{ "type" => "time", "ng-model" => "preset.schedule_start" }
+            %input.schedule_end{ "type" => "time", "ng-model" => "preset.schedule_end" }
+            %a{ "ng-click" => "save_preset_schedule(preset.id)"}
+              SAVE
+          .preset-delete
+            %a{ "ng-click" => "delete_preset(preset.id)"}
+              DEL
 
-    // Music / White Noise
-    #selector2{ "ng-if" => "home.mode == 'music' || home.mode == 'white-noise' || home.mode == 'spoken'"}
-      %h4
-        %span{ "ng-if" => "home.mode == 'music'"}
-          MUSIC:
-        %span{ "ng-if" => "home.mode == 'spoken'"}
-          SPOKEN:
-        %span{ "ng-if" => "home.mode == 'white-noise'"}
-          WHITE NOISE:
-        %a.hand{ "ng-click" => "refresh_media()"}
-          %img{ :src => "/images/refresh_16.png", :title => "Refresh the media in '{{home.mode}}'" }
+        %br
+        %h4
+          Scheduling Help:
+        %div{ style: "width: 500px" }
+          You can schedule presets to start/stop at certain days and times.
 
-      %h3{ "ng-if" => "(home.mode == 'music' || home.mode == 'spoken') && home.folder_id != -1" }
-        {{home.folder.basename}}:
+        %p{ "ng-if" => "home.presets.length > 0" }
+          Days format: M TU W TH F SA SU.
+          %ul
+            %li
+              Example: "M W F" (minus the quotes) for Monday + Wednesday + Friday
+            %li
+              Example: "SA SU" for the weekend
+            %li
+              If blank will run daily
+        %br
+        %br
 
-      %h3{ "ng-if" => "(home.mode == 'music' || home.mode == 'spoken') && home.folder_id == -1" }
-        Home:
+      // Music / White Noise
+      #selector2{ "ng-if" => "home.mode == 'music' || home.mode == 'white-noise' || home.mode == 'spoken'"}
+        %h4
+          %span{ "ng-if" => "home.mode == 'music'"}
+            MUSIC:
+          %span{ "ng-if" => "home.mode == 'spoken'"}
+            SPOKEN:
+          %span{ "ng-if" => "home.mode == 'white-noise'"}
+            WHITE NOISE:
+          %a.hand{ "ng-click" => "refresh_media()"}
+            %img{ :src => "/images/refresh_16.png", :title => "Refresh the media in '{{home.mode}}'" }
 
-      .folder-record{ "ng-if" => "home.folder_id > -1 && mode != 'white-noise'" }
-        .folder-playing
+        %h3{ "ng-if" => "(home.mode == 'music' || home.mode == 'spoken') && home.folder_id != -1" }
+          {{home.folder.basename}}:
 
-        .folder-name.ellipsis
-          %a{ "ng-click" => "select_folder(home.folder.parent_folder_id)" }
-            ^-- Back
+        %h3{ "ng-if" => "(home.mode == 'music' || home.mode == 'spoken') && home.folder_id == -1" }
+          Home:
 
-      .folder-record{ "ng-repeat" => "folder in home.folders", "ng-if" => "folder.parent_folder_id == home.folder_id && home.mode != 'white-noise'" }
-        .folder-playing
-          %span.play-button{ "ng-if" => "is_playing('folder_id', folder.id)", "ng-init" => "entry = is_playing('folder_id', folder.id)" }
-            %img{ "ng-src" => "/images/play_device_{{entry.num_casting}}.png"}
+        .folder-record{ "ng-if" => "home.folder_id > -1 && mode != 'white-noise'" }
+          .folder-name.back.ellipsis
+            %a{ "ng-click" => "select_folder(home.folder.parent_folder_id)" }
+              &lt;-- Back
 
-        .folder-name.ellipsis
-          %a{ "ng-click" => "select_folder(folder.id)" }
-            {{folder.basename}}
-          %span.play-button{ "ng-if" => "is_playing('folder_id', folder.id)" }
+        .folder-record{ "ng-repeat" => "folder in home.folders", "ng-if" => "folder.parent_folder_id == home.folder_id && home.mode != 'white-noise'" }
+          .folder-playing
+            %span.play-button{ "ng-if" => "is_playing('folder_id', folder.id)", "ng-init" => "entry = is_playing('folder_id', folder.id)" }
+              %img{ "ng-src" => "/images/play_device_{{entry.num_casting}}.png"}
 
-      .mp3-record{ "ng-if" => "!home.mp3s.length && !home.folders.length" }
-        No tracks or folders found
+          .folder-name.ellipsis
+            %a{ "ng-click" => "select_folder(folder.id)" }
+              {{folder.basename}}
+            %span.play-button{ "ng-if" => "is_playing('folder_id', folder.id)" }
 
-      .mp3-record{ "ng-if" => "home.mp3s.length" }
-        .mp3-playing
+        .mp3-record{ "ng-if" => "!home.mp3s.length && !home.folders.length" }
+          No tracks or folders found
 
-        .mp3-title
-          Title
-        .mp3-artist.ellipsis
-          Artist
-        .mp3-album.ellipsis
-          Album
-        .mp3-year
-          Year
-        .mp3-length-seconds
-          Time
+        .mp3-record{ "ng-if" => "home.mp3s.length" }
+          .mp3-playing
 
-      .mp3-record{ "ng-if" => "home.mode == 'spoken' && home.folder.bookmark"}
-        .mp3-playing
-          &nbsp;
-        .mp3-title.ellipsis
-          %a{ "ng-click" => "play_bookmark()" }
-            Bookmark: 01blablah: 73s
-        .mp3-artist.ellipsis
-          &nbsp;
-        .mp3-album.ellipsis
-          &nbsp;
-        .mp3-year
-          &nbsp;
-        .mp3-length-seconds
-          &nbsp;
+          .mp3-title
+            Title
+          .mp3-artist.ellipsis
+            Artist
+          .mp3-album.ellipsis
+            Album
+          .mp3-year
+            Year
+          .mp3-length-seconds
+            Time
 
-      / works for 'white-noise' and 'music'
-      .mp3-record{ "ng-repeat" => "mp3 in home.mp3s" }
-        .mp3-playing
-          %span.play-button{ "ng-if" => "is_playing('mp3_id', mp3.id)", "ng-init" => "entry = is_playing('mp3_id', mp3.id)" }
-            %img{ "ng-src" => "/images/play_device_{{entry.num_casting}}.png"}
-        .mp3-title.ellipsis
-          %a{ "ng-click" => "play($index)"}
-            {{mp3.title || mp3.filename}}
-        .mp3-artist.ellipsis
-          {{mp3.artist || ' - ' }}
-        .mp3-album.ellipsis
-          {{mp3.album || ' - '}}
-        .mp3-year
-          {{mp3.year || ' - '}}
-        .mp3-length-seconds
-          {{mp3.length_seconds | secondsToDateTime | date:'H:mm:ss' }}
-      %br
-      %br
+        .mp3-record{ "ng-if" => "home.mode == 'spoken' && home.folder.bookmark"}
+          .mp3-playing
+            &nbsp;
+          .mp3-title.ellipsis
+            %a{ "ng-click" => "play_bookmark()" }
+              Bookmark: 01blablah: 73s
+          .mp3-artist.ellipsis
+            &nbsp;
+          .mp3-album.ellipsis
+            &nbsp;
+          .mp3-year
+            &nbsp;
+          .mp3-length-seconds
+            &nbsp;
 
-    // Radio
-    #selector2{ "ng-if" => "home.mode == 'radio'" }
-      %h4
-        Radio Stations:
-      .mp3-record{ "ng-repeat" => "station in home.radio_stations", style: "width: 500px" }
-        .mp3-playing
-          %span.play-button{ "ng-if" => "is_playing('mp3_url', station.url)", "ng-init" => "entry = is_playing('mp3_url', station.url)" }
-            %img{ "ng-src" => "/images/play_device_{{entry.num_casting}}.png"}
-        .mp3-title.ellipsis
-          %a{ "ng-click" => "play_radio(station)"}
-            {{station.name}}
-      %br
+        / works for 'white-noise' and 'music'
+        .mp3-record{ "ng-repeat" => "mp3 in home.mp3s" }
+          .mp3-playing
+            %span.play-button{ "ng-if" => "is_playing('mp3_id', mp3.id)", "ng-init" => "entry = is_playing('mp3_id', mp3.id)" }
+              %img{ "ng-src" => "/images/play_device_{{entry.num_casting}}.png"}
+          .mp3-title.ellipsis
+            %a{ "ng-click" => "play($index)"}
+              {{mp3.title || mp3.filename}}
+          .mp3-artist.ellipsis
+            {{mp3.artist || ' - ' }}
+          .mp3-album.ellipsis
+            {{mp3.album || ' - '}}
+          .mp3-year
+            {{mp3.year || ' - '}}
+          .mp3-length-seconds
+            {{mp3.length_seconds | secondsToDateTime | date:'H:mm:ss' }}
+        %br
+        %br
 
-  #cast-select
-    %script#mySnippet{:type => "text/ng-template"}
+      // Radio
+      #selector2{ "ng-if" => "home.mode == 'radio'" }
+        %h4
+          Radio Stations:
+        .mp3-record{ "ng-repeat" => "station in home.radio_stations", style: "width: 500px" }
+          .mp3-playing
+            %span.play-button{ "ng-if" => "is_playing('mp3_url', station.url)", "ng-init" => "entry = is_playing('mp3_url', station.url)" }
+              %img{ "ng-src" => "/images/play_device_{{entry.num_casting}}.png"}
+          .mp3-title.ellipsis
+            %a{ "ng-click" => "play_radio(station)"}
+              {{station.name}}
+        %br
 
-    %table{ :style => "width: 100%" }
-      %tr
-        %td{ :style => "width: 50%; vertical-align: top" }
-          %table{ :style => "width: 100%; table-layout: fixed" }
-            %tr{ "ng-repeat" => "device in home.devices", "ng-if" => "device.cast_type == 'group'" }
-              = render :partial => 'device'
+    #cast-select
+      %script#mySnippet{:type => "text/ng-template"}
 
-        %td{ :style => "width: 50%; vertical-align: top" }
-          %img.hand{ "ng-click" => "refresh_devices()", :src => "/images/refresh_16.png", title: "Refresh the list of casts/groups", style: "position: absolute; right: 20px" }
+      %table{ :style => "width: 100%" }
+        %tr
+          %td{ :style => "width: 50%; vertical-align: top" }
+            %table{ :style => "width: 100%; table-layout: fixed" }
+              %tr{ "ng-repeat" => "device in home.devices", "ng-if" => "device.cast_type == 'group'" }
+                = render :partial => 'device'
 
-          %table{ :style => "width: 100%; table-layout: fixed" }
-            %tr{ "ng-repeat" => "device in home.devices", "ng-if" => "device.cast_type == 'audio'" }
-              = render :partial => 'device'
+          %td{ :style => "width: 50%; vertical-align: top" }
+            %img.hand{ "ng-click" => "refresh_devices()", :src => "/images/refresh_16.png", title: "Refresh the list of casts/groups", style: "position: absolute; right: 20px" }
 
-  //{ "ng-if" => "home.device.player_status != 'IDLE' && home.device.player_status != 'UNKNOWN'" }
-  #playbar
-    #cur-song
-      #song-name.ellipsis
-        %span{ "ng-if" => "player.playing" }
-          {{home.device.state_local.mp3.title || home.device.state_local.mp3.filename || home.device.state_local.radio_station.name}}
-        %span{ "ng-if" => "player.playing && home.device.state_local.mp3.artist" }
-          ({{home.device.state_local.mp3.artist}})
-        %span{ "ng-if" => "!player.playing" }
-          &nbsp;&nbsp;&nbsp;&nbsp;---
-      #current-cast-name.ellipsis
-        {{home.device.friendly_name}}
-    #play-controls
-      .play-control.play-control-large.hand{ "ng-click" => "prev()", title: "Play previous", "ng-class" => "{ 'disabled': player.playlistIndex == 0 }" }
-        %img{ :src => "/images/previous_16.png" }
-      .play-control.play-control-large.hand{"ng-show" => "!player.playing", "ng-click" => "resume()", title: "Play current" }
-        %img{ :src => "/images/play2_20.png" }
-      .play-control.play-control-large.hand{"ng-show" => "player.playing", "ng-click" => "pause()", title: "Pause current"}
-        %img{ :src => "/images/pause2_20.png" }
-      .play-control.play-control-large.hand{ "ng-click" => "next()", title: "Skip to next", "ng-class" => "{ 'disabled': player.playlistIndex == player.playlist.length - 1 }" }
-        %img{ :src => "/images/next_16.png" }
-      .play-control.play-control-small.hand{ "ng-click" => "toggleRepeat()", title: "Enable/disable repeat" }
-        %img{ "ng-src" => "/images/repeat_{{home.repeat}}_16.png" }
-      .play-control.play-control-small.hand{ "ng-click" => "toggleShuffle()", title: "Enable/disable shuffle" }
-        %img{ "ng-src" => "/images/shuffle_{{home.shuffle}}_16.png" }
+            %table{ :style => "width: 100%; table-layout: fixed" }
+              %tr{ "ng-repeat" => "device in home.devices", "ng-if" => "device.cast_type == 'audio'" }
+                = render :partial => 'device'
 
-    #time-passed
-      %span 0:00
+    //{ "ng-if" => "home.device.player_status != 'IDLE' && home.device.player_status != 'UNKNOWN'" }
+    #playbar
+      #cur-song
+        #song-name.ellipsis
+          %span{ "ng-if" => "player.playing" }
+            {{home.device.state_local.mp3.title || home.device.state_local.mp3.filename || home.device.state_local.radio_station.name}}
+          %span{ "ng-if" => "player.playing && home.device.state_local.mp3.artist" }
+            ({{home.device.state_local.mp3.artist}})
+          %span{ "ng-if" => "!player.playing" }
+            &nbsp;&nbsp;&nbsp;&nbsp;---
+        #current-cast-name.ellipsis
+          {{home.device.friendly_name}}
+      #play-controls
+        .play-control.play-control-large.hand{ "ng-click" => "prev()", title: "Play previous", "ng-class" => "{ 'disabled': player.playlistIndex == 0 }" }
+          %img{ :src => "/images/previous_16.png" }
+        .play-control.play-control-large.hand{"ng-show" => "!player.playing", "ng-click" => "resume()", title: "Play current" }
+          %img{ :src => "/images/play2_20.png" }
+        .play-control.play-control-large.hand{"ng-show" => "player.playing", "ng-click" => "pause()", title: "Pause current"}
+          %img{ :src => "/images/pause2_20.png" }
+        .play-control.play-control-large.hand{ "ng-click" => "next()", title: "Skip to next", "ng-class" => "{ 'disabled': player.playlistIndex == player.playlist.length - 1 }" }
+          %img{ :src => "/images/next_16.png" }
+        .play-control.play-control-small.hand{ "ng-click" => "toggleRepeat()", title: "Enable/disable repeat" }
+          %img{ "ng-src" => "/images/repeat_{{home.repeat}}_16.png" }
+        .play-control.play-control-small.hand{ "ng-click" => "toggleShuffle()", title: "Enable/disable shuffle" }
+          %img{ "ng-src" => "/images/shuffle_{{home.shuffle}}_16.png" }
 
-    #progress
-      #progress-wrapper.hand{ "ng-click" => "player.seek($event)" }
-        #progress-background
-        #progress-bar{:style => "width: 0%;"}
-        #progress-handle.sc-ir{:style => "left: 16px;"}
+      #time-passed
+        %span 0:00
 
-    #playback-duration
-      %span
+      #progress
+        #progress-wrapper.hand{ "ng-click" => "player.seek($event)" }
+          #progress-background
+          #progress-bar{:style => "width: 0%;"}
+          #progress-handle.sc-ir{:style => "left: 16px;"}
 
-    #stop-all
+      #playback-duration
+        %span
+
+      #stop-all
 

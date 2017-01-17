@@ -57,6 +57,8 @@ class Sync
     Rails.logger.warn("WE NEED TO DELETE: #{to_delete}")
 
     stats[:total] = stats[:existing] + stats[:added]
+
+    return stats
   end
 
   def self.escape_glob(s)

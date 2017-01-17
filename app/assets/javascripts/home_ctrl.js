@@ -1,23 +1,24 @@
-multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $rootScope, Device, Media, Preset) {
+multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $rootScope, Device, Media, Preset, $window) {
 
   window.scope = $scope;
+
+  $scope.loaded = false;
+  $rootScope.loading = false;
 
   function init() {
     $scope.home = {
       devices: [],
       device: null,
       devices_loaded: false,
-      mp3s: [],
-      radio_stations: [],
       mode: "",
       folder_id: -1,
       folder: {},
+      mp3s: [],
+      radio_stations: [],
       radio_station: "",
       repeat: "off",
       shuffle: "off"
     }
-
-    // Get devices, set current device if any
 
     // Subscribe to devices channel. This shares the state of the cast list between users: audio casts, groups and their volume levels
     App.cable.subscriptions.create('DeviceChannel', {
@@ -36,6 +37,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
           for (var i = 0; i < $scope.home.devices.length; i++) {
             var dev = $scope.home.devices[i];
             if (dev['uuid'] == default_cast_uuid) {
+              // This will also update the device's state in the playbar (e.g. play time, shuffle/repeat, song name)
               $scope.select_cast(dev, 'auto')
             }
           }
@@ -55,7 +57,10 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
 
         var max = num_groups;
         if (num_audios > max) { max = num_audios; }
-        $('#cast-select').css("height", (30 * max) + "px")
+        $('#cast-select').css("height", ((1.7 * parseFloat(max)) + 1) + "em")
+
+        // If we're here, enough has loaded that the page will look correct
+        $scope.loaded = true;
 
         $scope.safeApply()
       },
@@ -71,23 +76,51 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     if (mode) {
       $scope.select_mode(mode || 'music')
     }
+
+    init_player($scope, $rootScope, Media, Device);
+    init_presets($scope, $rootScope, Media, Device, Preset);
   }
 
-  // Determine if a given mode/folder/mp3 is being played. Works by checking device.state_local[fieldname] against 'val'.
-  // This is used to show the play buttons throughout the GUI
-  $scope.is_playing = function(type, val) {
-    var devices = $scope.home.devices;
-    for (var i = 0; i < devices.length; i++) {
-      var dev = devices[i];
-      if (dev.player_status != "IDLE" && dev.player_status != "UNKNOWN") {
-        //console.log("dev.state_local[type]", dev.state_local[type], "type", type, "val", val)
-        if (dev.state_local[type] == val) {
-          //console.log("YES")
-          return dev;
-        }
+
+  /*
+   * User selected a chromecast from the device list, get its shared state if any
+   */
+  $scope.select_cast = function(device, auto_manual) {
+    $scope.home.device = device;
+
+    // These are not necessarily set if no one has played to this cast yet since the server started
+    if (device.state_local && device.state_local.repeat) {
+      $scope.home.repeat = device.state_local.repeat;
+    }
+    if (device.state_local && device.state_local.shuffle) {
+      $scope.home.shuffle = device.state_local.shuffle;
+    }
+
+    var setup_cast_ui = function(dev) {
+      if (dev.state_local && dev.state_local.start && dev.player_status == "PLAYING") {
+        var sl = dev.state_local
+        $scope.player.reset(sl['mp3']['length_seconds'] * 1000, sl['elapsed'] * 1000)
+        $scope.player.play()
+      } else {
+        // Nothing is playing or song is buffering
+        $scope.player.reset(0, 0)
+        $scope.player.stop()
       }
     }
-    return false;
+
+    // select_cast was initiated by receiving websocket update. Info should be the very latest
+    if (auto_manual == 'auto') {
+      setup_cast_ui(device);
+    }
+
+    // select_cast was initiated by clicking a cast in the UI. Its elapsed time will be stale, so get an update from the back-end
+    if (auto_manual == 'manual') {
+      Device.select_cast(device.uuid, function(response) {
+        setup_cast_ui(response.data)
+      })
+    }
+
+    localStorage.setItem('cast_uuid', device.uuid);
   }
 
   /*
@@ -233,13 +266,6 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       $scope.home.folders = []
     }
 
-    // Buffering begins...
-    /*
-    var item = $scope.playlist.items[index];
-    $scope.playlist.current_index = index;
-    $scope.playlist.current_item = item;
-    */
-
     data = {
       state_local: get_state_local(),
       playlist: playlist
@@ -247,16 +273,11 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
 
     Media.play(data, function(response) {
       $scope.buffering = false;
-      // Buffering complete.
-      //$scope.player.play(index, 0, function() { })
-      // Show progress bar
-      console.log("resp", response)
-      console.log("playing!")
     })
   }
 
   $scope.play_bookmark = function() {
-
+    // ToDo: seek
   }
 
   /*
@@ -278,24 +299,17 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     };
     Media.play(data, function(response) {
       $scope.buffering = false;
-
-      // Buffering complete.
-      //$scope.player.playing = true;
-
-      // Show progress bar
-      console.log("resp", response)
-      console.log("playing!")
     })    
   }
 
-  var timer;
+  var volume_timer;
 
   $scope.volume_change = function(device) {
     if (!device) {
       return;
     }
-    clearTimeout(timer);
-    timer = setTimeout(function() {
+    clearTimeout(volume_timer);
+    volume_timer = setTimeout(function() {  // Timeout prevents user from changing volume 10 times a second
       var val = device.volume_level;
       if (device.volume_level == 1) { val = "1.0" }
       if (device.volume_level == 0) { val = "0.0" }
@@ -303,19 +317,21 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     }, 100)
   }
 
-  $scope.preset_create = function() {
-    name = window.prompt("Please enter a playlist name", "");
-    if (name) {
-      Preset.create({ "name": name }, function(response) {
-        Preset.get_all(function(response) {
-          $scope.home.presets = response.data;
-        })
-      })
+  // Determine if a given mode/folder/mp3 is being played. Works by checking device.state_local[fieldname] against 'val'.
+  // This is used to show the play buttons throughout the GUI
+  $scope.is_playing = function(type, val) {
+    var devices = $scope.home.devices;
+    for (var i = 0; i < devices.length; i++) {
+      var dev = devices[i];
+      if (dev.player_status != "IDLE" && dev.player_status != "UNKNOWN") {
+        //console.log("dev.state_local[type]", dev.state_local[type], "type", type, "val", val)
+        if (dev.state_local[type] == val) {
+          //console.log("YES")
+          return dev;
+        }
+      }
     }
-  }
-
-  $scope.play_preset = function(id) {
-    Preset.play(id)
+    return false;
   }
 
   var dirname = $scope.dirname = function(str) {
@@ -329,8 +345,6 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
      return base;
   }
 
-  init_player($scope, $rootScope, Media, Device);
-
   $scope.is_anything_playing = function() {
     for (var i = 0; i < $scope.home.devices.length; i++) {
       if ($scope.home.devices[i].player_status == 'PLAYING') {
@@ -343,7 +357,26 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
   $scope.refresh_media = function() {
     $.notify("Beginning sync. This can take several minutes depending on how many new MP3s are found.", "error")
 
-    Media.refresh($scope.home.mode, function() {
+    Media.refresh($scope.home.mode, function(response) {
+      console.log("response", response.data)
+      var stats = response.data;
+      var str = "Done. ";
+      if (stats.added > 0) {
+        str += stats.added + " added. ";
+      }
+      if (stats.error > 0) {
+        str += stats.error + " errors. ";
+      }
+      if (stats.moved > 0) {
+        str += stats.moved + " moved. ";
+      }
+      if (stats.removed > 0) {
+        str += stats.removed + " removed. ";
+      }
+      str += stats.total + " mp3s total.";
+      $('.notifyjs-wrapper').trigger('notify-hide');
+      $.notify(str)
+
       $scope.select_mode($scope.home.mode);
     })
   }
@@ -355,44 +388,6 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
         $.notify("No chromecast audio devices or groups found!", "error")
       }
     })
-  }
-
-  $scope.select_cast = function(device, auto_manual) {
-    $scope.home.device = device;
-
-    // These are not necessarily set if no one has played to this cast yet since the server startedf
-    if (device.state_local && device.state_local.repeat) {
-      $scope.home.repeat = device.state_local.repeat;
-    }
-    if (device.state_local && device.state_local.shuffle) {
-      $scope.home.shuffle = device.state_local.shuffle;
-    }
-
-    var setup_cast_ui = function(dev) {
-      if (dev.state_local && dev.state_local.start && dev.player_status == "PLAYING") {
-        var sl = dev.state_local
-        $scope.player.reset(sl['mp3']['length_seconds'] * 1000, sl['elapsed'] * 1000)
-        $scope.player.play()
-      } else {
-        // Nothing is playing or song is buffering
-        $scope.player.reset(0, 0)
-        $scope.player.stop()
-      }
-    }
-
-    // select_cast was initiated by receiving websocket update. Info should be the very latest
-    if (auto_manual == 'auto') {
-      setup_cast_ui(device);
-    }
-
-    // select_cast was initiated by clicking a cast in the UI. Its elapsed time will be stale, so get an update from the back-end
-    if (auto_manual == 'manual') {
-      Device.select_cast(device.uuid, function(response) {
-        setup_cast_ui(response.data)
-      })
-    }
-
-    localStorage.setItem('cast_uuid', device.uuid);
   }
 
   var cache = {}

@@ -9,10 +9,12 @@ Brew: brew install taglib
 MacPorts: sudo port install taglib
 
 
-1. Hook up hardware as usual
+1. Hook up chromecast audios as usual
 1.1. Test with spotify or another app to make sure casts and groups play music
 
 2. Give computer a static IP
+
+
 
 
 = Troubleshooting
