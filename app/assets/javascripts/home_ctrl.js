@@ -1,4 +1,4 @@
-multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $rootScope, Device, Media, Preset, $window) {
+multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $rootScope, Device, Media, Preset) {
 
   window.scope = $scope;
 
@@ -387,6 +387,48 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       if (response.data.audios.length == 0 && response.data.audios.groups.length == 0) {
         $.notify("No chromecast audio devices or groups found!", "error")
       }
+    })
+  }
+
+  $scope.configure_group = function(device) {
+    $('#overlay').show()
+    $('#fade').show()
+    $scope.group_configuring = device;
+  }
+
+  $scope.is_child = function(group, uuid) {
+    if (!group) {
+      return false;
+    }
+    console.log("group", group.children, "uuid", uuid)
+    var children = group.children;
+    for (var i = 0; i < children.length; i++) {
+      if (children[i] == uuid) {
+        console.log("YER")
+        return true;
+      }
+    }
+    return false;
+  }
+
+  $scope.group_configuration_save = function() {
+    var arr = $('.config-checked');
+    var children = []
+    var group_uuid = $scope.group_configuring.uuid;
+    for (var i = 0; i < arr.length; i++) {
+      var checkbox = $(arr[i]);
+      if (checkbox.is(':checked')) {
+        children.push(checkbox.attr('uuid'))
+      }
+    }
+    $('#overlay').hide()
+    $('#fade').hide()
+
+    Device.set_children({
+      group: group_uuid,
+      children: children
+    }, function(response) {
+      $.notify("Saved!")
     })
   }
 

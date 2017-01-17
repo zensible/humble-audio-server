@@ -1,4 +1,5 @@
 class DevicesController < ApiController
+  skip_before_action :verify_authenticity_token, :only => [:set_children]
 
   def refresh
     # Wait until terminal is ready
@@ -49,8 +50,11 @@ class DevicesController < ApiController
     render :json => { success: true }
   end
 
-  def play_status
-
+  def set_children
+    group_uuid = params[:group]
+    children = params[:children]
+    $redis.hset("group_children", group_uuid, JSON.dump(children))
+    Device.broadcast()
   end
 
 end

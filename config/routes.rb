@@ -15,6 +15,7 @@ Rails.application.routes.draw do
       get '/shuffle_change/:uuid/:shuffle' => 'devices#shuffle_change'
       get '/repeat_change/:uuid/:repeat' => 'devices#repeat_change'
       get '/play_status/:uuid' => 'devices#play_status'
+      post '/set_children' => 'devices#set_children'
     end
 
     scope '/presets' do

@@ -3,6 +3,9 @@
     = render :partial => 'loading'
 
   #top{ "ng-if" => "loaded" }
+    = render :partial => 'configure_group'
+
+
     #loading-small{ "ng-if" => "loading" }
       = render :partial => 'loading'
 

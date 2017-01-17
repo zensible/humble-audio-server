@@ -4,6 +4,9 @@
       {{device.friendly_name}}
     %span{ "ng-if" => "home.device.uuid != device.uuid" }<
       {{device.friendly_name}}
+    %span{ "ng-if" => "device.cast_type" == "group" }<
+      %a{ "ng-click" => "configure_group(device)" }<
+        %img.hand{ "src" => "/images/config_16.png" }
   %span.play-button{ "ng-if" => "device.player_status == 'PLAYING' || device.player_status == 'BUFFERING'" }<
     %img{ "ng-src" => "/images/play_device_{{device.num_casting}}.png"}
   %span.play-button{ "ng-if" => "device.player_status == 'PAUSED'" }<

@@ -21,6 +21,10 @@ angular.module("multiroomApp").factory('Device', function($rootScope, HttpErrorW
       HttpErrorWrapper.get("/api/devices/repeat_change/" + uuid + "/" + repeat, success, error);
     },
 
+    set_children: function(hsh, success, error) {
+      HttpErrorWrapper.post("/api/devices/set_children", hsh, success, error);
+    },
+
     select_cast: function(uuid, success, error) {
       HttpErrorWrapper.get("/api/devices/select/" + uuid, success, error);
     }

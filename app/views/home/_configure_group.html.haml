@@ -1,0 +1,12 @@
+#overlay{ "ng-show" => "group_configuring" }
+  %h2
+    {{group_configuring.friendly_name}}
+  %p
+    Please check the chromecast devices that this group contains:
+  %div{ "ng-repeat" => "device in home.devices", "ng-if" => "device.cast_type == 'audio'" }
+    %input.config-checked{ "type" => "checkbox", "ng-attr-uuid" => "{{device.uuid}}", "ng-checked" => "is_child(group_configuring, device.uuid)" }
+    {{device.friendly_name}}
+
+  %br
+  %a{:href => "", "ng-click" => "group_configuration_save()"} Save
+#fade

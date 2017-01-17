@@ -30,12 +30,7 @@ class Device
   end
 
   def children
-    cur = {
-      '5a7082bf-0f52-4d1c-8453-58bdf657c0fa' => [ '1bb851ea-5b0a-fce7-f395-16e1e13a86b9', 'a8a9ee5a-26df-595c-c566-c46b19006f7f' ],
-      '8f0c4659-3ef2-4155-bdcf-da6176c41f62' => [ '72af5e77-b9c9-150a-9372-f613c16698b8' ],
-      'ebdea152-4479-41c8-af85-5b3b0231c9e2' => [ '72af5e77-b9c9-150a-9372-f613c16698b8', 'a8a9ee5a-26df-595c-c566-c46b19006f7f', '1bb851ea-5b0a-fce7-f395-16e1e13a86b9' ]
-    }
-    return cur[@uuid] || []
+    return JSON.load($redis.hget("group_children", @uuid) || "[]") || "[]"
   end
 
   def select()
@@ -380,7 +375,8 @@ $populate_casts_var = "for cc in chromecasts:
       model_name: @model_name,
       state_local: @state_local,
       player_status: player_status(),
-      playbar: @play_status
+      playbar: @play_status,
+      children: children()
     }
   end
 
