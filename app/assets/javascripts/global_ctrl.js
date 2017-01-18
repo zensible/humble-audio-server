@@ -44,5 +44,7 @@ multiroomApp.controller('GlobalCtrl', function ($scope, $routeParams, $route, $
     return value.replace(/[\-\[\]{}()*+?.,\\\^$|#\s]/g, "\\$&");
   }
 
+  $scope.theme = window.theme;
+
 });
 

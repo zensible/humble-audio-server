@@ -17,6 +17,7 @@
     window.railsTest = #{Rails.env.test?};
     window.audio_dir = "#{$audio_dir}";
     window.http_address = "#{$http_address}";
+    window.theme = #{JSON.dump($theme)};
 
   = javascript_include_tag 'application'
   = javascript_include_tag '/bootstrap/js/bootstrap.js'

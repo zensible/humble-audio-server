@@ -400,11 +400,9 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     if (!group) {
       return false;
     }
-    console.log("group", group.children, "uuid", uuid)
     var children = group.children;
     for (var i = 0; i < children.length; i++) {
       if (children[i] == uuid) {
-        console.log("YER")
         return true;
       }
     }
@@ -421,8 +419,8 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
         children.push(checkbox.attr('uuid'))
       }
     }
-    $('#overlay').hide()
-    $('#fade').hide()
+
+    $scope.close_modal();
 
     Device.set_children({
       group: group_uuid,
@@ -430,6 +428,11 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     }, function(response) {
       $.notify("Saved!")
     })
+  }
+
+  $scope.close_modal = function() {
+    $('#overlay').hide()
+    $('#fade').hide()
   }
 
   var cache = {}

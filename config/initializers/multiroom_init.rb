@@ -5,6 +5,9 @@ $semaphore = Mutex.new # See: app/models/py_chromecast.rb
 $threads = {}
 $devices = [] # Global array of devices
 
+$settings = YAML.load_file(Rails.root + 'config/settings.yml')
+$theme = $settings['theme']
+
 # Initialize chromecast API and get a list of available cast devices
 
 unless ENV["RAILS_ENV"].nil? || ENV["RAILS_ENV"] == 'test' || !!@rake # Don't run for rake tasks, tests etc
