@@ -1,6 +1,26 @@
 require 'thread'
 require 'socket'
 
+
+local_timezone = Time.now.getlocal.zone
+
+preset = Preset.where("id = 6")
+
+preset.each do |preset|
+  Time.now
+
+  offset = Time.zone_offset(local_timezone)
+  sta = preset.schedule_start
+  time_local = (sta + offset)
+
+  time_now = Time.now + offset
+
+#  abort time_now.to_s + ',' + time_local.to_s
+
+end
+
+#abort "done"
+
 $semaphore = Mutex.new # See: app/models/py_chromecast.rb
 $threads = {}
 $devices = [] # Global array of devices
@@ -38,6 +58,11 @@ Startup successful! This multiroom audio server is available at this address:
 rescue NameError => e
   # We're running a rake or other task, Rails::Server isn't available
 end
+
+
+$preset_schedule = Thread.new {
+
+}
 
 # Forgot what's playing when the server stops, it probably won't be correct when it starts up again
 at_exit { 

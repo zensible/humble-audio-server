@@ -23,11 +23,13 @@ Rails.application.routes.draw do
       get '/get_all' => 'presets#index'
       get '/destroy/:id' => 'presets#destroy'
       get '/play/:id' => 'presets#play'
+      put '/update' => 'presets#update'
     end
 
     scope '/mp3s' do
       get '/get/:mode/:id' => 'mp3s#get'
       get '/get_folders/:mode/:folder_id' => 'mp3s#get_folders'
+      get '/get_folder/:mode/:folder_id' => 'mp3s#get_folder'
       get '/refresh/:mode' => 'mp3s#refresh'
       post '/play' => 'mp3s#play'
       get '/stop/:cast_uuid' => 'mp3s#stop'
@@ -35,6 +37,7 @@ Rails.application.routes.draw do
       get '/resume/:cast_uuid' => 'mp3s#resume'
       get '/next/:cast_uuid' => 'mp3s#next'
       get '/prev/:cast_uuid' => 'mp3s#prev'
+      get '/seek/:cast_uuid/:secs' => 'mp3s#seek'
     end
   end
 

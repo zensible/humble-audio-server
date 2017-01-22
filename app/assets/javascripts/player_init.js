@@ -139,5 +139,18 @@ var init_player = function($scope, $rootScope, Media, Device) {
     isPaused = false;
   }
 
+  $scope.seek = function(evt) {
+    var offsetX = evt.offsetX;
+    var tot = $scope.player.total;
+    var maxWid = $('#progress-wrapper').width();
+    var mult = offsetX / maxWid;
+    var seekMs = mult * tot;
+    var seekSecs = parseInt(seekMs / 1000);
+console.log("seekSecs", seekSecs)
+    Media.seek($scope.home.device.uuid, seekSecs, function() {
+
+    });
+  }
+
 
 };

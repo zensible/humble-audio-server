@@ -13,6 +13,10 @@ angular.module("multiroomApp").factory('Preset', function($rootScope, HttpErrorW
       HttpErrorWrapper.get("/api/presets/destroy/" + id, success, error);
     },
 
+    update: function(hsh, success, error) {
+      HttpErrorWrapper.put("/api/presets/update", hsh, success, error);
+    },
+
     play: function(id, success, error) {
       HttpErrorWrapper.get("/api/presets/play/" + id, success, error);
     },

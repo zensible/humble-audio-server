@@ -9,6 +9,10 @@ angular.module("multiroomApp").factory('Media', function($rootScope, HttpErrorWr
       HttpErrorWrapper.get("/api/mp3s/get_folders/" + mode + '/' + id, success, error);
     },
 
+    get_folder: function(mode, id, success, error) {
+      HttpErrorWrapper.get("/api/mp3s/get_folder/" + mode + '/' + id, success, error);
+    },
+
     refresh: function(mode, success, error) {
       HttpErrorWrapper.get("/api/mp3s/refresh/" + mode, success, error);
     },
@@ -19,6 +23,10 @@ angular.module("multiroomApp").factory('Media', function($rootScope, HttpErrorWr
 
     stop: function(cast_uuid, success, error) {
       HttpErrorWrapper.get("/api/mp3s/stop/" + cast_uuid, success, error);
+    },
+
+    seek: function(cast_uuid, secs, success, error) {
+      HttpErrorWrapper.get("/api/mp3s/seek/" + cast_uuid + "/" + secs, success, error);
     },
 
     pause: function(cast_uuid, success, error) {

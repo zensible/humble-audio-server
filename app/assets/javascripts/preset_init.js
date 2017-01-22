@@ -1,7 +1,7 @@
 var init_presets = function($scope, $rootScope, Media, Device, Preset) {
 
   $scope.preset_create = function() {
-    name = window.prompt("Please enter a playlist name", "");
+    var name = window.prompt("Please enter a playlist name", "");
     if (name) {
       Preset.create({ "name": name }, function(response) {
         Preset.get_all(function(response) {
@@ -13,6 +13,10 @@ var init_presets = function($scope, $rootScope, Media, Device, Preset) {
 
   $scope.play_preset = function(id) {
     Preset.play(id)
+  }
+
+  $scope.save_preset_schedule = function(hsh) {
+    Preset.update(hsh)
   }
 
 };

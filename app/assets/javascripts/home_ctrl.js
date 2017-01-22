@@ -100,8 +100,10 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       if (dev.state_local && dev.state_local.start && dev.player_status == "PLAYING") {
         var sl = dev.state_local
         $scope.player.reset(sl['mp3']['length_seconds'] * 1000, sl['elapsed'] * 1000)
+        console.error("GOOOO")
         $scope.player.play()
       } else {
+        console.error("STOOOP")
         // Nothing is playing or song is buffering
         $scope.player.reset(0, 0)
         $scope.player.stop()
@@ -163,7 +165,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
         }
 
         var folder_id = localStorage.getItem('folder::' + mode)
-        if (folder_id) {
+        if (folder_id > 0) {
           $scope.select_folder(folder_id);
         } else {
           $scope.select_folder(-1);
@@ -231,7 +233,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
    * The user has clicked an MP3 in #selector2, in music/spoken/white-noise mode.
    * Construct a playlist of mp3 ids/urls and send it and the user's current UI state to mp3s_controller.rb#play
    */
-  $scope.play = function(index) {
+  $scope.play = function(index, seekSecs) {
     public_prefix = dirname(audio_dir)
     url_prefix = window.http_address
 
@@ -266,9 +268,12 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       $scope.home.folders = []
     }
 
+    var hsh = get_state_local();
+    hsh['seek'] = seekSecs;
     data = {
-      state_local: get_state_local(),
-      playlist: playlist
+      state_local: hsh,
+      playlist: playlist,
+      seek: seekSecs
     };
 
     Media.play(data, function(response) {
@@ -276,9 +281,31 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     })
   }
 
-  $scope.play_bookmark = function() {
-    // ToDo: seek
+  $scope.play_bookmark = function(bookmark) {
+    Media.get_folder('spoken', $scope.home.folder_id, function(response) {
+      var fol = response.data;
+      var bookmark = fol['bookmark']
+
+      mp3 = bookmark['mp3']
+      var seekSecs = bookmark['elapsed']
+
+      var mp3s = $scope.home.mp3s;
+      var index = -1;
+      for (var i = 0; i < mp3s.length; i++) {
+        if (mp3s[i].id == mp3['id']) {
+          index = i;
+          break
+        }
+      }
+      if (index == -1) {
+        $.notify("The bookmarked MP3 no longer exists in this folder!")
+      } else {
+        $scope.play(index, seekSecs)
+      }
+
+    })
   }
+
 
   /*
    * The user has clicked a radio station in #selector2 in radio mode.

@@ -25,10 +25,10 @@ angular.module("multiroomApp").factory('HttpErrorWrapper', function($rootScope, 
       });
     },
 
-    put: function(url, data, config, success, error) {
+    put: function(url, data, success, error) {
       error || (error = $rootScope.showDefaultError);
       $rootScope.loading = true;
-      return $http.put(url, data, config).then(function(response) {
+      return $http.put(url, data).then(function(response) {
         $rootScope.loading = false;
         success(response)
       }, function(response) {

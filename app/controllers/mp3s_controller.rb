@@ -23,8 +23,21 @@ class Mp3sController < ApiController
   def get_folders
     mode = params[:mode]
     #folder_id = params[:folder_id]
+    folders = []
+    Folder.all.order("basename").where("mode = '#{mode}'").each do |fol|
+      folders.push(fol.to_h)
+    end
+    render :json => folders
+  end
 
-    render :json => Folder.all.order("basename").where("mode = '#{mode}'")
+
+  def get_folder
+    mode = params[:mode]
+    folder_id = params[:folder_id]
+
+    fol = Folder.find_by_id(folder_id)
+
+    render :json => fol.to_h
   end
 
   #def cur_cast
@@ -85,9 +98,15 @@ class Mp3sController < ApiController
     if device.state_local && device.state_local[:mp3_id] && device.state_local[:mode] == "spoken"
       mp3 = Mp3.find_by_id(device.state_local[:mp3_id])
       fold = Folder.find_by_id(mp3.folder_id)
-      fold.bookmark = JSON.dump(
-        elapsed: device.to_h()[:state_local]["elapsed"],
-        id: device.state_local[:mp3_id]
+
+      elapsed_friendly = Time.at(device.to_h()[:state_local]["elapsed"]).utc.strftime("%Hh %Mm %Ss")
+      elapsed_friendly = elapsed_friendly.gsub(/^00h /, "")
+
+      fold.bookmark = JSON.dump({
+          elapsed: device.to_h()[:state_local]["elapsed"].to_i,
+          elapsed_friendly: elapsed_friendly,
+          mp3: (mp3 ? mp3.to_h : {})
+        }
       )
       fold.save
     end
@@ -103,6 +122,12 @@ class Mp3sController < ApiController
   def resume
     device = Device.get_by_uuid(params[:cast_uuid])
     device.resume()
+    render :json => { success: true }
+  end
+
+  def seek
+    device = Device.get_by_uuid(params[:cast_uuid])
+    device.seek((params[:secs] || 0).to_i)
     render :json => { success: true }
   end
 

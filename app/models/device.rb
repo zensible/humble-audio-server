@@ -153,11 +153,12 @@ $populate_casts_var = "for cc in chromecasts:
             sleep 1
           end
         rescue Exception => ex
-          puts "================EXCEPTION==============
+          puts %Q{================EXCEPTION==============
 
 #{ex.inspect}
+#{ex.backtrace.join("\n")}
 
-================/EXCEPTION=============="
+================/EXCEPTION==============}
         end
       end
     end
@@ -189,33 +190,42 @@ $populate_casts_var = "for cc in chromecasts:
     @state_local[:mp3_id] = mp3[:id]
     @state_local[:mp3_url] = mp3[:url]
 
+    skip_to_seconds = 0
+    if @state_local["seek"] # We only want to seek the first track in the playlist
+      skip_to_seconds = @state_local["seek"]
+      @state_local["seek"] = 0
+    end
     play_url(mp3[:url])
     sleep(0.5)
 
     if wait_for_device_status('BUFFERING', 0.5, MAX_BUFFERING_WAIT) # Wait 10 seconds to go from IDLE/UNKNOWN -> BUFFERING
       Device.broadcast()
 
-      if wait_for_device_status('PLAYING', 0.5, MAX_PLAYING_WAIT) # Wait 5 seconds to go from BUFFERING -> PLAYING
+      if skip_to_seconds && skip_to_seconds > 0
+        seek(skip_to_seconds)
         $redis.hset("thread_command", @uuid, "wait_for_idle") # Wait indefinitely for "IDLE" status a.k.a. MP3 has stopped playing
-
-        @state_local[:elapsed] = 0
-        @state_local[:start] = Time.now().to_i
-        @state_local[:paused_start] = 0
-        @state_local[:paused_time] = 0
-
-        Device.broadcast()
-
-        return true
       else
-        # Could not get MP3
-        Rails.logger.warn("= 102 = Could not retrieve buffer for mp3 within #{MAX_PLAYING_WAIT}. Waiting #{RETRY_WAIT} seconds and retrying. Retry ##{retry_num + 1} of #{MAX_RETRIES} for #{mp3[:url]}")
-        sleep(RETRY_WAIT)  # Wait 5 seconds and try again
-        if retry_num < MAX_RETRIES
-          return play_at_index(retry_num + 1)
+        if wait_for_device_status('PLAYING', 0.5, MAX_PLAYING_WAIT) # Wait 5 seconds to go from BUFFERING -> PLAYING
+          @state_local[:elapsed] = 0
+          @state_local[:start] = Time.now().to_i - skip_to_seconds
+          @state_local[:paused_start] = 0
+          @state_local[:paused_time] = 0
+
+          Device.broadcast()
+          $redis.hset("thread_command", @uuid, "wait_for_idle") # Wait indefinitely for "IDLE" status a.k.a. MP3 has stopped playing
+
+          return true
         else
-          Rails.logger.error("= 101 = Tried #{MAX_RETRIES} times and couldn't go from BUFFERING to PLAYING - give up and cancel play")
-          $redis.hset("thread_command", @uuid, "")
-          return false
+          # Could not get MP3
+          Rails.logger.warn("= 102 = Could not retrieve buffer for mp3 within #{MAX_PLAYING_WAIT}. Waiting #{RETRY_WAIT} seconds and retrying. Retry ##{retry_num + 1} of #{MAX_RETRIES} for #{mp3[:url]}")
+          sleep(RETRY_WAIT)  # Wait 5 seconds and try again
+          if retry_num < MAX_RETRIES
+            return play_at_index(retry_num + 1)
+          else
+            Rails.logger.error("= 101 = Tried #{MAX_RETRIES} times and couldn't go from BUFFERING to PLAYING - give up and cancel play")
+            $redis.hset("thread_command", @uuid, "")
+            return false
+          end
         end
       end
     else
@@ -293,7 +303,6 @@ $populate_casts_var = "for cc in chromecasts:
       #{cast_var}.media_controller.play_media('#{url}', 'audio/mp3')
     }
     PyChromecast.run(str)
-
   end
 
   def play()
@@ -337,6 +346,26 @@ $populate_casts_var = "for cc in chromecasts:
     @state_local[:paused_time] += Time.now().to_f - @state_local[:paused_start]
 
     Device.broadcast()
+  end
+
+  def seek(secs)
+    str = %Q{
+      #{cast_var}.media_controller.seek(#{secs})
+    }
+    PyChromecast.run(str)
+
+    @state_local[:elapsed] = 0
+    @state_local[:start] = Time.now().to_i - secs
+    @state_local[:paused_start] = 0
+    @state_local[:paused_time] = 0
+
+    if wait_for_device_status('BUFFERING', 0.5, MAX_PLAYING_WAIT)
+      if wait_for_device_status('PLAYING', 0.5, MAX_PLAYING_WAIT)
+        Device.broadcast()
+      else
+        Rails.logger.info "-- Could not seek!"
+      end
+    end
   end
 
   def set_volume(level)

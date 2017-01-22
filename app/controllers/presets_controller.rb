@@ -1,7 +1,7 @@
 class PresetsController < ApplicationController
   require 'rest-client'
 
-  skip_before_action :verify_authenticity_token, :only => [:create]
+  skip_before_action :verify_authenticity_token, :only => [:create, :update]
 
   def index
     render :json => Preset.all.order(:name)
@@ -47,6 +47,17 @@ class PresetsController < ApplicationController
     render :json => { success: true }
 
 #    abort cmd
+  end
+
+  def update
+    preset = Preset.find_by_id(params[:id])
+    preset.update_attributes({
+      :schedule_days => params[:schedule_days],
+      :schedule_start => params[:schedule_start],
+      :schedule_end => params[:schedule_end]
+    })
+
+    render :json => { success: true }
   end
 
   def destroy

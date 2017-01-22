@@ -14,6 +14,12 @@ MacPorts: sudo port install taglib
 
 2. Give computer a static IP
 
+3. Install pychromecast requirements
+cd pychromecast
+sudo easy_install pip
+pip install --upgrade pip
+sudo pip install -r requirements.txt
+Install taglib, mysql, rvm, rails
 
 
 

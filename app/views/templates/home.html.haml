@@ -50,7 +50,7 @@
             %input.schedule_days{ "ng-model" => "preset.schedule_days", :placeholder => "Daily" }
             %input.schedule_start{ "type" => "time", "ng-model" => "preset.schedule_start" }
             %input.schedule_end{ "type" => "time", "ng-model" => "preset.schedule_end" }
-            %a{ "ng-click" => "save_preset_schedule(preset.id)"}
+            %a{ "ng-click" => "save_preset_schedule(preset)"}
               SAVE
           .preset-delete
             %a{ "ng-click" => "delete_preset(preset.id)"}
@@ -76,13 +76,13 @@
 
       // Music / White Noise
       #selector2{ "ng-if" => "home.mode == 'music' || home.mode == 'white-noise' || home.mode == 'spoken'"}
-        %h4
+        %h3
           %span{ "ng-if" => "home.mode == 'music'"}
-            MUSIC:
+            Music:
           %span{ "ng-if" => "home.mode == 'spoken'"}
-            SPOKEN:
+            Spoken:
           %span{ "ng-if" => "home.mode == 'white-noise'"}
-            WHITE NOISE:
+            White Noise:
           %a.hand{ "ng-click" => "refresh_media()"}
             %img{ "ng-src" => "/images/{{theme.icons}}/refresh_16.png", :title => "Refresh the media in '{{home.mode}}'" }
 
@@ -128,8 +128,10 @@
           .mp3-playing
             &nbsp;
           .mp3-title.ellipsis
-            %a{ "ng-click" => "play_bookmark()" }
-              Bookmark: 01blablah: 73s
+            %a{ "ng-click" => "play_bookmark(home.folder.bookmark)" }
+              Resume From Bookmark
+            %p
+              {{home.folder.bookmark['elapsed_friendly']}} -> {{home.folder.bookmark['mp3']['title']}}
           .mp3-artist.ellipsis
             &nbsp;
           .mp3-album.ellipsis
@@ -155,6 +157,11 @@
             {{mp3.year || ' - '}}
           .mp3-length-seconds
             {{mp3.length_seconds | secondsToDateTime | date:'H:mm:ss' }}
+
+        %br
+        %p{ "ng-if" => "home.mode == 'spoken'"}
+          Note: In the Spoken Word section, stopping or pausing a track will save a "bookmark" which you can resume later.
+
         %br
         %br
 
@@ -218,7 +225,7 @@
         %span 0:00
 
       #progress
-        #progress-wrapper.hand{ "ng-click" => "player.seek($event)" }
+        #progress-wrapper.hand{ "ng-click" => "seek($event)" }
           #progress-background
           #progress-bar{:style => "width: 0%;"}
           #progress-handle.sc-ir{:style => "left: 16px;"}
