@@ -33,6 +33,7 @@ Rails.application.routes.draw do
       get '/refresh/:mode' => 'mp3s#refresh'
       post '/play' => 'mp3s#play'
       get '/stop/:cast_uuid' => 'mp3s#stop'
+      get '/stop_all' => 'mp3s#stop_all'
       get '/pause/:cast_uuid' => 'mp3s#pause'
       get '/resume/:cast_uuid' => 'mp3s#resume'
       get '/next/:cast_uuid' => 'mp3s#next'

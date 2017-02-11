@@ -22,6 +22,7 @@ sudo pip install -r requirements.txt
 Install taglib, mysql, rvm, rails
 
 
+DEBUG=true 
 
 = Troubleshooting
 

@@ -105,7 +105,7 @@ $populate_casts_var = "for cc in chromecasts:
             cmd = ""
             $semaphore.synchronize {
               cmd = $redis.hget("thread_command", uuid)
-              puts "uuid: #{uuid}, cmd: #{cmd}"
+              puts "uuid: #{uuid}, cmd: #{cmd}" if ENV['DEBUG'] == 'true'
             }
 
             case cmd
@@ -114,7 +114,7 @@ $populate_casts_var = "for cc in chromecasts:
 
               if device.cast_type == "group"
                 device.children.each do |child_uuid|
-                  puts "====+++++ CHILD #{child_uuid}"
+                  puts "====+++++ CHILD #{child_uuid}" if ENV['DEBUG'] == 'true'
                   child = Device.get_by_uuid(child_uuid)
                   child.stop()
                 end
@@ -171,7 +171,7 @@ $populate_casts_var = "for cc in chromecasts:
   MAX_RETRIES = 3
 
   def play_at_index(retry_num = 0)
-    puts "Playlist index: #{@playlist_index}"
+    puts "Playlist index: #{@playlist_index}" if ENV['DEBUG'] == 'true'
     mp3 = @playlist[@playlist_index]
 
     if mp3[:id] == -1
@@ -195,6 +195,7 @@ $populate_casts_var = "for cc in chromecasts:
       skip_to_seconds = @state_local["seek"]
       @state_local["seek"] = 0
     end
+
     play_url(mp3[:url])
     sleep(0.5)
 
@@ -240,7 +241,7 @@ $populate_casts_var = "for cc in chromecasts:
     reps = 0
     while (player_state != str && reps * interval < max_wait)
       reps += 1
-      puts "Waiting for...#{str}"
+      puts "Waiting for...#{str}" if ENV['DEBUG'] == 'true'
       player_state = player_status()
       sleep(interval) # Poll device every half second
     end
@@ -369,10 +370,14 @@ $populate_casts_var = "for cc in chromecasts:
   end
 
   def set_volume(level)
-    str = %Q{
-      #{cast_var}.set_volume(#{level})
-    }
-    PyChromecast.run(str)
+    if @uuid == 'local'
+
+    else
+      str = %Q{
+        #{cast_var}.set_volume(#{level})
+      }
+      PyChromecast.run(str)
+    end
 
     @volume_level = level.to_f
 

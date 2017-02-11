@@ -43,6 +43,10 @@ import json
     Device.refresh()
   end
 
+  def self.debugout(str)
+    puts str if ENV['DEBUG'] == 'true'
+  end
+
   def self.run(str, strip_leading_spaces = true, split_lines = true)
     retval = nil
     $semaphore.synchronize { # So race conditions don't pop up when casting to multiple devices from multiple threads
@@ -54,13 +58,13 @@ import json
       arr.each do |cmd|
         next if cmd.blank? || cmd.gsub(/\s+/, "").blank?
         cmd = cmd.gsub(/^\s+/, '') if strip_leading_spaces
-        puts "= RUN: [#{cmd}]\n"
+        debugout "= RUN: [#{cmd}]\n"
         $pyout.flush
         $pyin.puts cmd
         #sleep(0.01)
         $pyout.expect(">>>") do |result|
           retval = parse_result(cmd, result[0])
-          puts "= result1: ***#{retval}***\n\n"
+          debugout "= result1: ***#{retval}***\n\n"
           STDOUT.flush
         end
       end

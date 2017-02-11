@@ -12,7 +12,7 @@ class Mp3sController < ApiController
     if mode == "music"
       mp3s = Mp3.where("mode = 'music' AND folder_id = '#{id}'").order("track_nr, artist, album, title, filename")
     elsif mode == "spoken"
-      mp3s = Mp3.where("mode = 'spoken' AND folder_id = '#{id}'").order("track_nr, artist, album, title, filename")
+      mp3s = Mp3.where("mode = 'spoken' AND folder_id = '#{id}'").order("filename, title")
     elsif mode == "white-noise"
       mp3s = Mp3.where("mode = 'white-noise'").order("title")
     end
@@ -91,6 +91,11 @@ class Mp3sController < ApiController
     device = Device.get_by_uuid(params[:cast_uuid])
     device.stop()
     save_bookmark(device)
+    render :json => { success: true }
+  end
+
+  def stop_all
+    Device.stop_all(true)
     render :json => { success: true }
   end
 

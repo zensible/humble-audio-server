@@ -3,7 +3,24 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
   window.scope = $scope;
 
   $scope.loaded = false;
-  $rootScope.loading = false;
+
+  $(document).keydown(function(event) {
+    console.log("evt", event)
+    switch(event.keyCode) {
+      case 38:
+        console.log("mode up")
+        break;
+      case 40:
+        console.log("mode down")
+        break;
+      case 37:
+        console.log("mode left")
+        break;
+      case 39:
+        console.log("mode right")
+        break;
+    }
+  });
 
   function init() {
     $scope.home = {
@@ -57,7 +74,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
 
         var max = num_groups;
         if (num_audios > max) { max = num_audios; }
-        $('#cast-select').css("height", ((1.7 * parseFloat(max)) + 1) + "em")
+        $('#cast-select').css("height", ((1.7 * parseFloat(max)) + 2) + "em")
 
         // If we're here, enough has loaded that the page will look correct
         $scope.loaded = true;
@@ -78,6 +95,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     }
 
     init_player($scope, $rootScope, Media, Device);
+    init_mp3_player($scope, $rootScope, Media, Device);
     init_presets($scope, $rootScope, Media, Device, Preset);
   }
 
@@ -327,6 +345,13 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     Media.play(data, function(response) {
       $scope.buffering = false;
     })    
+  }
+
+  $scope.stop_all = function() {
+    $.notify("Stopping all chromecasts!", "warn")
+    Media.stop_all(function(response) {
+      $scope.player.stop();
+    })
   }
 
   var volume_timer;

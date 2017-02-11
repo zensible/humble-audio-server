@@ -20,6 +20,7 @@ class DevicesController < ApiController
   end
 
   def volume_change
+#    abort "uuid: #{params[:uuid]}"
     dev = Device.get_by_uuid(params[:uuid])
     #dev.select()
 

@@ -92,6 +92,14 @@
         %h3{ "ng-if" => "(home.mode == 'music' || home.mode == 'spoken') && home.folder_id == -1" }
           Home:
 
+        .mp3-record{ "ng-if" => "home.mode == 'spoken' && home.folder.bookmark['mp3']"}
+          Sort by: [ ] filename   [ ] title
+          %p
+            %a{ "ng-click" => "play_bookmark(home.folder.bookmark)" }
+              Resume From Bookmark: 
+          %p
+            &nbsp;&nbsp;"{{home.folder.bookmark['mp3']['title']}}" -> {{home.folder.bookmark['elapsed_friendly']}}
+
         .folder-record{ "ng-if" => "home.folder_id > -1 && mode != 'white-noise'" }
           .folder-name.back.ellipsis
             %a{ "ng-click" => "select_folder(home.folder.parent_folder_id)" }
@@ -123,23 +131,6 @@
             Year
           .mp3-length-seconds
             Time
-
-        .mp3-record{ "ng-if" => "home.mode == 'spoken' && home.folder.bookmark"}
-          .mp3-playing
-            &nbsp;
-          .mp3-title.ellipsis
-            %a{ "ng-click" => "play_bookmark(home.folder.bookmark)" }
-              Resume From Bookmark
-            %p
-              {{home.folder.bookmark['elapsed_friendly']}} -> {{home.folder.bookmark['mp3']['title']}}
-          .mp3-artist.ellipsis
-            &nbsp;
-          .mp3-album.ellipsis
-            &nbsp;
-          .mp3-year
-            &nbsp;
-          .mp3-length-seconds
-            &nbsp;
 
         / works for 'white-noise' and 'music'
         .mp3-record{ "ng-repeat" => "mp3 in home.mp3s" }
@@ -192,6 +183,9 @@
             %img.hand{ "ng-click" => "refresh_devices()", "ng-src" => "/images/{{theme.icons}}/refresh_16.png", title: "Refresh the list of casts/groups", style: "position: absolute; right: 20px" }
 
             %table{ :style => "width: 100%; table-layout: fixed" }
+              %tr{ "ng-init" => "device = { cast_type: 'audio', uuid: 'local', volume_level: 90, friendly_name: 'Browser' }"}
+                = render :partial => 'device'
+
               %tr{ "ng-repeat" => "device in home.devices", "ng-if" => "device.cast_type == 'audio'" }
                 = render :partial => 'device'
 
@@ -234,4 +228,6 @@
         %span
 
       #stop-all
+        %a.hand{ "ng-click" => "stop_all()", title: "Emergency stop all chromecasts" }<
+          %img{ "ng-src" => "/images/{{theme.icons}}/stop_20.png" }
 
