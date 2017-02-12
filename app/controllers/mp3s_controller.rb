@@ -20,6 +20,12 @@ class Mp3sController < ApiController
     render :json => mp3s
   end
 
+  def get_by_id
+    id = params[:id]
+    mp3 = Mp3.find_by_id(id)
+    render :json => mp3
+  end
+
   def get_folders
     mode = params[:mode]
     #folder_id = params[:folder_id]

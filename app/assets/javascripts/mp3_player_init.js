@@ -4,7 +4,8 @@ var init_mp3_player = function($scope, $rootScope, Media, Device) {
     playing: {},
     jplayer: null,
     playlist: [],
-    playlist_index: 0
+    playlist_index: 0,
+    mp3: {}
   };
 
   /*
@@ -36,7 +37,7 @@ var init_mp3_player = function($scope, $rootScope, Media, Device) {
   }
 
   $scope.player_mp3.play_playlist = function(data) {
-    $scope.player_mp3.playlist = data.data;
+    $scope.player_mp3.playlist = data.playlist;
     $scope.player_mp3.playlist_index = 0;
     playAtIndex()
   }
@@ -45,8 +46,33 @@ var init_mp3_player = function($scope, $rootScope, Media, Device) {
     var ind = $scope.player_mp3.playlist_index;
     var pl = $scope.player_mp3.playlist;
 
-    $scope.player_mp3.load(pl[ind].url, function() {
-      $scope.player_mp3.play(pl, playAtIndex);
+    var entry = pl[ind];
+    $scope.player_mp3.load(entry.url, function() {
+      Media.get_by_id(entry.id, function(response) {
+        var mp3 = response.data;
+        $scope.player.reset(mp3['length_seconds'] * 1000, 0)
+        console.error("GOOOO")
+        $scope.player.play()
+      })
+
+      $scope.player_mp3.play(pl, function() {
+        var dev = $scope.browser_device;
+
+        $scope.player_mp3.playlist_index += 1
+
+        if (dev.state_local.repeat == "one") {
+          $scope.player_mp3.playlist_index = 0
+        }
+        if ($scope.player_mp3.playlist_index >= $scope.player_mp3.playlist.length) { // Reached the end of the playlist
+          if (dev.state_local.repeat == "all") {  // Repeat isn't on, just stop playing
+            $scope.player_mp3.playlist_index = 0
+          } else { 
+            // Reset ui in some way?
+          }
+        }
+
+        playAtIndex()
+      });
     })    
   }
 

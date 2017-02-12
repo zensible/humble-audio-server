@@ -28,6 +28,7 @@ Rails.application.routes.draw do
 
     scope '/mp3s' do
       get '/get/:mode/:id' => 'mp3s#get'
+      get '/:id' => 'mp3s#get_by_id'
       get '/get_folders/:mode/:folder_id' => 'mp3s#get_folders'
       get '/get_folder/:mode/:folder_id' => 'mp3s#get_folder'
       get '/refresh/:mode' => 'mp3s#refresh'
