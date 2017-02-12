@@ -1,7 +1,6 @@
 require 'thread'
 require 'socket'
 
-
 local_timezone = Time.now.getlocal.zone
 
 preset = Preset.where("id = 6")
@@ -14,9 +13,6 @@ preset.each do |preset|
   time_local = (sta + offset)
 
   time_now = Time.now + offset
-
-#  abort time_now.to_s + ',' + time_local.to_s
-
 end
 
 

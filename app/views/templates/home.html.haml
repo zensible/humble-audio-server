@@ -1,4 +1,6 @@
 #content{"ng-controller" => "HomeCtrl" }
+  #jquery_jplayer_1.jp-jplayer
+
   %span#loading{ "ng-if" => "!loaded" }
     = render :partial => 'loading'
 
@@ -183,7 +185,7 @@
             %img.hand{ "ng-click" => "refresh_devices()", "ng-src" => "/images/{{theme.icons}}/refresh_16.png", title: "Refresh the list of casts/groups", style: "position: absolute; right: 20px" }
 
             %table{ :style => "width: 100%; table-layout: fixed" }
-              %tr{ "ng-init" => "device = { cast_type: 'audio', uuid: 'local', volume_level: 90, friendly_name: 'Browser' }"}
+              %tr{ "ng-init" => "device = browser_device"}
                 = render :partial => 'device'
 
               %tr{ "ng-repeat" => "device in home.devices", "ng-if" => "device.cast_type == 'audio'" }

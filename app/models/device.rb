@@ -86,7 +86,7 @@ $populate_casts_var = "for cc in chromecasts:
     if devs.length == 0
       raise "No chromecast audio devices found on the network! Please set up your chromecasts and try again."
     end
-    $redis.set("devices", JSON.dump(devs))
+    #$redis.set("devices", JSON.dump(devs))
 
     $devices = []
     devs.each do |hsh|

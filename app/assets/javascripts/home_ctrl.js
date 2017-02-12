@@ -37,6 +37,32 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       shuffle: "off"
     }
 
+    // Fake chromecast 'device' for when we're playing MP3s in the browser rather than on a chromecast
+    $scope.browser_device = {
+      cast_type: 'audio',
+      uuid: 'browser',
+      volume_level: 90,
+      friendly_name: 'Browser',
+      state_local: {
+        folder_id: null,
+        mp3: {},
+        mp3_id: null,
+        mp3_url: "",
+        radio_station: ""
+      }
+    }
+    if (localStorage.getItem('browser_state_local')) {
+      $scope.browser_device.state_local = JSON.parse(localStorage.getItem('browser_state_local'))
+      // If playing, start and seek to correct ms
+    }
+    if (localStorage.getItem('browser_volume_level')) {
+      $scope.browser_device.volume_level = parseFloat(localStorage.getItem('browser_volume_level'))
+    }
+    setInterval(function() {
+      localStorage.setItem('browser_state_local', JSON.stringify(get_state_local()))
+      localStorage.setItem('browser_volume_level', JSON.stringify($scope.browser_device.volume_level))
+    }, 1000)
+
     // Subscribe to devices channel. This shares the state of the cast list between users: audio casts, groups and their volume levels
     App.cable.subscriptions.create('DeviceChannel', {
       connected: function() {
@@ -51,11 +77,15 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
         // Set default device
         var default_cast_uuid = localStorage.getItem('cast_uuid');
         if (default_cast_uuid) {
-          for (var i = 0; i < $scope.home.devices.length; i++) {
-            var dev = $scope.home.devices[i];
-            if (dev['uuid'] == default_cast_uuid) {
-              // This will also update the device's state in the playbar (e.g. play time, shuffle/repeat, song name)
-              $scope.select_cast(dev, 'auto')
+          if (default_cast_uuid == 'browser') {
+            $scope.select_cast($scope.browser_device);
+          } else {
+            for (var i = 0; i < $scope.home.devices.length; i++) {
+              var dev = $scope.home.devices[i];
+              if (dev['uuid'] == default_cast_uuid) {
+                // This will also update the device's state in the playbar (e.g. play time, shuffle/repeat, song name)
+                $scope.select_cast(dev, 'auto')
+              }
             }
           }
         }
@@ -135,9 +165,13 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
 
     // select_cast was initiated by clicking a cast in the UI. Its elapsed time will be stale, so get an update from the back-end
     if (auto_manual == 'manual') {
-      Device.select_cast(device.uuid, function(response) {
-        setup_cast_ui(response.data)
-      })
+      if (device.uuid == 'browser') {
+        setup_cast_ui(device)
+      } else {
+        Device.select_cast(device.uuid, function(response) {
+          setup_cast_ui(response.data)
+        })
+      }
     }
 
     localStorage.setItem('cast_uuid', device.uuid);
@@ -294,9 +328,13 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       seek: seekSecs
     };
 
-    Media.play(data, function(response) {
-      $scope.buffering = false;
-    })
+    if ($scope.home.device.uuid == 'browser') {
+      $scope.player_mp3.play_playlist(data)
+    } else {
+      Media.play(data, function(response) {
+        $scope.buffering = false;
+      })
+    }
   }
 
   $scope.play_bookmark = function(bookmark) {
@@ -358,6 +396,10 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
 
   $scope.volume_change = function(device) {
     if (!device) {
+      return;
+    }
+    if (device.uuid == 'browser') {
+      $('#jquery_jplayer_1').jPlayer("volume", device.volume_level)
       return;
     }
     clearTimeout(volume_timer);
