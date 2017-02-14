@@ -37,19 +37,24 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       shuffle: "off"
     }
 
+    console.log()
+    var browser = jQuery.browser;
+
     // Fake chromecast 'device' for when we're playing MP3s in the browser rather than on a chromecast
     $scope.browser_device = {
       cast_type: 'audio',
       uuid: 'browser',
       volume_level: 90,
-      friendly_name: 'Browser',
+      friendly_name: "Local Play (" + toTitleCase(browser.name) + " for " + toTitleCase(browser.platform) + ")",
       state_local: {
         folder_id: null,
         mp3: {},
         mp3_id: null,
         mp3_url: "",
         radio_station: ""
-      }
+      },
+      player_status: "UNKNOWN",
+      num_casting: 3
     }
     if (localStorage.getItem('browser_state_local')) {
       $scope.browser_device.state_local = JSON.parse(localStorage.getItem('browser_state_local'))
@@ -74,11 +79,11 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
 
         $scope.home.devices_loaded = true
 
-        // Set default device
+        // Set default device / update it based on changes on the back-end (see: Device.broadcast())
         var default_cast_uuid = localStorage.getItem('cast_uuid');
         if (default_cast_uuid) {
           if (default_cast_uuid == 'browser') {
-            $scope.select_cast($scope.browser_device);
+            $scope.select_cast($scope.browser_device, 'auto');
           } else {
             for (var i = 0; i < $scope.home.devices.length; i++) {
               var dev = $scope.home.devices[i];
@@ -124,7 +129,8 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       $scope.select_mode(mode || 'music')
     }
 
-    init_player($scope, $rootScope, Media, Device);
+    // Set up playbar. 
+    init_playbar($scope, $rootScope, Media, Device);
     init_mp3_player($scope, $rootScope, Media, Device);
     init_presets($scope, $rootScope, Media, Device, Preset);
   }
@@ -147,14 +153,14 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     var setup_cast_ui = function(dev) {
       if (dev.state_local && dev.state_local.start && dev.player_status == "PLAYING") {
         var sl = dev.state_local
-        $scope.player.reset(sl['mp3']['length_seconds'] * 1000, sl['elapsed'] * 1000)
+        $scope.playbar.reset(sl['mp3']['length_seconds'] * 1000, sl['elapsed'] * 1000)
         console.error("GOOOO")
-        $scope.player.play()
+        $scope.playbar.play()
       } else {
         console.error("STOOOP")
         // Nothing is playing or song is buffering
-        $scope.player.reset(0, 0)
-        $scope.player.stop()
+        $scope.playbar.reset(0, 0)
+        $scope.playbar.stop()
       }
     }
 
@@ -166,7 +172,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     // select_cast was initiated by clicking a cast in the UI. Its elapsed time will be stale, so get an update from the back-end
     if (auto_manual == 'manual') {
       if (device.uuid == 'browser') {
-        setup_cast_ui(device)
+        //setup_cast_ui($scope.browser_device)
       } else {
         Device.select_cast(device.uuid, function(response) {
           setup_cast_ui(response.data)
@@ -204,7 +210,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
           $.notify("No mp3s found in this folder. You may need to populate and/or refresh your media.", "warn")
         }
         $scope.home.mp3s = response.data
-        //$scope.player.init($scope.home.mp3s)
+        //$scope.playbar.init($scope.home.mp3s)
         if (callback) { callback() }
       })
     }
@@ -258,7 +264,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     Media.get($scope.home.mode, folder_id, function(response) {
       if (response.data.length > 0) {
         $scope.home.mp3s = response.data
-        //$scope.player.init($scope.home.mp3s)
+        //$scope.playbar.init($scope.home.mp3s)
       } else {
         $scope.home.mp3s = []
       }
@@ -311,7 +317,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       add_playlist(mp3s[i])
     }
 
-    //$scope.player.pause()
+    //$scope.playbar.pause()
     $scope.buffering = true;
 
     if ($scope.home.mode != "spoken" && $scope.home.mode != "music") {
@@ -329,8 +335,13 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     };
 
     if ($scope.home.device.uuid == 'browser') {
+      $scope.volume_change($scope.browser_device)
+
+      // For playing in the browser it's easy, just start playing with a hidden jPlayer and update the playbar
       $scope.player_mp3.play_playlist(data)
     } else {
+      // For chromecasts, we have to tell the back-end to load and play the playlist on the given device
+      // We then depend on Device.broadcast() to fire when buffering/playing starts. See the init() and $scope.select_cast() functions
       Media.play(data, function(response) {
         $scope.buffering = false;
       })
@@ -387,8 +398,9 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
 
   $scope.stop_all = function() {
     $.notify("Stopping all chromecasts!", "warn")
+    $scope.player_mp3.stop()
     Media.stop_all(function(response) {
-      $scope.player.stop();
+      $scope.playbar.stop();
     })
   }
 
@@ -415,6 +427,11 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
   // This is used to show the play buttons throughout the GUI
   $scope.is_playing = function(type, val) {
     var devices = $scope.home.devices;
+    //console.log("$scope.browser_device.state_local[type]", $scope.browser_device.state_local[type], "type", type, "val", val)
+    if ($scope.browser_device.player_status == 'PLAYING' && $scope.browser_device.state_local[type] == val) {
+      //console.log("YASS")
+      return $scope.browser_device;
+    }
     for (var i = 0; i < devices.length; i++) {
       var dev = devices[i];
       if (dev.player_status != "IDLE" && dev.player_status != "UNKNOWN") {

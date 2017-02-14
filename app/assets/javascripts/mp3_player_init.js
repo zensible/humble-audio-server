@@ -36,8 +36,36 @@ var init_mp3_player = function($scope, $rootScope, Media, Device) {
     
   }
 
+  $scope.player_mp3.shuffle_playlist = function() {
+    $scope.player_mp3.playlist = shuffle($scope.player_mp3.playlist)
+  }
+
   $scope.player_mp3.play_playlist = function(data) {
     $scope.player_mp3.playlist = data.playlist;
+
+    if ($scope.home.shuffle == 'on') {
+      var clicked = $scope.player_mp3.playlist.shift()
+      console.log("clicked", clicked)
+      $scope.player_mp3.playlist = shuffle($scope.player_mp3.playlist)
+      $scope.player_mp3.playlist.unshift(clicked)
+    }
+
+/*
+    function shuffleArray(array) {
+      for (var i = array.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+      }
+      return array;
+    }
+
+    clicked = playlist.shift # We want the clicked mp3 to play first, all else is shuffled
+    playlist.shuffle!
+    playlist.unshift(clicked)
+*/
+
     $scope.player_mp3.playlist_index = 0;
     playAtIndex()
   }
@@ -50,21 +78,24 @@ var init_mp3_player = function($scope, $rootScope, Media, Device) {
     $scope.player_mp3.load(entry.url, function() {
       Media.get_by_id(entry.id, function(response) {
         var mp3 = response.data;
-        $scope.player.reset(mp3['length_seconds'] * 1000, 0)
-        console.error("GOOOO")
-        $scope.player.play()
+        $scope.browser_device.state_local.mp3 = mp3;
+        $scope.browser_device.state_local.mp3_id = mp3.id;
+        $scope.browser_device.state_local.mp3_url = entry.url;
+        $scope.browser_device.player_status = "PLAYING";
+        $scope.playbar.reset(mp3['length_seconds'] * 1000, 0)
+        console.error("GOOOO2")
+        $scope.playbar.play()
+        $scope.safeApply()
       })
 
       $scope.player_mp3.play(pl, function() {
-        var dev = $scope.browser_device;
-
         $scope.player_mp3.playlist_index += 1
 
-        if (dev.state_local.repeat == "one") {
+        if ($scope.home.repeat == "one") {
           $scope.player_mp3.playlist_index = 0
         }
         if ($scope.player_mp3.playlist_index >= $scope.player_mp3.playlist.length) { // Reached the end of the playlist
-          if (dev.state_local.repeat == "all") {  // Repeat isn't on, just stop playing
+          if ($scope.home.repeat == "all") {  // Repeat isn't on, just stop playing
             $scope.player_mp3.playlist_index = 0
           } else { 
             // Reset ui in some way?
@@ -79,6 +110,7 @@ var init_mp3_player = function($scope, $rootScope, Media, Device) {
   /*
    * Retrieve Audio, then download MIDI file at its url. Extract obj.adjustments.bpm and insts. Load all of its soundfonts.
    */
+
   $scope.player_mp3.load = function(url, callbackLoaded) {
     var jp = $scope.player_mp3.jplayer;
 
@@ -104,14 +136,61 @@ var init_mp3_player = function($scope, $rootScope, Media, Device) {
     });
   }
 
+  $scope.player_mp3.prev = function() {
+    $scope.player_mp3.playlist_index -= 1
+    if ($scope.player_mp3.playlist_index < 0) {
+      $scope.player_mp3.playlist_index = $scope.player_mp3.playlist.length - 1
+    }
+    playAtIndex()
+
+    $scope.safeApply();    
+  }
+
+  $scope.player_mp3.next = function() {
+    $scope.player_mp3.playlist_index += 1
+    if ($scope.player_mp3.playlist_index >= $scope.player_mp3.playlist.length) {
+      $scope.player_mp3.playlist_index = 0
+    }
+    console.log("$scope.player_mp3.playlist_index", $scope.player_mp3.playlist_index)
+    playAtIndex()
+  }
+
   $scope.player_mp3.stop = function() {
     $scope.player_mp3.jplayer.jPlayer('stop');    
 
     $scope.safeApply();    
   }
 
+  $scope.player_mp3.stop = function() {
+    $scope.player_mp3.jplayer.jPlayer('stop');    
+
+    $scope.safeApply();    
+  }
+
+  var pausedMs = 0;
   $scope.player_mp3.pause = function() {
+    $scope.browser_device.player_status = "PAUSED";
+
     $scope.player_mp3.jplayer.jPlayer('stop');
+    pausedMs = scope.player_mp3.jplayer.data('jPlayer').status.currentTime;
+    $scope.playbar.pause()
+
+    $scope.safeApply();    
+  }
+
+  $scope.player_mp3.resume = function() {
+    $scope.browser_device.player_status = "PLAYING";
+    $scope.player_mp3.jplayer.jPlayer('play', pausedMs);
+    $scope.playbar.resume()
+
+    $scope.safeApply();    
+  }
+
+  $scope.player_mp3.seek = function(secs) {
+    $scope.browser_device.player_status = "PLAYING";
+    $scope.player_mp3.jplayer.jPlayer('play', secs);
+    $scope.playbar.reset($scope.playbar.total, parseInt(secs * 1000))
+    $scope.playbar.play()
 
     $scope.safeApply();    
   }
