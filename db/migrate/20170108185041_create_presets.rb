@@ -5,8 +5,8 @@ class CreatePresets < ActiveRecord::Migration[5.0]
       t.text :preset
       t.string :options
       t.string :schedule_days
-      t.time :schedule_start
-      t.time :schedule_end
+      t.string :schedule_start
+      t.string :schedule_end
     end
   end
 end

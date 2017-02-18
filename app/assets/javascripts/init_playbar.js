@@ -119,7 +119,11 @@ var init_playbar = function($scope, $rootScope, Media, Device) {
     var dev = $scope.home.device;
 
     if ($scope.home.device.uuid == 'browser') {
-      $scope.player_mp3.shuffle_playlist();
+      if ($scope.home.shuffle == "on") {
+        $scope.player_mp3.shuffle_playlist();
+      } else {
+        $scope.player_mp3.unshuffle_playlist();
+      }
     } else {
       Device.shuffle_change(dev.uuid, $scope.home.shuffle, function() {
         console.log("Shuffle change successful")

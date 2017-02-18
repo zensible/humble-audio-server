@@ -40,31 +40,20 @@ var init_mp3_player = function($scope, $rootScope, Media, Device) {
     $scope.player_mp3.playlist = shuffle($scope.player_mp3.playlist)
   }
 
+  $scope.player_mp3.unshuffle_playlist = function() {
+    $scope.player_mp3.playlist_orig = $scope.player_mp3.playlist;
+  }
+
   $scope.player_mp3.play_playlist = function(data) {
     $scope.player_mp3.playlist = data.playlist;
 
     if ($scope.home.shuffle == 'on') {
+      $scope.player_mp3.playlist_orig = JSON.parse(JSON.stringify(data.playlist));
       var clicked = $scope.player_mp3.playlist.shift()
       console.log("clicked", clicked)
       $scope.player_mp3.playlist = shuffle($scope.player_mp3.playlist)
       $scope.player_mp3.playlist.unshift(clicked)
     }
-
-/*
-    function shuffleArray(array) {
-      for (var i = array.length - 1; i > 0; i--) {
-        var j = Math.floor(Math.random() * (i + 1));
-        var temp = array[i];
-        array[i] = array[j];
-        array[j] = temp;
-      }
-      return array;
-    }
-
-    clicked = playlist.shift # We want the clicked mp3 to play first, all else is shuffled
-    playlist.shuffle!
-    playlist.unshift(clicked)
-*/
 
     $scope.player_mp3.playlist_index = 0;
     playAtIndex()
@@ -76,17 +65,28 @@ var init_mp3_player = function($scope, $rootScope, Media, Device) {
 
     var entry = pl[ind];
     $scope.player_mp3.load(entry.url, function() {
-      Media.get_by_id(entry.id, function(response) {
-        var mp3 = response.data;
-        $scope.browser_device.state_local.mp3 = mp3;
-        $scope.browser_device.state_local.mp3_id = mp3.id;
+      if (entry.id == -1) {  // Playing a radio stream
+        $scope.browser_device.state_local.mp3_id = -1;
         $scope.browser_device.state_local.mp3_url = entry.url;
+
         $scope.browser_device.player_status = "PLAYING";
-        $scope.playbar.reset(mp3['length_seconds'] * 1000, 0)
+        $scope.playbar.reset(0, 0)
         console.error("GOOOO2")
         $scope.playbar.play()
         $scope.safeApply()
-      })
+      } else {
+        Media.get_by_id(entry.id, function(response) {
+          var mp3 = response.data;
+          $scope.browser_device.state_local.mp3 = mp3;
+          $scope.browser_device.state_local.mp3_id = mp3.id;
+          $scope.browser_device.state_local.mp3_url = entry.url;
+          $scope.browser_device.player_status = "PLAYING";
+          $scope.playbar.reset(mp3['length_seconds'] * 1000, 0)
+          console.error("GOOOO2")
+          $scope.playbar.play()
+          $scope.safeApply()
+        })
+      }
 
       $scope.player_mp3.play(pl, function() {
         $scope.player_mp3.playlist_index += 1
