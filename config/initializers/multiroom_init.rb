@@ -5,17 +5,6 @@ local_timezone = Time.now.getlocal.zone
 
 preset = Preset.where("id = 6")
 
-preset.each do |preset|
-  Time.now
-
-  offset = Time.zone_offset(local_timezone)
-  sta = preset.schedule_start
-  time_local = (sta + offset)
-
-  time_now = Time.now + offset
-end
-
-
 $semaphore = Mutex.new # See: app/models/py_chromecast.rb
 $threads = {}
 $devices = [] # Global array of devices
@@ -23,16 +12,20 @@ $devices = [] # Global array of devices
 $settings = YAML.load_file(Rails.root + 'config/settings.yml')
 $theme = $settings['theme']
 
-puts "
+puts "$0            : #{$0}"
+puts "__FILE__      : #{__FILE__}"
+puts "$PROGRAM_NAME : #{$PROGRAM_NAME}"
+
+if $0 == 'bin/rails' # Don't run for rake tasks, tests etc
+
+  puts "
 ================================
 
 Initializing chromecast API and getting a list of available cast devices...
 
-"
+  "
 
-unless ENV["RAILS_ENV"].nil? || ENV["RAILS_ENV"] == 'test' || !!@rake # Don't run for rake tasks, tests etc
   PyChromecast.init()
-
 end
 
 # Set audio directory and $http_address

@@ -153,9 +153,11 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     var setup_cast_ui = function(dev) {
       if (dev.state_local && dev.state_local.start && dev.player_status == "PLAYING") {
         var sl = dev.state_local
-        $scope.playbar.reset(sl['mp3']['length_seconds'] * 1000, sl['elapsed'] * 1000)
-        console.error("GOOOO")
-        $scope.playbar.play()
+        if (sl['mp3']) {
+          $scope.playbar.reset(sl['mp3']['length_seconds'] * 1000, sl['elapsed'] * 1000)
+          console.error("GOOOO")
+          $scope.playbar.play()
+        }
       } else {
         console.error("STOOOP")
         // Nothing is playing or song is buffering
@@ -333,6 +335,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       playlist: playlist,
       seek: seekSecs
     };
+console.log("data", data)
 
     if ($scope.home.device.uuid == 'browser') {
       $scope.volume_change($scope.browser_device)
@@ -391,9 +394,17 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       state_local: sl,
       playlist: [ { id: -1, url: station.url } ]
     };
-    Media.play(data, function(response) {
-      $scope.buffering = false;
-    })    
+    if ($scope.home.device.uuid == 'browser') {
+      $scope.browser_device.state_local = sl;
+      $scope.volume_change($scope.browser_device)
+console.log("data", data)
+      // For playing in the browser it's easy, just start playing with a hidden jPlayer and update the playbar
+      $scope.player_mp3.play_playlist(data)
+    } else {
+      Media.play(data, function(response) {
+        $scope.buffering = false;
+      })    
+    }
   }
 
   $scope.stop_all = function() {
@@ -419,7 +430,9 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       var val = device.volume_level;
       if (device.volume_level == 1) { val = "1.0" }
       if (device.volume_level == 0) { val = "0.0" }
-      Device.volume_change(device.uuid, val)
+      Device.volume_change(device.uuid, val, function() {
+        console.log("yay")
+      })
     }, 100)
   }
 

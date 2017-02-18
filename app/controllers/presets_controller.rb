@@ -7,6 +7,17 @@ class PresetsController < ApplicationController
     render :json => Preset.all.order(:name)
   end
 
+  def update_crono
+    str = ""
+    Preset.all.each do |preset|
+      str += preset.get_crono
+    end
+
+    File.write("config/cronotab.rb", str)
+
+    `MULTIROOM_START=false bundle exec crono restart`
+  end
+
   def create
     arr = []
     $devices.each do |dev|
@@ -19,6 +30,7 @@ class PresetsController < ApplicationController
       end
     end
     Preset.create(:name => params[:name], :preset => JSON.dump(arr))
+    update_crono()
 
     render :json => { success: true }
   end
@@ -31,22 +43,10 @@ class PresetsController < ApplicationController
     sleep 1
 
     preset = Preset.find(params[:id])
-    initheader = { 'Content-Type' => 'application/json;charset=UTF-8' }
-
-    play = JSON.load(preset.preset)
-    play.each_with_index do |pl, cast_num|
-
-      fn = Rails.root.join("tmp/#{preset.id}.#{cast_num}.preset")
-      File.write(fn, JSON.dump(pl))
-      cmd = "curl -v -X POST -H \"Content-Type: application/json;charset=UTF-8\" --data-binary \"@#{fn}\" #{$http_address}/api/mp3s/play > out.txt"
-
-      spawn(cmd)
-    end
+    preset.play($http_address)
 
 
     render :json => { success: true }
-
-#    abort cmd
   end
 
   def update
@@ -56,6 +56,7 @@ class PresetsController < ApplicationController
       :schedule_start => params[:schedule_start],
       :schedule_end => params[:schedule_end]
     })
+    update_crono()
 
     render :json => { success: true }
   end

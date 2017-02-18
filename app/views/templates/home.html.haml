@@ -20,7 +20,7 @@
 
     #media-selector{ "ng-if" => "home.device"}
       #mode-select.ellipsis
-        %p{ "ng-repeat" => "mode in [ 'presets', 'music', 'radio', 'spoken', 'white-noise' ]"}
+        %p{ "ng-repeat" => "mode in [ 'music', 'spoken', 'white-noise', 'radio', 'presets' ]"}
           = render :partial => 'mode'
 
       // Presets
@@ -50,8 +50,8 @@
               (rename)
           .preset-schedule
             %input.schedule_days{ "ng-model" => "preset.schedule_days", :placeholder => "Daily" }
-            %input.schedule_start{ "type" => "time", "ng-model" => "preset.schedule_start" }
-            %input.schedule_end{ "type" => "time", "ng-model" => "preset.schedule_end" }
+            %input.schedule_start{ "ng-model" => "preset.schedule_start", :placeholder => "12:30 PM" }
+            %input.schedule_end{ "ng-model" => "preset.schedule_end", :placeholder => "1:30 AM" }
             %a{ "ng-click" => "save_preset_schedule(preset)"}
               SAVE
           .preset-delete
@@ -94,8 +94,11 @@
         %h3{ "ng-if" => "(home.mode == 'music' || home.mode == 'spoken') && home.folder_id == -1" }
           Home:
 
+        Sort by:
+        %input{ :type => "radio", :name => "sort_by", :value => "title" } Title
+        %input{ :type => "radio", :name => "sort_by", :value => "filename" } Filename
+
         .mp3-record{ "ng-if" => "home.mode == 'spoken' && home.folder.bookmark['mp3']"}
-          Sort by: [ ] filename   [ ] title
           %p
             %a{ "ng-click" => "play_bookmark(home.folder.bookmark)" }
               Resume From Bookmark: 
