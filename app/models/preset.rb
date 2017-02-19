@@ -29,7 +29,7 @@ class Preset < ApplicationRecord
         class #{jobname}Start
           def perform
             preset = Preset.find(#{self.id})
-            preset.play("#{$http_address}")
+            preset.play("#{$http_address_local}")
           end
         end
       }
@@ -37,7 +37,7 @@ class Preset < ApplicationRecord
       str += %Q{
         class #{jobname}Stop
           def perform
-            spawn("curl -v #{$http_address}/api/mp3s/stop_all > out.txt")
+            spawn("curl -v #{$http_address_local}/api/mp3s/stop_all > out.txt")
           end
         end
       }
