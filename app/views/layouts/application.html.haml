@@ -15,8 +15,9 @@
     window.authenticityToken = "#{form_authenticity_token}";
     window.env = "#{Rails.env}";
     window.audio_dir = "#{$audio_dir}";
-    window.http_address = "#{$http_address}";
+    window.http_address = "#{request.host == $settings['ddns_hostname'] ? $http_address_ddns : $http_address_local}";
     window.theme = #{JSON.dump($theme)};
+    window.request_hostname = "#{request.host}";
 
   = javascript_include_tag 'application'
   = javascript_include_tag '/bootstrap/js/bootstrap.js'

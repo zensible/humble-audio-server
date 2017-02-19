@@ -31,6 +31,13 @@ DEBUG=true
 * Make sure it works w/ spotify or another app
 * Check the rails log. If the player says its status is 'IDLE', rather than 'PLAYING' or 'BUFFERING' then the cast isn't able to hit the web server.
 
+= Installation: stream from outside your network
+
+== Get an account from duckdns
+
+== set up port forwarding
+
+
 
 = Alternate Audio Directory
 

@@ -33,7 +33,7 @@ class PresetsController < ApplicationController
     sleep 1
 
     preset = Preset.find(params[:id])
-    preset.play($http_address)
+    preset.play($http_address_local)
 
 
     render :json => { success: true }
