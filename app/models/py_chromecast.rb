@@ -39,8 +39,6 @@ import json
     "
 
     self.run(init)
-
-    Device.refresh()
   end
 
   def self.debugout(str)

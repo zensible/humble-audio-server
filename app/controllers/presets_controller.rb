@@ -7,16 +7,6 @@ class PresetsController < ApplicationController
     render :json => Preset.all.order(:name)
   end
 
-  def update_crono
-    str = ""
-    Preset.all.each do |preset|
-      str += preset.get_crono
-    end
-
-    File.write("config/cronotab.rb", str)
-
-    `MULTIROOM_START=false bundle exec crono restart`
-  end
 
   def create
     arr = []
@@ -30,7 +20,7 @@ class PresetsController < ApplicationController
       end
     end
     Preset.create(:name => params[:name], :preset => JSON.dump(arr))
-    update_crono()
+    Preset.update_crono()
 
     render :json => { success: true }
   end
@@ -56,7 +46,7 @@ class PresetsController < ApplicationController
       :schedule_start => params[:schedule_start],
       :schedule_end => params[:schedule_end]
     })
-    update_crono()
+    Preset.update_crono()
 
     render :json => { success: true }
   end

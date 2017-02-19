@@ -125,7 +125,8 @@
 
         .mp3-record{ "ng-if" => "home.mp3s.length" }
           .mp3-playing
-
+          .mp3-track-nr
+            = "#"
           .mp3-title
             Title
           .mp3-artist.ellipsis
@@ -142,9 +143,13 @@
           .mp3-playing
             %span.play-button{ "ng-if" => "is_playing('mp3_id', mp3.id)", "ng-init" => "entry = is_playing('mp3_id', mp3.id)" }
               %img{ "ng-src" => "/images/play_device_{{entry.num_casting}}.png"}
+          .mp3-track-nr
+            {{mp3.track_nr || "-"}}
           .mp3-title.ellipsis
             %a{ "ng-click" => "play($index)"}
               {{mp3.title || mp3.filename}}
+          .mp3-title.ellipsis
+            {{mp3.filename}}
           .mp3-artist.ellipsis
             {{mp3.artist || ' - ' }}
           .mp3-album.ellipsis

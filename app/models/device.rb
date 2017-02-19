@@ -3,10 +3,10 @@ class Device
 
   attr_accessor :uuid, :cast_type, :friendly_name, :volume_level, :status_text, :model_name, :state_local, :playlist, :playlist_index
 
-  MAX_BUFFERING_WAIT = 10
-  MAX_PLAYING_WAIT = 8
-  RETRY_WAIT = 5
-  MAX_RETRIES = 3
+  MAX_BUFFERING_WAIT ||= 10
+  MAX_PLAYING_WAIT ||= 8
+  RETRY_WAIT ||= 5
+  MAX_RETRIES ||= 3
 
   @uuid = ""
   @cast_type = ""

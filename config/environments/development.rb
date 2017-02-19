@@ -12,16 +12,18 @@ Rails.application.configure do
   # Show full error reports.
   config.consider_all_requests_local = true
 
-  begin
-    ip = Socket.ip_address_list.detect{|intf| intf.ipv4_private?}
-    ip = ip.ip_address
-    host = "#{ip}:#{Rails::Server.new.options[:Port]}"
-  rescue NameError => e
-    puts "Error: couldn't get hostname for websockets, using localhost"
-    host = "localhost"
+  if $0 == 'bin/rails' # Don't run for rake tasks, tests etc
+    begin
+      ip = Socket.ip_address_list.detect{|intf| intf.ipv4_private?}
+      ip = ip.ip_address
+      host = "#{ip}:#{Rails::Server.new.options[:Port]}"
+    rescue NameError => e
+      puts "Error: couldn't get hostname for websockets, using localhost"
+      host = "localhost"
+    end
+    config.action_cable.url = "ws://#{host}/cable"
+    config.action_cable.allowed_request_origins = [/http:\/\/*/, /https:\/\/*/]
   end
-  config.action_cable.url = "ws://#{host}/cable"
-  config.action_cable.allowed_request_origins = [/http:\/\/*/, /https:\/\/*/]
 
   # Enable/disable caching. By default caching is disabled.
   if Rails.root.join('tmp/caching-dev.txt').exist?
