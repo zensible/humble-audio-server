@@ -14,7 +14,6 @@
   :javascript
     window.authenticityToken = "#{form_authenticity_token}";
     window.env = "#{Rails.env}";
-    window.railsTest = #{Rails.env.test?};
     window.audio_dir = "#{$audio_dir}";
     window.http_address = "#{$http_address}";
     window.theme = #{JSON.dump($theme)};
