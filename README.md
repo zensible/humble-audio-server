@@ -82,6 +82,7 @@ Ubuntu:
 sudo add-apt-repository ppa:fkrull/deadsnakes
 sudo apt-get update
 sudo apt-get install python2.7
+sudo apt install python-pip
 
 See: http://askubuntu.com/questions/101591/how-do-i-install-python-2-7-2-on-ubuntu
 
