@@ -17,6 +17,8 @@
 /config/redis.yml
 /config/database.yml
 /config/cable.yml
+/config/settings.yml
+/config/cronotab.rb
 .ruby-version
 
 log
