@@ -8,10 +8,22 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     console.log("evt", event)
     switch(event.keyCode) {
       case 38:
-        console.log("mode up")
+        var modeNum = $scope.available_modes.indexOf($scope.home.mode);
+        modeNum -= 1;
+        if (modeNum < 0) {
+          modeNum = $scope.available_modes.length - 1;
+        }
+        $scope.select_mode($scope.available_modes[modeNum])
+        $scope.safeApply()
         break;
       case 40:
-        console.log("mode down")
+        var modeNum = $scope.available_modes.indexOf($scope.home.mode);
+        modeNum += 1;
+        if (modeNum > $scope.available_modes.length - 1) {
+          modeNum = 0;
+        }
+        $scope.select_mode($scope.available_modes[modeNum])
+        $scope.safeApply()
         break;
       case 37:
         console.log("mode left")
@@ -21,6 +33,8 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
         break;
     }
   });
+
+  $scope.available_modes = [ 'music', 'spoken', 'white-noise', 'radio', 'presets', 'settings' ];
 
   function init() {
     $scope.home = {
@@ -189,6 +203,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
    * User clicked one of the 'modes' in the leftmost column: Presets, Music, Radio etc
    */
   $scope.select_mode = function(mode, callback) {
+    console.log("mode", mode)
     localStorage.setItem('mode', mode);
 
     $scope.home.mode = mode
@@ -242,6 +257,9 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
         }
         console.log(response)
       })
+      if (callback) { callback() }
+    }
+    if (mode == 'radio') {
       if (callback) { callback() }
     }
   }
@@ -335,7 +353,6 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       playlist: playlist,
       seek: seekSecs
     };
-console.log("data", data)
 
     if ($scope.home.device.uuid == 'browser') {
       $scope.volume_change($scope.browser_device)
@@ -397,7 +414,6 @@ console.log("data", data)
     if ($scope.home.device.uuid == 'browser') {
       $scope.browser_device.state_local = sl;
       $scope.volume_change($scope.browser_device)
-console.log("data", data)
       // For playing in the browser it's easy, just start playing with a hidden jPlayer and update the playbar
       $scope.player_mp3.play_playlist(data)
     } else {

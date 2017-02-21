@@ -52,5 +52,8 @@ multiroomApp.controller('GlobalCtrl', function ($scope, $routeParams, $route, $
 
   $scope.theme = window.theme;
 
+  $scope.http_address_ddns = window.http_address_ddns;
+  $scope.http_address_local = window.http_address_local;
+
 });
 

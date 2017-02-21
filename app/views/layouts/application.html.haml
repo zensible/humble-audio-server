@@ -6,6 +6,7 @@
     = stylesheet_link_tag    '/bootstrap/css/bootstrap.min.css', media: 'all'
     = stylesheet_link_tag    'application', media: 'all'
     = action_cable_meta_tag
+    %link{:href => "/favicon.png", :rel => "icon", :type => "image/png"}/
 
   %body{"ng-controller" => "GlobalCtrl", "ng-class" => "{{ currentPage }}" }
     = yield
@@ -18,6 +19,8 @@
     window.http_address = "#{request.host == $settings['ddns_hostname'] ? $http_address_ddns : $http_address_local}";
     window.theme = #{JSON.dump($theme)};
     window.request_hostname = "#{request.host}";
+    window.http_address_ddns = "#{$http_address_ddns}";
+    window.http_address_local = "#{$http_address_local}";
 
   = javascript_include_tag 'application'
   = javascript_include_tag '/bootstrap/js/bootstrap.js'
