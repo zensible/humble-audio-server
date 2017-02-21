@@ -40,7 +40,6 @@ var init_mp3_player = function($scope, $rootScope, Media, Device) {
     if ($scope.home.shuffle == 'on') {
       $scope.player_mp3.playlist_orig = JSON.parse(JSON.stringify(data.playlist));
       var clicked = $scope.player_mp3.playlist.shift()
-      console.log("clicked", clicked)
       $scope.player_mp3.playlist = shuffle($scope.player_mp3.playlist)
       $scope.player_mp3.playlist.unshift(clicked)
     }

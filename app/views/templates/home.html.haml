@@ -7,7 +7,6 @@
   #top{ "ng-if" => "loaded" }
     = render :partial => 'configure_group'
 
-
     #loading-small{ "ng-if" => "loading" }
       = render :partial => 'loading'
 
@@ -20,8 +19,20 @@
 
     #media-selector{ "ng-if" => "home.device"}
       #mode-select.ellipsis
-        %p{ "ng-repeat" => "mode in [ 'music', 'spoken', 'white-noise', 'radio', 'presets' ]"}
+        %p{ "ng-repeat" => "mode in available_modes"}
           = render :partial => 'mode'
+
+      #selector2{ "ng-if" => "home.mode == 'settings'" }
+        %h4
+          Settings:
+        %br
+
+        %h5
+          Addresses:
+
+        {{http_address_local}}
+        %br
+        {{http_address_ddns}}
 
       // Presets
       #selector2{ "ng-if" => "home.mode == 'presets'" }
@@ -94,9 +105,9 @@
         %h3{ "ng-if" => "(home.mode == 'music' || home.mode == 'spoken') && home.folder_id == -1" }
           Home:
 
-        Sort by:
-        %input{ :type => "radio", :name => "sort_by", :value => "title" } Title
-        %input{ :type => "radio", :name => "sort_by", :value => "filename" } Filename
+        /Sort by:
+        /%input{ :type => "radio", :name => "sort_by", :value => "title" } Title
+        /%input{ :type => "radio", :name => "sort_by", :value => "filename" } Filename
 
         .mp3-record{ "ng-if" => "home.mode == 'spoken' && home.folder.bookmark['mp3']"}
           %p
@@ -148,8 +159,6 @@
           .mp3-title.ellipsis
             %a{ "ng-click" => "play($index)"}
               {{mp3.title || mp3.filename}}
-          .mp3-title.ellipsis
-            {{mp3.filename}}
           .mp3-artist.ellipsis
             {{mp3.artist || ' - ' }}
           .mp3-album.ellipsis
@@ -188,14 +197,14 @@
             %table{ :style => "width: 100%; table-layout: fixed" }
               %tr{ "ng-repeat" => "device in home.devices", "ng-if" => "device.cast_type == 'group'" }
                 = render :partial => 'device'
+              %tr{ "ng-init" => "device = browser_device"}
+                = render :partial => 'device'
 
           %td{ :style => "width: 50%; vertical-align: top" }
             %img.hand{ "ng-click" => "refresh_devices()", "ng-src" => "/images/{{theme.icons}}/refresh_16.png", title: "Refresh the list of casts/groups", style: "position: absolute; right: 20px" }
 
             %table{ :style => "width: 100%; table-layout: fixed" }
               %tr{ "ng-repeat" => "device in home.devices", "ng-if" => "device.cast_type == 'audio'" }
-                = render :partial => 'device'
-              %tr{ "ng-init" => "device = browser_device"}
                 = render :partial => 'device'
 
     //{ "ng-if" => "home.device.player_status != 'IDLE' && home.device.player_status != 'UNKNOWN'" }

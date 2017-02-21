@@ -89,7 +89,9 @@ $populate_casts_var = "for cc in chromecasts:
 
     devs = JSON.parse(all)
     if devs.length == 0
-      raise "No chromecast audio devices found on the network! Please set up your chromecasts and try again."
+      puts "==== WARNING: No chromecast audio devices found on the network! Server will only be able to stream to web browsers."
+    else
+      $has_chromecasts = true
     end
     #$redis.set("devices", JSON.dump(devs))
 

@@ -12,7 +12,9 @@ var init_presets = function($scope, $rootScope, Media, Device, Preset) {
   }
 
   $scope.play_preset = function(id) {
-    Preset.play(id)
+    Preset.play(id, function(response) {
+      console.log(response)
+    })
   }
 
   $scope.save_preset_schedule = function(hsh) {

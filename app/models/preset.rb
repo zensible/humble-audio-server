@@ -8,8 +8,10 @@ class Preset < ApplicationRecord
 
       fn = Rails.root.join("tmp/#{self.id}.#{cast_num}.preset")
       File.write(fn, JSON.dump(pl))
-      cmd = "curl -v -X POST -H \"Content-Type: application/json;charset=UTF-8\" --data-binary \"@#{fn}\" #{http_address}/api/mp3s/play > out.txt"
-      puts "====\n#{cmd}\n==="
+      cmd = "curl #{$curl_basic_auth} -s -X POST -H \"Content-Type: application/json;charset=UTF-8\" --data-binary \"@#{fn}\" #{http_address}/api/mp3s/play > out.txt"
+      if ENV['DEBUG']
+        puts cmd
+      end
       spawn(cmd)
     end
   end
@@ -37,7 +39,7 @@ class Preset < ApplicationRecord
       str += %Q{
         class #{jobname}Stop
           def perform
-            spawn("curl -v #{$http_address_local}/api/mp3s/stop_all > out.txt")
+            spawn("curl #{$curl_basic_auth} -s #{$http_address_local}/api/mp3s/stop_all > out.txt")
           end
         end
       }
@@ -48,7 +50,6 @@ class Preset < ApplicationRecord
       end
       arr = daysStart.split(/\s+/)
       arr.each do |day|
-        puts "day: #{day}"
         day_pretty = ""
         case day
         when "SU"
@@ -83,10 +84,22 @@ class Preset < ApplicationRecord
     return str
   end
 
-
   # If any preset schedule start/end/days values change, update our scheduler
   def self.update_crono
     str = ""
+
+    if $settings['ddns_update'].match(/http/)
+      str += %Q{
+        class UpdateDDNSIP
+          def perform
+            puts "Updating DDNS IP"
+            spawn("curl -s #{$settings['ddns_update']}")
+          end
+        end
+        Crono.perform(UpdateDDNSIP).every 30.minutes
+      }
+    end
+
     Preset.all.each do |preset|
       str += preset.get_crono
     end
@@ -97,4 +110,5 @@ class Preset < ApplicationRecord
       `bundle exec crono restart`
     end
   end
+
 end

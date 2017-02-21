@@ -14,7 +14,9 @@
 # Ignore all logfiles and tempfiles.
 /log/*.log
 /tmp
-/config/*.yml
+/config/redis.yml
+/config/database.yml
+/config/cable.yml
 .ruby-version
 
 log
