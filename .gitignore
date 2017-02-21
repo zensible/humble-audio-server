@@ -26,7 +26,9 @@ midi
 public/uploads
 screen*
 
-public/audio
+public/audio/music/*
+public/audio/spoken/*
+public/audio/white-noise/*
 
 public/.DS_Store
 .DS_STORE
