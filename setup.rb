@@ -13,11 +13,11 @@ if File.exist? 'config/settings.yml'
   settings = YAML.load_file('config/settings.yml')
 else
   settings = {
-    'login_username': '',
-    'login_password': '',
-    'port': 4040,
-    'ddns_hostname': '',
-    'ddns_update': ''
+    'login_username' => '',
+    'login_password' => '',
+    'port' => 4040,
+    'ddns_hostname' => '',
+    'ddns_update' => ''
   }
 end
 
@@ -41,7 +41,7 @@ while !inp.match(/^[a-zA-Z0-9]*$/)
     puts "Sorry, that's an invalid username"
   end
 end
-settings["login_password"] = inp
+settings["login_username"] = inp
 
 inp = "."
 while !inp.match(/^[a-zA-Z0-9]*$/)
@@ -59,6 +59,8 @@ puts ("\nStep 2 of 3: Set a Port").colorize(:light_blue)
 puts "\nIf you set port to 80, you can get to the server from: http://your.ip.address. If not, the URL will require a port at the end: http://your.ip.address:4040"
 puts "\nThe latter is recommended if you're exposing your server to the internet as it makes it less likely for your server to fall to automated hacking tools."
 puts "\nRecommended ports: 4040, 8011, 10000. Prohibited ports: 22, 139, 445, 3306, 6379\n\n"
+
+puts settings.inspect
 
 inp = '.'
 while !is_numeric?(inp)
@@ -152,8 +154,6 @@ When this is done, type OK below.
     inp = gets.chomp
   end
 end
-
-puts settings.inspect
 
 puts line.colorize(:blue)
 
