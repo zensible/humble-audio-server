@@ -1,1 +1,0 @@
-This folder contains white noise MP3s. Subfolders are NOT supported, so all your white noise MP3s should go into the root.
