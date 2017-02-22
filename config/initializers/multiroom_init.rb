@@ -52,12 +52,20 @@ https://www.google.com/search?q=how+install+curl+ubuntu
   $ip_address = ip
   $port = $settings['port']
 
-  $http_address_local = "http://#{ip}:#{$port}"
+  if $port == 80
+    $http_address_local = "http://#{ip}"
+  else
+    $http_address_local = "http://#{ip}:#{$port}"
+  end
 
   $has_ddns = false
   if !$settings['ddns_hostname'].blank?
     $has_ddns = true
-    $http_address_ddns = "http://#{$settings['ddns_hostname']}:#{$port}"
+    if $port == 80
+      $http_address_ddns = "http://#{$settings['ddns_hostname']}"
+    else
+      $http_address_ddns = "http://#{$settings['ddns_hostname']}:#{$port}"
+    end
   end
 
   def wait_until(max=5, wait_time=0.15)
