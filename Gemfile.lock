@@ -42,6 +42,7 @@ GEM
     bcrypt (3.1.11)
     builder (3.2.2)
     byebug (9.0.6)
+    colorize (0.8.1)
     concurrent-ruby (1.0.4)
     crono (1.1.2)
       activerecord (>= 4.0)
@@ -167,6 +168,7 @@ PLATFORMS
 DEPENDENCIES
   bcrypt (~> 3.1.7)
   byebug
+  colorize
   crono
   daemons
   haml

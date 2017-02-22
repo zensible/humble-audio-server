@@ -96,7 +96,6 @@ https://www.google.com/search?q=how+install+curl+ubuntu
 
         if $settings['ddns_update'].match(/http/)
           puts "Scheduling DDNS IP address update for every 30 minutes"
-          Preset.update_crono
         end
       else
         puts "==== WARNING: This server is NOT available over the internet, only over the local network.
@@ -116,6 +115,8 @@ The author recommends duckdns.org as a reliable free DDNS provider."
     else
       puts "\n\n= INIT 4 of 4 skipped: No DDNS server configured in settings.yml. Streaming will be available only on the local network."
     end
+
+    Preset.update_crono
 
     puts "================================"
     puts "\n"

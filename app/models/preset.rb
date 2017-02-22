@@ -104,7 +104,7 @@ class Preset < ApplicationRecord
       str += preset.get_crono
     end
 
-    if File.read("config/cronotab.rb") != str
+    if !File.exist?("config/cronotab.rb") || (File.exist?("config/cronotab.rb") && File.read("config/cronotab.rb") != str)
       File.write("config/cronotab.rb", str)
 
       `bundle exec crono restart`

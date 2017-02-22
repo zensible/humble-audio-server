@@ -188,7 +188,7 @@ You should now see all of your audio appear in the app.
 
 
 
-= Alternatives
+# Alternatives
 
 Plex
 Ampache
