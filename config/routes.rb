@@ -37,6 +37,7 @@ Rails.application.routes.draw do
       get '/stop_all' => 'mp3s#stop_all'
       get '/pause/:cast_uuid' => 'mp3s#pause'
       get '/resume/:cast_uuid' => 'mp3s#resume'
+      get '/save_bookmark/:mp3_id/:elapsed' => 'mp3s#save_bookmark'
       get '/next/:cast_uuid' => 'mp3s#next'
       get '/prev/:cast_uuid' => 'mp3s#prev'
       get '/seek/:cast_uuid/:secs' => 'mp3s#seek'

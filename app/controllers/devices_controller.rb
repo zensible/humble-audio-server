@@ -4,8 +4,7 @@ class DevicesController < ApiController
   def refresh
     # Wait until terminal is ready
 
-    Device.refresh()
-    render :json => @devices
+    render :json => Device.refresh()
   end
 
   def get_all
@@ -26,7 +25,7 @@ class DevicesController < ApiController
 
     dev.children.each do |child_uuid|
       child = Device.get_by_uuid(child_uuid)
-      child.volume_level = params[:volume_level].to_f
+      child.volume_level = params[:volume_level].to_f if child
     end
 
     dev.set_volume(params[:volume_level].to_f)

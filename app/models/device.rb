@@ -104,6 +104,10 @@ $populate_casts_var = "for cc in chromecasts:
 
     buffering_pause = 3
 
+    $threads.keys.each do |key|
+      Thread.kill($threads[key])
+    end
+
     $devices.each do |device|
       uuid = device.uuid
       $threads[uuid] = Thread.new do
@@ -123,7 +127,7 @@ $populate_casts_var = "for cc in chromecasts:
                 device.children.each do |child_uuid|
                   puts "====+++++ CHILD #{child_uuid}" if ENV['DEBUG'] == 'true'
                   child = Device.get_by_uuid(child_uuid)
-                  child.stop()
+                  child.stop() if child
                 end
                 Device.broadcast()
               end
@@ -168,8 +172,9 @@ $populate_casts_var = "for cc in chromecasts:
 ================/EXCEPTION==============}
         end
       end
-    end
 
+    end
+    return $devices
   end
 
   def play_at_index(retry_num = 0)

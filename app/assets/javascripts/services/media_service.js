@@ -45,6 +45,10 @@ angular.module("multiroomApp").factory('Media', function($rootScope, HttpErrorWr
       HttpErrorWrapper.get("/api/mp3s/resume/" + cast_uuid, success, error);
     },
 
+    save_bookmark: function(mp3_id, elapsed, success, error) {
+      HttpErrorWrapper.get("/api/mp3s/save_bookmark/" + mp3_id + "/" + elapsed, success, error);
+    },
+
     next: function(cast_uuid, success, error) {
       HttpErrorWrapper.get("/api/mp3s/next/" + cast_uuid, success, error);
     },

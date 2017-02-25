@@ -17,6 +17,9 @@ if $settings['login_username'] && $settings['login_password']
   $curl_basic_auth = "-u #{$settings['login_username']}:#{$settings['login_password']}"
 end
 
+# Set audio directory and $http_address
+$audio_dir = Rails.root.join('public', (Rails.env.test? ? 'test' : 'audio'))
+
 if $0 == 'bin/rails' # Don't run for rake tasks, tests etc
 
   if !`curl --version`.match(/^curl \d/)
@@ -40,9 +43,6 @@ https://www.google.com/search?q=how+install+curl+ubuntu
 
   PyChromecast.init()
   Device.refresh()
-
-  # Set audio directory and $http_address
-  $audio_dir = Rails.root.join('public', 'audio')
 
   ip = Socket.ip_address_list.detect{|intf| intf.ipv4_private?}
   if ip.nil?

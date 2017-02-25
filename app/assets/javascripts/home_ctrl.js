@@ -236,8 +236,16 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       Media.get_folders(mode, -1, function(response) {
         $scope.home.folders = response.data;
         if (response.data.length == 0) {
-          $.notify("No mp3s found. You may need to populate and/or refresh your media.", "warn")
+          Media.get('music', -1, function(response) {
+            if (response.data.length == 0) {
+              $.notify("No mp3s found. You may need to populate and/or refresh your media.", "warn")
+            }
+          })
         }
+        Media.get('music', -1, function(response) {
+          $scope.home.mp3s = response.data
+          if (callback) { callback() }
+        })
 
         var folder_id = localStorage.getItem('folder::' + mode)
         if (folder_id > 0) {
@@ -245,8 +253,6 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
         } else {
           $scope.select_folder(-1);
         }
-
-        if (callback) { callback() }
       })
     }
     if (mode == 'radio') {

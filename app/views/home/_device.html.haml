@@ -4,7 +4,7 @@
       {{device.friendly_name}}
     %span{ "ng-if" => "home.device.uuid != device.uuid" }<
       {{device.friendly_name}}
-  %span{ "ng-if" => "isMobile || (device.cast_type == 'group' && home.device_hover == device) || (device.cast_type == 'group' && device.children.length == 0)" }<
+  %span{ "ng-if" => "(device.cast_type == 'group' && (isMobile || home.device_hover == device || device.children.length == 0))" }<
     %a{ "ng-click" => "configure_group(device)" }<
       %img.hand{ "ng-src" => "/images/{{theme.icons}}/config_16.png" }
   %span.play-button{ "ng-if" => "device.player_status == 'PLAYING' || device.player_status == 'BUFFERING'" }<

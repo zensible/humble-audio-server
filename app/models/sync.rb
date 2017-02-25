@@ -67,6 +67,7 @@ class Sync
 
   def self.recursive_sync_folder(path, parent_id, mode, folders_hsh, arr, stats)
     puts "recursive_sync_folder: #{path}"
+    parse_dir_mp3(mode, arr, stats, path, -1)
     Dir.glob(escape_glob(path) + "/*").each do |dir|
       next unless File.directory? dir
       if folders_hsh[dir]
