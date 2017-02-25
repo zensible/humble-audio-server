@@ -1,5 +1,5 @@
 
-$settings = YAML.load_file(Rails.root + 'config/settings.yml')
+$settings = YAML.load_file(Rails.root + 'config/' + (Rails.env.test? ? 'test.yml' : 'settings.yml'))
 
 # Set some sensible defaults
 $settings['port'] ||= 4040

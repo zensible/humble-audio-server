@@ -9,7 +9,7 @@
       %img.hand{ "ng-src" => "/images/{{theme.icons}}/config_16.png" }
   %span.play-button{ "ng-if" => "device.player_status == 'PLAYING' || device.player_status == 'BUFFERING'" }<
     %img{ "ng-src" => "/images/{{theme.icons}}/play_device_{{device.num_casting}}.png"}
-  %span.play-button{ "ng-if" => "device.player_status == 'PAUSED'" }<
+  %span.pause-button{ "ng-if" => "device.player_status == 'PAUSED'" }<
     %img{ "ng-src" => "/images/{{theme.icons}}/pause2_16.png"}
 
 %td.ellipsis{ :style => "width: 60%; padding-right: 40px" }

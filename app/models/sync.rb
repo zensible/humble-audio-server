@@ -40,6 +40,8 @@ class Sync
         end
       end
 
+      parse_dir_mp3(mode, arr, stats, "#{$audio_dir}/#{mode}", -1)
+
       recursive_sync_folder("#{$audio_dir}/#{mode}", -1, mode, folders_hsh, arr, stats)
       #sql = "
       #  DELETE FROM folders WHERE id NOT IN (SELECT folder_id FROM mp3s)
@@ -66,10 +68,12 @@ class Sync
   end
 
   def self.recursive_sync_folder(path, parent_id, mode, folders_hsh, arr, stats)
+    puts "001"
+
     puts "recursive_sync_folder: #{path}"
-    parse_dir_mp3(mode, arr, stats, path, -1)
     Dir.glob(escape_glob(path) + "/*").each do |dir|
       next unless File.directory? dir
+    puts "dir #{dir}"
       if folders_hsh[dir]
         fold = folders_hsh[dir]
       else

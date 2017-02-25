@@ -1,4 +1,4 @@
-%a{ "ng-click" => "select_mode(mode)"}<
+%a.select-mode{ "ng-click" => "select_mode(mode)"}<
   %span{ "ng-if" => "home.mode == mode"}
     %b
       {{mode | modeName}}

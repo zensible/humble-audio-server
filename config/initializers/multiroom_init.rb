@@ -20,7 +20,7 @@ end
 # Set audio directory and $http_address
 $audio_dir = Rails.root.join('public', (Rails.env.test? ? 'test' : 'audio'))
 
-if $0 == 'bin/rails' # Don't run for rake tasks, tests etc
+if $0 == 'bin/rails' || $0.match(/cucumber/) # Don't run for rake tasks, tests etc
 
   if !`curl --version`.match(/^curl \d/)
     puts "=====
@@ -50,7 +50,7 @@ https://www.google.com/search?q=how+install+curl+ubuntu
   end
   ip = ip.ip_address
   $ip_address = ip
-  $port = $settings['port']
+  $port = Rails.env.test? ? 65501 : $settings['port']
 
   if $port == 80
     $http_address_local = "http://#{ip}"

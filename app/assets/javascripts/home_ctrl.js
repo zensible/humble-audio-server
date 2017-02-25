@@ -1,5 +1,9 @@
 multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $rootScope, Device, Media, Preset) {
 
+  if (window.env == 'test') {
+    localStorage.clear();
+  }
+
   window.scope = $scope;
 
   $scope.loaded = false;
@@ -94,7 +98,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
         $scope.home.devices_loaded = true
 
         // Set default device / update it based on changes on the back-end (see: Device.broadcast())
-        var default_cast_uuid = localStorage.getItem('cast_uuid');
+        var default_cast_uuid = localStorage.getItem('cast_uuid') || 'browser';
         if (default_cast_uuid) {
           if (default_cast_uuid == 'browser') {
             $scope.select_cast($scope.browser_device, 'auto');
@@ -138,9 +142,9 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       }
     });
 
-    var mode = localStorage.getItem('mode');
+    var mode = localStorage.getItem('mode') || 'music';
     if (mode) {
-      $scope.select_mode(mode || 'music')
+      $scope.select_mode(mode)
     }
 
     // Set up playbar. 
@@ -169,11 +173,9 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
         var sl = dev.state_local
         if (sl['mp3']) {
           $scope.playbar.reset(sl['mp3']['length_seconds'] * 1000, sl['elapsed'] * 1000)
-          console.error("GOOOO")
           $scope.playbar.play()
         }
       } else {
-        console.error("STOOOP")
         // Nothing is playing or song is buffering
         $scope.playbar.reset(0, 0)
         $scope.playbar.stop()
@@ -236,13 +238,13 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       Media.get_folders(mode, -1, function(response) {
         $scope.home.folders = response.data;
         if (response.data.length == 0) {
-          Media.get('music', -1, function(response) {
+          Media.get(mode, -1, function(response) {
             if (response.data.length == 0) {
               $.notify("No mp3s found. You may need to populate and/or refresh your media.", "warn")
             }
           })
         }
-        Media.get('music', -1, function(response) {
+        Media.get(mode, -1, function(response) {
           $scope.home.mp3s = response.data
           if (callback) { callback() }
         })
@@ -304,6 +306,9 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
    * It is also broadcast to all other users via websockets (see device.rb#broadcast), to be used by the front-end UI for showing play buttons on the appropriate cast/mode/folder/mp3 entry
    */
   function get_state_local() {
+    if (!$scope.home.device) {
+      return;
+    }
     return {
       cast_uuid: $scope.home.device.uuid,
       mode: $scope.home.mode,
@@ -318,6 +323,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
    * Construct a playlist of mp3 ids/urls and send it and the user's current UI state to mp3s_controller.rb#play
    */
   $scope.play = function(index, seekSecs) {
+    console.log("play", index)
     public_prefix = dirname(audio_dir)
     url_prefix = window.http_address
 

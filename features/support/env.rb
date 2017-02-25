@@ -5,6 +5,22 @@
 # files.
 
 require 'cucumber/rails'
+require 'capybara-screenshot/cucumber'
+require 'capybara/poltergeist'
+require "json_spec/cucumber"
+
+Capybara.server_port = 65501
+Capybara.javascript_driver = (ENV['DRIVER'] || "poltergeist").to_sym
+Capybara.register_driver :poltergeist do |app|
+  Capybara::Poltergeist::Driver.new(app)
+end
+
+Capybara.configure do |config|
+  config.server = :puma
+end
+
+Capybara::Screenshot.autosave_on_failure = true
+Capybara::Screenshot.prune_strategy = :keep_last_run
 
 # Capybara defaults to CSS3 selectors rather than XPath.
 # If you'd prefer to use XPath, just uncomment this line and adjust any
@@ -26,7 +42,7 @@ require 'cucumber/rails'
 # 2) Set the value below to true. Beware that doing this globally is not
 # recommended as it will mask a lot of errors for you!
 #
-ActionController::Base.allow_rescue = false
+ActionController::Base.allow_rescue = ENV['SHOW_ERRORS'] == 'true' ? false : true
 
 # Remove/comment out the lines below if your app doesn't have a database.
 # For some databases (like MongoDB and CouchDB) you may need to use :truncation instead.
@@ -50,6 +66,7 @@ end
 #     DatabaseCleaner.strategy = :transaction
 #   end
 #
+WebMock.disable_net_connect!(:allow_localhost => true)
 
 # Possible values are :truncation and :transaction
 # The :transaction strategy is faster, but might give you threading problems.

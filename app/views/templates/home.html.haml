@@ -10,13 +10,6 @@
     #loading-small{ "ng-if" => "loading" }
       = render :partial => 'loading'
 
-    #media-selector{ "ng-if" => "!home.device && home.devices_loaded"}
-      %div{ :style => "padding: 20px" }
-        %p
-          Welcome to Multiroom Audio 1.0
-        %p
-          Please select a Chromecast audio device below
-
     #media-selector{ "ng-if" => "home.device"}
       #mode-select.ellipsis
         %p{ "ng-repeat" => "mode in available_modes"}
@@ -96,7 +89,7 @@
             Spoken:
           %span{ "ng-if" => "home.mode == 'white-noise'"}
             White Noise:
-          %a.hand{ "ng-click" => "refresh_media()"}
+          %a#refresh-media.hand{ "ng-click" => "refresh_media()"}
             %img{ "ng-src" => "/images/{{theme.icons}}/refresh_16.png", :title => "Refresh the media in '{{home.mode}}'" }
 
         %h3{ "ng-if" => "(home.mode == 'music' || home.mode == 'spoken') && home.folder_id != -1" }
@@ -118,7 +111,7 @@
 
         .folder-record{ "ng-if" => "home.folder_id > -1 && mode != 'white-noise'" }
           .folder-name.back.ellipsis
-            %a{ "ng-click" => "select_folder(home.folder.parent_folder_id)" }
+            %a#back-button{ "ng-click" => "select_folder(home.folder.parent_folder_id)" }
               &lt;-- Back
 
         .folder-record{ "ng-repeat" => "folder in home.folders", "ng-if" => "folder.parent_folder_id == home.folder_id && home.mode != 'white-noise'" }
@@ -127,7 +120,7 @@
               %img{ "ng-src" => "/images/play_device_0.png"}
 
           .folder-name.ellipsis
-            %a{ "ng-click" => "select_folder(folder.id)" }
+            %a.select-folder{ "ng-click" => "select_folder(folder.id)" }
               {{folder.basename}}
             %span.play-button{ "ng-if" => "is_playing('folder_id', folder.id)" }
 
@@ -157,7 +150,7 @@
           .mp3-track-nr
             {{mp3.track_nr || "-"}}
           .mp3-title.ellipsis
-            %a{ "ng-click" => "play($index)"}
+            %a.play-mp3{ "ng-click" => "play($index)"}
               {{mp3.title || mp3.filename}}
           .mp3-artist.ellipsis
             {{mp3.artist || ' - ' }}
@@ -197,7 +190,7 @@
             %table{ :style => "width: 100%; table-layout: fixed" }
               %tr{ "ng-repeat" => "device in home.devices", "ng-if" => "device.cast_type == 'group'" }
                 = render :partial => 'device'
-              %tr{ "ng-init" => "device = browser_device"}
+              %tr#browser-device{ "ng-init" => "device = browser_device"}
                 = render :partial => 'device'
 
           %td{ :style => "width: 50%; vertical-align: top" }
@@ -218,17 +211,17 @@
         #current-cast-name.ellipsis
           {{home.device.friendly_name}}
       #play-controls
-        .play-control.play-control-large.hand{ "ng-click" => "prev()", title: "Play previous", "ng-class" => "{ 'disabled': playbar.playlistIndex == 0 }" }
+        #playbar-previous.play-control.play-control-large.hand{ "ng-click" => "prev()", title: "Play previous", "ng-class" => "{ 'disabled': playbar.playlistIndex == 0 }" }
           %img{ "ng-src" => "/images/{{theme.icons}}/previous_16.png" }
-        .play-control.play-control-large.hand{"ng-show" => "!playbar.playing", "ng-click" => "resume()", title: "Play current" }
+        #playbar-resume.play-control.play-control-large.hand{"ng-show" => "!playbar.playing", "ng-click" => "resume()", title: "Play current" }
           %img{ "ng-src" => "/images/{{theme.icons}}/play2_20.png" }
-        .play-control.play-control-large.hand{"ng-show" => "playbar.playing", "ng-click" => "pause()", title: "Pause current"}
+        #playbar-pause.play-control.play-control-large.hand{"ng-show" => "playbar.playing", "ng-click" => "pause()", title: "Pause current"}
           %img{ "ng-src" => "/images/{{theme.icons}}/pause2_20.png" }
-        .play-control.play-control-large.hand{ "ng-click" => "next()", title: "Skip to next", "ng-class" => "{ 'disabled': playbar.playlistIndex == playbar.playlist.length - 1 }" }
+        #playbar-next.play-control.play-control-large.hand{ "ng-click" => "next()", title: "Skip to next", "ng-class" => "{ 'disabled': playbar.playlistIndex == playbar.playlist.length - 1 }" }
           %img{ "ng-src" => "/images/{{theme.icons}}/next_16.png" }
-        .play-control.play-control-small.hand{ "ng-click" => "toggleRepeat()", title: "Enable/disable repeat" }
+        #playbar-repeat.play-control.play-control-small.hand{ "ng-click" => "toggleRepeat()", title: "Enable/disable repeat" }
           %img{ "ng-src" => "/images/{{theme.icons}}/repeat_{{home.repeat}}_16.png" }
-        .play-control.play-control-small.hand{ "ng-click" => "toggleShuffle()", title: "Enable/disable shuffle" }
+        #playbar-shuffle.play-control.play-control-small.hand{ "ng-click" => "toggleShuffle()", title: "Enable/disable shuffle" }
           %img{ "ng-src" => "/images/{{theme.icons}}/shuffle_{{home.shuffle}}_16.png" }
 
       #time-passed
