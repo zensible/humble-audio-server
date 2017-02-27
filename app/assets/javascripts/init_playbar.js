@@ -171,6 +171,7 @@ var init_playbar = function($scope, $rootScope, Media, Device) {
   }
 
   $scope.seek = function(evt) {
+    console.log("evt", evt)
     var offsetX = evt.offsetX;
     var tot = $scope.playbar.total;
     var maxWid = $('#progress-wrapper').width();

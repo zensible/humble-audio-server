@@ -148,9 +148,3 @@ The author recommends duckdns.org as a reliable free DDNS provider."
     puts "\nAll systems go! Get streamin'!\n\n"
   }
 end
-
-# Forget what's playing when the server stops, it probably won't be correct when it starts up again
-at_exit { 
-  $redis.del("state_shared")
-}
-

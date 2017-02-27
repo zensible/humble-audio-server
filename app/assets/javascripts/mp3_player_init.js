@@ -128,7 +128,7 @@ var init_mp3_player = function($scope, $rootScope, Media, Device) {
     if (window.env == 'test') {
       setTimeout(function() {
         playCallback();
-      }, 2000)
+      }, 3000)
       return;
     }
 

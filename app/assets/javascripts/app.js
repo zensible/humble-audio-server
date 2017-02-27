@@ -14,3 +14,18 @@ multiroomApp.filter('modeName', [function() {
       return str.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();})
     };
 }])
+
+multiroomApp.directive("ngMobileClick", [function () {
+    return function (scope, elem, attrs) {
+        elem.bind("touchstart click", function (e) {
+          console.log("scope.isMobile", scope.isMobile)
+          if (!scope.isMobile) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+          }
+
+            scope.$apply(attrs["ngMobileClick"]);
+        });
+    }
+}])

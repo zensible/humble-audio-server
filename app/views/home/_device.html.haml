@@ -13,4 +13,4 @@
     %img{ "ng-src" => "/images/{{theme.icons}}/pause2_16.png"}
 
 %td.ellipsis{ :style => "width: 60%; padding-right: 40px" }
-  %input.slider{ type: "range", min: "0", max: "1", step: ".05", "ng-change" => "volume_change(device)", "ng-model" => "device.volume_level" }
+  %input.slider{ type: "range", min: "0", max: "1", step: ".05", autocomplete: "off", "ng-click" => "volume_change(device)", "ng-model" => "device.volume_level", "ng-mobile-click" => "volume_change(device)" }

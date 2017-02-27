@@ -55,7 +55,6 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       shuffle: "off"
     }
 
-    console.log()
     var browser = jQuery.browser;
 
     // Fake chromecast 'device' for when we're playing MP3s in the browser rather than on a chromecast
@@ -152,7 +151,6 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     init_mp3_player($scope, $rootScope, Media, Device);
     init_presets($scope, $rootScope, Media, Device, Preset);
   }
-
 
   /*
    * User selected a chromecast from the device list, get its shared state if any
@@ -446,6 +444,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
   var volume_timer;
 
   $scope.volume_change = function(device) {
+    console.log("vc dev", device)
     if (!device) {
       return;
     }
@@ -453,6 +452,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       $('#jquery_jplayer_1').jPlayer("volume", device.volume_level)
       return;
     }
+    console.log("device.volume_level", device.volume_level)
     clearTimeout(volume_timer);
     volume_timer = setTimeout(function() {  // Timeout prevents user from changing volume 10 times a second
       var val = device.volume_level;
