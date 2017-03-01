@@ -8,7 +8,7 @@ var init_playbar = function($scope, $rootScope, Media, Device) {
   };
 
   $scope.playbar.reset = function(lenMs, elapsedMs) {
-    console.log("lenms", lenMs, "elapsedMs", elapsedMs)
+    //console.log("lenms", lenMs, "elapsedMs", elapsedMs)
     $scope.playbar.total = lenMs;
     $scope.playbar.progress = elapsedMs;
 

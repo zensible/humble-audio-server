@@ -3,7 +3,7 @@
 
 ### A Simple, Free Multiroom Audio Server
 
-This project is a web server for streaming MP3s to your desktop web browser, mobile browser and Chromecast Audio devices.
+This project is a web server for streaming MP3s to your desktop web browser, mobile browser or Chromecast Audio devices.
 
 While it competes with very featureful streaming apps such as Ampache or Plex, it has several advantages and unique features:
 
@@ -16,7 +16,7 @@ While it competes with very featureful streaming apps such as Ampache or Plex, i
 
 Most of all, Humble's advantage is in its simplicity. Other streaming servers try to do everything for everyone (video, album art, online channels such as TED talks, lyrics, visualizations, multiple user accounts) which tend to make them cluttered and buggy.
 
-Humble has just one screen which works equally well on a mobile device or a browser and has a laserlike focus on the one basic feature that all users require: streaming MP3s to browsers and Chromecast Audios. There are no native mobile apps for it yet, but so far I've had no trouble at all just using a mobile browser.
+Humble has just one screen which works equally well on a mobile device or a browser and has a laserlike focus on the one basic feature that everyone wants: streaming MP3s to browsers and Chromecast Audios. There are no native mobile apps for it yet, but so far I've had no trouble at all just using a mobile browser.
 
 Here are the other basic features:
 

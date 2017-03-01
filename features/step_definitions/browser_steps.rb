@@ -43,18 +43,18 @@ Then(/^I should be able to seek$/) do
   page.evaluate_script("scope.playbar.progress").should eql(1000)
 end
 
-Then(/^I should be able to stop all$/) do
-  pending # Write code here that turns the phrase above into concrete actions
-end
-
 Then(/^I should be able to toggle shuffle$/) do
-  pending # Write code here that turns the phrase above into concrete actions
+  
 end
 
 Then(/^I should be able to toggle repeat\-all$/) do
-  pending # Write code here that turns the phrase above into concrete actions
+  pending
 end
 
 Then(/^I should be able to toggle repeat\-one$/) do
+  pending
+end
+
+Then(/^I should be able to stop all$/) do
   pending # Write code here that turns the phrase above into concrete actions
 end

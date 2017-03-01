@@ -21,8 +21,8 @@ class DevicesController < ApiController
   def volume_change
 #    abort "uuid: #{params[:uuid]}"
     dev = Device.get_by_uuid(params[:uuid])
-    #dev.select()
 
+    # If device is a chromecast group
     dev.children.each do |child_uuid|
       child = Device.get_by_uuid(child_uuid)
       child.volume_level = params[:volume_level].to_f if child

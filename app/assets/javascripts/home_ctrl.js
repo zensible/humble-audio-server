@@ -1,42 +1,10 @@
 multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $rootScope, Device, Media, Preset) {
 
-  if (window.env == 'test') {
-    localStorage.clear();
-  }
-
+  // For use in debugging w/ the chrome console
   window.scope = $scope;
 
+  // If false, show the loading indicator. If true, show the UI
   $scope.loaded = false;
-
-  $(document).keydown(function(event) {
-    console.log("evt", event)
-    switch(event.keyCode) {
-      case 38:
-        var modeNum = $scope.available_modes.indexOf($scope.home.mode);
-        modeNum -= 1;
-        if (modeNum < 0) {
-          modeNum = $scope.available_modes.length - 1;
-        }
-        $scope.select_mode($scope.available_modes[modeNum])
-        $scope.safeApply()
-        break;
-      case 40:
-        var modeNum = $scope.available_modes.indexOf($scope.home.mode);
-        modeNum += 1;
-        if (modeNum > $scope.available_modes.length - 1) {
-          modeNum = 0;
-        }
-        $scope.select_mode($scope.available_modes[modeNum])
-        $scope.safeApply()
-        break;
-      case 37:
-        console.log("mode left")
-        break;
-      case 39:
-        console.log("mode right")
-        break;
-    }
-  });
 
   $scope.available_modes = [ 'music', 'spoken', 'white-noise', 'radio', 'presets', 'settings' ];
 
@@ -57,7 +25,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
 
     var browser = jQuery.browser;
 
-    // Fake chromecast 'device' for when we're playing MP3s in the browser rather than on a chromecast
+    // 'device' for when we're playing MP3s in the browser rather than on a chromecast
     $scope.browser_device = {
       cast_type: 'audio',
       uuid: 'browser',
@@ -68,12 +36,15 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
         mp3: {},
         mp3_id: null,
         mp3_url: "",
-        radio_station: ""
+        radio_station: "",
+        repeat: "off",
+        shuffle: "off"
       },
       player_status: "UNKNOWN",
       num_casting: 3
     }
     if (localStorage.getItem('browser_state_local')) {
+      console.log("local", localStorage.getItem('browser_state_local'))
       $scope.browser_device.state_local = JSON.parse(localStorage.getItem('browser_state_local'))
       // If playing, start and seek to correct ms
     }
@@ -81,7 +52,9 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       $scope.browser_device.volume_level = parseFloat(localStorage.getItem('browser_volume_level'))
     }
     setInterval(function() {
+      console.log("inv")
       localStorage.setItem('browser_state_local', JSON.stringify(get_state_local()))
+      console.log("JSON.stringify(get_state_local()", JSON.stringify(get_state_local()))
       localStorage.setItem('browser_volume_level', JSON.stringify($scope.browser_device.volume_level))
     }, 1000)
 
@@ -340,10 +313,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
         url: url
       });
     }
-    for (var i = index; i < mp3s.length; i++) {
-      add_playlist(mp3s[i])
-    }
-    for (var i = 0; i < index; i++) {
+    for (var i = 0; i < mp3s.length; i++) {
       add_playlist(mp3s[i])
     }
 
@@ -361,6 +331,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     data = {
       state_local: hsh,
       playlist: playlist,
+      playlist_index: index,
       seek: seekSecs
     };
 
