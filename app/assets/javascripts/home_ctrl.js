@@ -10,17 +10,15 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
 
   function init() {
     $scope.home = {
-      devices: [],
-      device: null,
-      devices_loaded: false,
-      mode: "",
-      folder_id: -1,
-      folder: {},
-      mp3s: [],
-      radio_stations: [],
-      radio_station: "",
-      repeat: "off",
-      shuffle: "off"
+      devices: [],  // All devices
+      device: null, // Currently selected device
+      devices_loaded: false,  // If false, show loading gif
+      mode: "",  // Currently selected mode
+      folder_id: -1,  // Currently selected folder id
+      folder: {},  // Currently selected folder
+      mp3s: [],  // Mp3s in current folder
+      radio_stations: [],  // All radio stations
+      radio_station: ""  // Currently selected radio station
     }
 
     var browser = jQuery.browser;
@@ -43,19 +41,18 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       player_status: "UNKNOWN",
       num_casting: 3
     }
-    if (localStorage.getItem('browser_state_local')) {
-      console.log("local", localStorage.getItem('browser_state_local'))
-      $scope.browser_device.state_local = JSON.parse(localStorage.getItem('browser_state_local'))
+    if (sessionStorage.getItem('browser_state_local')) {
+      console.log("local", sessionStorage.getItem('browser_state_local'))
+      $scope.browser_device.state_local = JSON.parse(sessionStorage.getItem('browser_state_local'))
       // If playing, start and seek to correct ms
     }
-    if (localStorage.getItem('browser_volume_level')) {
-      $scope.browser_device.volume_level = parseFloat(localStorage.getItem('browser_volume_level'))
+    if (sessionStorage.getItem('browser_volume_level')) {
+      $scope.browser_device.volume_level = parseFloat(sessionStorage.getItem('browser_volume_level'))
     }
     setInterval(function() {
-      console.log("inv")
-      localStorage.setItem('browser_state_local', JSON.stringify(get_state_local()))
-      console.log("JSON.stringify(get_state_local()", JSON.stringify(get_state_local()))
-      localStorage.setItem('browser_volume_level', JSON.stringify($scope.browser_device.volume_level))
+      sessionStorage.setItem('browser_state_local', JSON.stringify(get_state_local()))
+      //console.log("JSON.stringify(get_state_local()", JSON.stringify(get_state_local()))
+      sessionStorage.setItem('browser_volume_level', JSON.stringify($scope.browser_device.volume_level))
     }, 1000)
 
     // Subscribe to devices channel. This shares the state of the cast list between users: audio casts, groups and their volume levels
@@ -132,12 +129,14 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     $scope.home.device = device;
 
     // These are not necessarily set if no one has played to this cast yet since the server started
+    /*
     if (device.state_local && device.state_local.repeat) {
       $scope.home.repeat = device.state_local.repeat;
     }
     if (device.state_local && device.state_local.shuffle) {
       $scope.home.shuffle = device.state_local.shuffle;
     }
+    */
 
     var setup_cast_ui = function(dev) {
       if (dev.state_local && dev.state_local.start && dev.player_status == "PLAYING") {
@@ -283,8 +282,8 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     return {
       cast_uuid: $scope.home.device.uuid,
       mode: $scope.home.mode,
-      repeat: $scope.home.repeat,
-      shuffle: $scope.home.shuffle,
+      repeat: $scope.home.device.state_local.repeat,
+      shuffle: $scope.home.device.state_local.shuffle,
       folder_id: $scope.home.folder_id
     }
   }

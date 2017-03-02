@@ -31,13 +31,26 @@ var init_mp3_player = function($scope, $rootScope, Media, Device) {
   }
 
   $scope.player_mp3.shuffle_playlist = function() {
+
+    // Filter out currently playing song
+    var cur_index_val = playa.playlist_order[playa.playlist_index]
+    playa.playlist_order = _.reject(playa.playlist_order, function(num){ return num == cur_index_val; });
+
+    // Shuffle
     playa.playlist_order = shuffle(playa.playlist_order);
-    playa.playlist_index = playa.playlist_order.indexOf(playa.playlist_index)
+    playa.playlist_order.unshift(cur_index_val)
+    playa.playlist_index = 0;
+    //playa.playlist_index = playa.playlist_order.indexOf(playa.playlist_index)
   }
 
   $scope.player_mp3.unshuffle_playlist = function() {
-    playa.playlist_order = playa.playlist_order.sort(function(a, b) { a - b })
-    playa.playlist_index = playa.playlist_order.indexOf(playa.playlist_index)
+    var cur_index_val = playa.playlist_order[playa.playlist_index]
+
+    console.log("playa.playlist_order before", playa.playlist_order)
+    playa.playlist_order = playa.playlist_order.sort(function(a, b) { return a - b })
+    console.log("playa.playlist_order after", playa.playlist_order)
+    playa.playlist_index = playa.playlist_order.indexOf(cur_index_val)
+    console.log("playa.playlist_index", playa.playlist_index)
   }
 
   $scope.player_mp3.play_playlist = function(data) {
@@ -50,7 +63,7 @@ var init_mp3_player = function($scope, $rootScope, Media, Device) {
       playa.playlist_order.push(i);
     }
 
-    if ($scope.home.shuffle == 'on') {
+    if ($scope.home.device.state_local.shuffle == 'on') {
       playa.shuffle_playlist();
     }
     console.log("$scope.player_mp3.playlist_order", playa.playlist_order)
@@ -62,7 +75,6 @@ var init_mp3_player = function($scope, $rootScope, Media, Device) {
   var playAtIndex = function(is_orig_play) {
     var ind = playa.playlist_index;
     var pl = playa.playlist;
-    console.log("index", ind)
     var entry = pl[playa.playlist_order[ind]];
     //console.log("entry.url", entry.url)
     $scope.player_mp3.load(entry.url, function() {
@@ -91,7 +103,7 @@ var init_mp3_player = function($scope, $rootScope, Media, Device) {
       $scope.player_mp3.play(pl, function() {  // Play is complete, advance in the playlist
         $scope.player_mp3.playlist_index += 1
 
-        if ($scope.home.repeat == "one") {
+        if ($scope.home.device.state_local.repeat == "one") {
           $scope.player_mp3.playlist_index -= 1;
         } else {
           if (playa.playlist_index >= playa.playlist_order.length) { // Reached the end of the playlist
@@ -100,7 +112,7 @@ var init_mp3_player = function($scope, $rootScope, Media, Device) {
 
           // We've played the playlist until we're back to the first song clicked
           if (!is_orig_play && playa.playlist_order[playa.playlist_index] == playa.orig_index) {
-            if ($scope.home.repeat != "all") {
+            if ($scope.home.device.state_local.repeat != "all") {
               // If repeat is 'all', do nothing -- just keep on playin'
               return;  // If it's off, stop here
             }
@@ -139,7 +151,7 @@ var init_mp3_player = function($scope, $rootScope, Media, Device) {
     if (window.env == 'test') {
       setTimeout(function() {
         playCallback();
-      }, 3000)
+      }, 2000)
       return;
     }
 
@@ -173,13 +185,10 @@ var init_mp3_player = function($scope, $rootScope, Media, Device) {
   }
 
   $scope.player_mp3.stop = function() {
-    $scope.player_mp3.jplayer.jPlayer('stop');    
-
-    $scope.safeApply();    
-  }
-
-  $scope.player_mp3.stop = function() {
-    $scope.player_mp3.jplayer.jPlayer('stop');    
+    if (window.env != 'test') {
+      $scope.player_mp3.jplayer.jPlayer('stop');    
+    }
+    $scope.browser_device.player_status = "STOPPED";
 
     $scope.safeApply();    
   }

@@ -220,9 +220,9 @@
         #playbar-next.play-control.play-control-large.hand{ "ng-click" => "next()", title: "Skip to next", "ng-class" => "{ 'disabled': playbar.playlistIndex == playbar.playlist.length - 1 }" }
           %img{ "ng-src" => "/images/{{theme.icons}}/next_16.png" }
         #playbar-repeat.play-control.play-control-small.hand{ "ng-click" => "toggleRepeat()", title: "Enable/disable repeat" }
-          %img{ "ng-src" => "/images/{{theme.icons}}/repeat_{{home.repeat}}_16.png" }
+          %img{ "ng-src" => "/images/{{theme.icons}}/repeat_{{home.device.state_local.repeat}}_16.png" }
         #playbar-shuffle.play-control.play-control-small.hand{ "ng-click" => "toggleShuffle()", title: "Enable/disable shuffle" }
-          %img{ "ng-src" => "/images/{{theme.icons}}/shuffle_{{home.shuffle}}_16.png" }
+          %img{ "ng-src" => "/images/{{theme.icons}}/shuffle_{{home.device.state_local.shuffle}}_16.png" }
 
       #time-passed
         %span 0:00

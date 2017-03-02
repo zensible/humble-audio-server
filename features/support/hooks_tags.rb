@@ -1,4 +1,20 @@
 
+# Wait up to 5 seconds for code block to return true
+def wait_until(max=5, wait_time=0.15)
+  start = Time.now.to_f
+  begin
+    yield
+  rescue Exception => ex
+    if (Time.now - start).to_f > max
+      puts "== waited max #{max} seconds" if ENV['VERBOSE'] == 'true'
+      raise
+    else
+      sleep(wait_time)
+      retry
+    end
+  end
+end
+
 
 def screenie()
   @screenNum ||= 0

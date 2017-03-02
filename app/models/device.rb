@@ -330,6 +330,8 @@ $populate_casts_var = "for cc in chromecasts:
     @state_local['mp3_id'] = nil
     @state_local['mp3'] = {}
     @state_local['radio_station'] = nil
+    @state_local['shuffle'] = 'off'
+    @state_local['repeat'] = 'off'
   end
 
   def pause()
