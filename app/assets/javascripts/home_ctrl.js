@@ -6,7 +6,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
   // If false, show the loading indicator. If true, show the UI
   $scope.loaded = false;
 
-  $scope.available_modes = [ 'music', 'spoken', 'white-noise', 'radio', 'presets', 'settings' ];
+  $scope.available_modes = window.menu;
 
   function init() {
     $scope.home = {
@@ -380,18 +380,22 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
    */
   $scope.play_radio = function(station) {
     $scope.home.mode = 'radio'
-    //$scope.home.radio_station = station
+    $scope.home.radio_station = station
     $scope.home.folder_id = -1
     $scope.home.folder = null
     $scope.home.folders = []
 
     var sl = get_state_local();
-    sl['radio_station'] = station;
+    sl.radio_station = station;
     data = {
       state_local: sl,
-      playlist: [ { id: -1, url: station.url } ]
+      playlist: [ { id: -1, url: station.url } ],
+      playlist_index: 0,
+      seek: 0
     };
+//home.device.state_local.mp3.title
     if ($scope.home.device.uuid == 'browser') {
+      console.log("station", station)
       $scope.browser_device.state_local = sl;
       $scope.volume_change($scope.browser_device)
       // For playing in the browser it's easy, just start playing with a hidden jPlayer and update the playbar

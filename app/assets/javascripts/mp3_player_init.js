@@ -75,8 +75,9 @@ var init_mp3_player = function($scope, $rootScope, Media, Device) {
   var playAtIndex = function(is_orig_play) {
     var ind = playa.playlist_index;
     var pl = playa.playlist;
+    console.log("ind", ind, "pl", playa.playlist_order)
     var entry = pl[playa.playlist_order[ind]];
-    //console.log("entry.url", entry.url)
+    console.log("entry.url", entry)
     $scope.player_mp3.load(entry.url, function() {
       if (entry.id == -1) {  // Playing a radio stream
         $scope.browser_device.state_local.mp3_id = -1;
@@ -92,7 +93,9 @@ var init_mp3_player = function($scope, $rootScope, Media, Device) {
           $scope.browser_device.state_local.mp3 = mp3;
           $scope.browser_device.state_local.mp3_id = mp3.id;
           $scope.browser_device.state_local.mp3_url = entry.url;
-          $scope.browser_device.state_local.folder_id = $scope.home.folder.id;
+          if ($scope.home.folder) {
+            $scope.browser_device.state_local.folder_id = $scope.home.folder.id;
+          }
           $scope.browser_device.player_status = "PLAYING";
           $scope.playbar.reset(mp3['length_seconds'] * 1000, 0)
           $scope.playbar.play()

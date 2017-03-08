@@ -17,7 +17,8 @@ else
     'login_password' => '',
     'port' => 4040,
     'ddns_hostname' => '',
-    'ddns_update' => ''
+    'ddns_update' => '',
+    'menu' => [ 'music', 'spoken', 'white-noise', 'radio', 'presets', 'settings' ]
   }
 end
 
@@ -27,7 +28,31 @@ cli = HighLine.new
 puts line.colorize(:blue)
 puts "Welcome to Humble Audio Server Setup"
 
-puts "\nStep 1 of 3: Authentication".colorize(:light_blue)
+puts "\nStep 1 of 4: Menu Items".colorize(:light_blue)
+puts "\nThis populates the leftmost column in the UI."
+puts "\nIf you will have MP3s of the given type, enter Y. If not, enter N.\n"
+puts "\nNote: you can always re-run setup later to change menu items"
+
+items_all = [ 'music', 'spoken', 'white-noise', 'radio', 'presets', 'settings' ]
+captions = {
+  'music' => "Music MP3s",
+  'spoken' => "Spoken word (audio books, podcasts etc)",
+  'white-noise' => "White noise tracks",
+  'radio' => "Radio stations",
+  'presets' => "Chromecast Presets (enable if you have Chromecast Audios)",
+  'settings' => "Settings item"
+}
+arr = []
+items_all.each do |itm|
+  val = (settings['menu'].include?(itm) ? 'Y' : 'N')
+  inp = cli.ask(captions[itm] + ":") { |q| q.default = val }
+  if inp && inp.upcase == 'Y'
+    arr.push(itm)
+  end
+end
+settings['menu'] = arr
+
+puts "\nStep 2 of 4: Authentication".colorize(:light_blue)
 puts "\nIf you want to require users to login, set both username and password. If not, leave them blank."
 puts "\nIf you want to make your server internet accessible, it is ABSURDLY HIGHLY RECOMMENDED that you require a login.".colorize(:red)
 puts "\nUsername and password must be alphanumeric: no spaces, !, ;, quotes or or other characters"
@@ -35,7 +60,7 @@ puts "\nJust hit enter to leave the default setting or use 'n/a' (without quotes
 
 inp = "."
 while !inp.match(/^[a-zA-Z0-9]*$/)
-  inp = cli.ask("Username:  ") { |q| q.default = settings['login_username'] }
+  inp = cli.ask("Username (or n/a):  ") { |q| q.default = settings['login_username'] }
   inp = '' if inp.downcase() == 'n/a'
   if !inp.match(/^[a-zA-Z0-9]*$/)
     puts "Sorry, that's an invalid username"
@@ -43,18 +68,20 @@ while !inp.match(/^[a-zA-Z0-9]*$/)
 end
 settings["login_username"] = inp
 
-inp = "."
-while !inp.match(/^[a-zA-Z0-9]*$/)
-  inp = cli.ask("Password:  ") { |q| q.default = settings['login_password'] }
-  inp = '' if inp.downcase() == 'n/a'
-  if !inp.match(/^[a-zA-Z0-9]*$/)
-    puts "Sorry, that's an invalid password"
+if settings["login_username"] != ''
+  inp = "."
+  while !inp.match(/^[a-zA-Z0-9]*$/)
+    inp = cli.ask("Password:  ") { |q| q.default = settings['login_password'] }
+    inp = '' if inp.downcase() == 'n/a'
+    if !inp.match(/^[a-zA-Z0-9]*$/)
+      puts "Sorry, that's an invalid password"
+    end
   end
+  settings["login_password"] = inp
 end
-settings["login_password"] = inp
 
 puts line.colorize(:blue)
-puts ("\nStep 2 of 3: Set a Port").colorize(:light_blue)
+puts ("\nStep 3 of 4: Set a Port").colorize(:light_blue)
 
 puts "\nIf you set port to 80, you can get to the server from: http://your.ip.address. If not, the URL will require a port at the end: http://your.ip.address:4040"
 puts "\nThe latter is recommended if you're exposing your server to the internet as it makes it less likely for your server to fall to automated hacking tools."
@@ -82,7 +109,7 @@ end
 settings['port'] = inp
 
 puts line.colorize(:blue)
-puts ("\nStep 3 of 3: Expose your server to the internet (optional)").colorize(:light_blue)
+puts "\nStep 4 of 4: Expose your server to the internet (optional)".colorize(:light_blue)
 
 puts "\nIf you expose your server to the internet, you'll be able to use it outside your home network, e.g.: from a cell phone in the car, from the office, etc.
 
@@ -157,7 +184,7 @@ end
 
 puts line.colorize(:blue)
 
-File.write("config/settings.yml", "
+str = "
 port: #{settings['port']}
 
 # If set, makes this server available over the internet. Can be either a DDNS host or a domain name.
@@ -171,6 +198,13 @@ ddns_update: #{settings['ddns_update']}
 # Username and password must be alphanumeric: no spaces, !, ;, quotes or or other characters
 login_username: #{settings['login_username']}
 login_password: #{settings['login_password']}
-")
+
+menu:
+"
+settings['menu'].each do |itm|
+  str += "  - #{itm}\n"
+end
+
+File.write("config/settings.yml", str)
 
 puts "Setup complete! Starting server..."

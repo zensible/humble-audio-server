@@ -20,17 +20,22 @@
           Settings:
         %br
 
-        %h5
-          Addresses:
+        %h4
+          Server URL(s):
 
+        %p
+          Wifi accessible:
         {{http_address_local}}
         %br
+        %br
+        %p
+          Internet accessible:
         {{http_address_ddns}}
 
       // Presets
       #selector2{ "ng-if" => "home.mode == 'presets'" }
         %h4
-          Presets:
+          Chromecast Presets:
         %p{ "ng-if" => "is_anything_playing()"}
           %a{ "ng-click" => "preset_create()" }<
             Create Preset
@@ -219,9 +224,9 @@
           %img{ "ng-src" => "/images/{{theme.icons}}/pause2_20.png" }
         #playbar-next.play-control.play-control-large.hand{ "ng-click" => "next()", title: "Skip to next", "ng-class" => "{ 'disabled': playbar.playlistIndex == playbar.playlist.length - 1 }" }
           %img{ "ng-src" => "/images/{{theme.icons}}/next_16.png" }
-        #playbar-repeat.play-control.play-control-small.hand{ "ng-click" => "toggleRepeat()", title: "Enable/disable repeat" }
+        #playbar-repeat.play-control.play-control-small.hand{ "ng-click" => "toggleRepeat()", title: "Enable/disable repeat", "ng-hide" => "home.mode == 'radio'" }
           %img{ "ng-src" => "/images/{{theme.icons}}/repeat_{{home.device.state_local.repeat}}_16.png" }
-        #playbar-shuffle.play-control.play-control-small.hand{ "ng-click" => "toggleShuffle()", title: "Enable/disable shuffle" }
+        #playbar-shuffle.play-control.play-control-small.hand{ "ng-click" => "toggleShuffle()", title: "Enable/disable shuffle", "ng-hide" => "home.mode == 'radio'"  }
           %img{ "ng-src" => "/images/{{theme.icons}}/shuffle_{{home.device.state_local.shuffle}}_16.png" }
 
       #time-passed

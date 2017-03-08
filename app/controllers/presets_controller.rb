@@ -35,7 +35,6 @@ class PresetsController < ApplicationController
     preset = Preset.find(params[:id])
     preset.play($http_address_local)
 
-
     render :json => { success: true }
   end
 
@@ -52,6 +51,13 @@ class PresetsController < ApplicationController
   end
 
   def destroy
-    abort params.inspect
+    id = params[:id]
+    p = Preset.find(id)
+    if p
+      p.destroy()
+    end
+    Preset.update_crono()
+
+    render :json => { success: true }
   end
 end

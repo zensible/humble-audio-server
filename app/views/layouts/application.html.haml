@@ -21,6 +21,7 @@
     window.request_hostname = "#{request.host}";
     window.http_address_ddns = "#{$http_address_ddns}";
     window.http_address_local = "#{$http_address_local}";
+    window.menu = #{JSON.dump($settings['menu'])};
 
   = javascript_include_tag 'application'
   = javascript_include_tag '/bootstrap/js/bootstrap.js'

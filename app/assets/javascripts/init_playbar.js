@@ -141,8 +141,10 @@ var init_playbar = function($scope, $rootScope, Media, Device) {
     if ($scope.home.device.uuid == 'browser') {
       $scope.player_mp3.pause();
 
-      Media.save_bookmark($scope.browser_device.state_local.mp3_id, parseInt($scope.playbar.progress / 1000), function(response) {
-      })
+      if ($scope.home.mode == 'spoken') {
+        Media.save_bookmark($scope.browser_device.state_local.mp3_id, parseInt($scope.playbar.progress / 1000), function(response) {
+        })
+      }
     } else {
       Media.pause($scope.home.device.uuid, function(response) {
         $scope.playbar.pause()

@@ -142,3 +142,43 @@ Then(/^I should be able to stop all$/) do
   sleep(0.1)
   page.evaluate_script("scope.browser_device.player_status").should_not eql("PLAYING")
 end
+
+Then(/^I should be able to play and pause a radio station$/) do
+  page.find(".select-mode", :text => 'Radio').click() 
+
+  page.first(".mp3-title a").click
+
+  page.find('#song-name').text.should match(/WBEZ Chicago/)
+end
+
+Then(/^I should be able to play and pause white noise$/) do
+  page.find(".select-mode", :text => 'White Noise').click() 
+
+  page.first(".mp3-title a").click
+
+  page.find('#song-name').text.should match(/test-04\.mp3/)
+end
+
+Given(/^I am in 'spoken' mode$/) do
+  pending # Write code here that turns the phrase above into concrete actions
+end
+
+Then(/^I should be able to play a spoken word track$/) do
+  pending # Write code here that turns the phrase above into concrete actions
+end
+
+When(/^I hit pause$/) do
+  pending # Write code here that turns the phrase above into concrete actions
+end
+
+Then(/^a bookmark should be saved$/) do
+  pending # Write code here that turns the phrase above into concrete actions
+end
+
+When(/^I leave the page$/) do
+  pending # Write code here that turns the phrase above into concrete actions
+end
+
+Then(/^I should be able to resume from my bookmark$/) do
+  pending # Write code here that turns the phrase above into concrete actions
+end

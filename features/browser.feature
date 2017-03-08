@@ -11,10 +11,14 @@ Scenario: music
   And I should be able to toggle repeat-one
   And I should be able to toggle shuffle
   And I should be able to stop all
+  And I should be able to play and pause white noise
+  And I should be able to play and pause a radio station
 
-Scenario: spoken
+Scenario: bookmarks
   Given I am in 'spoken' mode
+  Then I should be able to play a spoken word track
   When I hit pause
   Then a bookmark should be saved
   When I leave the page
   Then a bookmark should be saved
+  And I should be able to resume from my bookmark
