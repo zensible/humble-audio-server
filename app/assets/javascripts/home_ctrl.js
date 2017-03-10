@@ -373,6 +373,9 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     })
   }
 
+  $scope.$on('$locationChangeStart', function( event ) {
+      alert("yaaar")
+  });
 
   /*
    * The user has clicked a radio station in #selector2 in radio mode.

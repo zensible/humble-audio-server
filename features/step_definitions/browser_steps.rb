@@ -160,23 +160,43 @@ Then(/^I should be able to play and pause white noise$/) do
 end
 
 Given(/^I am in 'spoken' mode$/) do
-  pending # Write code here that turns the phrase above into concrete actions
+  page.find(".select-mode", :text => 'Spoken').click()
 end
 
 Then(/^I should be able to play a spoken word track$/) do
-  pending # Write code here that turns the phrase above into concrete actions
+  page.find(".select-folder", :text => "playlist").click()
+
+  # Click the first mp3
+  page.first(".play-mp3").click()
+  safeApply()
+  sleep(1.0)
+  page.find("#playbar-pause").should be_visible
+  page.find('#song-name').text.should match(/test-01\.mp3/)
+  
 end
 
-When(/^I hit pause$/) do
-  pending # Write code here that turns the phrase above into concrete actions
+When(/^I hit pause a bookmark should be saved$/) do
+  page.find("#playbar-pause").click()
+  page.find("#playbar-resume").should be_visible
+
+  book_folder = Folder.where("mode = 'spoken' AND parent_folder_id = -1 AND basename = 'playlist'").first
+  bm = JSON.load(book_folder.bookmark)
+  bm["elapsed"].should eql(1)
+  bm["mp3"]["filename"].should match(/test-01/)
+
+  book_folder.bookmark = nil
+  book_folder.save
+
+  page.find("#playbar-resume").click()
 end
 
-Then(/^a bookmark should be saved$/) do
-  pending # Write code here that turns the phrase above into concrete actions
-end
+When(/^I leave the page a bookmark should be saved$/) do
+  visit "/"
 
-When(/^I leave the page$/) do
-  pending # Write code here that turns the phrase above into concrete actions
+  book_folder = Folder.where("mode = 'spoken' AND parent_folder_id = -1 AND basename = 'playlist'").first
+  bm = JSON.load(book_folder.bookmark)
+  bm["elapsed"].should eql(1)
+  bm["mp3"]["filename"].should match(/test-01/) 
 end
 
 Then(/^I should be able to resume from my bookmark$/) do
