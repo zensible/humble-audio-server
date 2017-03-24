@@ -177,8 +177,11 @@ end
 
 When(/^I hit pause a bookmark should be saved$/) do
   page.find("#playbar-pause").click()
+  sleep 0.1
   page.find("#playbar-resume").should be_visible
+  sleep 0.1
 
+  book_folder = nil
   book_folder = Folder.where("mode = 'spoken' AND parent_folder_id = -1 AND basename = 'playlist'").first
   bm = JSON.load(book_folder.bookmark)
   bm["elapsed"].should eql(1)
@@ -191,7 +194,7 @@ When(/^I hit pause a bookmark should be saved$/) do
 end
 
 When(/^I leave the page a bookmark should be saved$/) do
-  visit "/"
+  visit "/robots.txt"
 
   book_folder = Folder.where("mode = 'spoken' AND parent_folder_id = -1 AND basename = 'playlist'").first
   bm = JSON.load(book_folder.bookmark)
@@ -200,5 +203,10 @@ When(/^I leave the page a bookmark should be saved$/) do
 end
 
 Then(/^I should be able to resume from my bookmark$/) do
-  pending # Write code here that turns the phrase above into concrete actions
+  visit("/")
+  wait_until {
+    puts page.text
+    page.text.should match(/Resume From Bookmark/)
+    page.text.should match(/00m 01s/)
+  }
 end

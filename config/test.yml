@@ -1,0 +1,22 @@
+
+port: 4040
+
+# If set, makes this server available over the internet. Can be either a DDNS host or a domain name.
+ddns_hostname: 
+
+# If set, the server will curl this address every 30 minutes to update your IP with your DDNS provider.
+ddns_update: 
+
+# If a password is set the app will require the user log in.
+# This is recommended if you're serving out to the internet -- otherwise some random script kiddie in Belarus might blast heavy metal on all your chromecasts at 3AM.
+# Username and password must be alphanumeric: no spaces, !, ;, quotes or or other characters
+login_username: 
+login_password: 
+
+menu:
+  - music
+  - spoken
+  - white-noise
+  - radio
+  - presets
+  - settings

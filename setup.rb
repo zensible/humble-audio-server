@@ -24,6 +24,7 @@ end
 
 cli = HighLine.new
 
+# To Do: mysql database password
 
 puts line.colorize(:blue)
 puts "Welcome to Humble Audio Server Setup"

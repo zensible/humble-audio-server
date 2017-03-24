@@ -194,8 +194,8 @@ $populate_casts_var = "for cc in chromecasts:
       mp3_obj = Mp3.find_by_id(mp3[:id]).to_h
     end
     @state_local[:mp3] = mp3_obj
-    @state_local[:mp3_id] = mp3[:id]
-    @state_local[:mp3_url] = mp3[:url]
+    #@state_local[:mp3_id] = mp3[:id]
+    #@state_local[:mp3_url] = mp3[:url]
 
     skip_to_seconds = 0
     if @state_local["seek"] # We only want to seek the first track in the playlist
@@ -326,8 +326,8 @@ $populate_casts_var = "for cc in chromecasts:
     # This clears what's playing on front-end
     @state_local['mode'] = ""
     @state_local['folder_id'] = nil
-    @state_local['mp3_url'] = ""
-    @state_local['mp3_id'] = nil
+    #@state_local['mp3_url'] = ""
+    #@state_local['mp3_id'] = nil
     @state_local['mp3'] = {}
     @state_local['radio_station'] = nil
     @state_local['shuffle'] = 'off'

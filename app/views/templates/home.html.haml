@@ -10,12 +10,12 @@
     #loading-small{ "ng-if" => "loading" }
       = render :partial => 'loading'
 
-    #media-selector{ "ng-if" => "home.device"}
+    #media-selector{ "ng-if" => "home.device_selected"}
       #mode-select.ellipsis
         %p{ "ng-repeat" => "mode in available_modes"}
           = render :partial => 'mode'
 
-      #selector2{ "ng-if" => "home.mode == 'settings'" }
+      #selector2{ "ng-if" => "home.mode_ui_ui == 'settings'" }
         %h4
           Settings:
         %br
@@ -33,7 +33,7 @@
         {{http_address_ddns}}
 
       // Presets
-      #selector2{ "ng-if" => "home.mode == 'presets'" }
+      #selector2{ "ng-if" => "home.mode_ui_ui == 'presets'" }
         %h4
           Chromecast Presets:
         %p{ "ng-if" => "is_anything_playing()"}
@@ -86,48 +86,47 @@
         %br
 
       // Music / White Noise
-      #selector2{ "ng-if" => "home.mode == 'music' || home.mode == 'white-noise' || home.mode == 'spoken'"}
+      #selector2{ "ng-if" => "home.mode_ui == 'music' || home.mode_ui == 'white-noise' || home.mode_ui == 'spoken'"}
         %h3
-          %span{ "ng-if" => "home.mode == 'music'"}
+          %span{ "ng-if" => "home.mode_ui == 'music'"}
             Music:
-          %span{ "ng-if" => "home.mode == 'spoken'"}
+          %span{ "ng-if" => "home.mode_ui == 'spoken'"}
             Spoken:
-          %span{ "ng-if" => "home.mode == 'white-noise'"}
+          %span{ "ng-if" => "home.mode_ui == 'white-noise'"}
             White Noise:
           %a#refresh-media.hand{ "ng-click" => "refresh_media()"}
-            %img{ "ng-src" => "/images/{{theme.icons}}/refresh_16.png", :title => "Refresh the media in '{{home.mode}}'" }
+            %img{ "ng-src" => "/images/{{theme.icons}}/refresh_16.png", :title => "Refresh the media in '{{home.mode_ui}}'" }
 
-        %h3{ "ng-if" => "(home.mode == 'music' || home.mode == 'spoken') && home.folder_id != -1" }
+        %h3{ "ng-if" => "(home.mode_ui == 'music' || home.mode_ui == 'spoken') && home.folder.id != -1" }
           {{home.folder.basename}}:
 
-        %h3{ "ng-if" => "(home.mode == 'music' || home.mode == 'spoken') && home.folder_id == -1" }
+        %h3{ "ng-if" => "(home.mode_ui == 'music' || home.mode_ui == 'spoken') && home.folder.id == -1" }
           Home:
 
         /Sort by:
         /%input{ :type => "radio", :name => "sort_by", :value => "title" } Title
         /%input{ :type => "radio", :name => "sort_by", :value => "filename" } Filename
 
-        .mp3-record{ "ng-if" => "home.mode == 'spoken' && home.folder.bookmark['mp3']"}
+        .mp3-record{ "ng-if" => "home.mode_ui == 'spoken' && home.folder.bookmark['mp3']"}
           %p
             %a{ "ng-click" => "play_bookmark(home.folder.bookmark)" }
               Resume From Bookmark: 
           %p
             &nbsp;&nbsp;"{{home.folder.bookmark['mp3']['title']}}" -> {{home.folder.bookmark['elapsed_friendly']}}
 
-        .folder-record{ "ng-if" => "home.folder_id > -1 && mode != 'white-noise'" }
+        .folder-record{ "ng-if" => "home.folder.id > -1 && mode != 'white-noise'" }
           .folder-name.back.ellipsis
             %a#back-button{ "ng-click" => "select_folder(home.folder.parent_folder_id)" }
               &lt;-- Back
 
-        .folder-record{ "ng-repeat" => "folder in home.folders", "ng-if" => "folder.parent_folder_id == home.folder_id && home.mode != 'white-noise'" }
+        .folder-record{ "ng-repeat" => "folder in home.folders", "ng-if" => "folder.parent_folder_id == home.folder.id && home.mode_ui != 'white-noise'" }
           .folder-playing
-            %span.play-button{ "ng-if" => "is_playing('folder_id', folder.id)", "ng-init" => "entry = is_playing('folder_id', folder.id)" }
-              %img{ "ng-src" => "/images/play_device_0.png"}
+            %span.play-button{ "ng-if" => "is_playing('folder.id', folder.id)", "ng-init" => "entry = is_playing('folder.id', folder.id)" }
+              %img{ "ng-src" => "/images/play_device_{{entry.num_casting || 0}}.png"}
 
           .folder-name.ellipsis
             %a.select-folder{ "ng-click" => "select_folder(folder.id)" }
               {{folder.basename}}
-            %span.play-button{ "ng-if" => "is_playing('folder_id', folder.id)" }
 
         .mp3-record{ "ng-if" => "!home.mp3s.length && !home.folders.length" }
           No tracks or folders found
@@ -150,7 +149,7 @@
         / works for 'white-noise' and 'music'
         .mp3-record{ "ng-repeat" => "mp3 in home.mp3s" }
           .mp3-playing
-            %span.play-button{ "ng-if" => "is_playing('mp3_id', mp3.id)", "ng-init" => "entry = is_playing('mp3_id', mp3.id)" }
+            %span.play-button{ "ng-if" => "is_playing('mp3.id', mp3.id)", "ng-init" => "entry = is_playing('mp3.id', mp3.id)" }
               %img{ "ng-src" => "/images/play_device_{{entry.num_casting}}.png"}
           .mp3-track-nr
             {{mp3.track_nr || "-"}}
@@ -167,19 +166,19 @@
             {{mp3.length_seconds | secondsToDateTime | date:'H:mm:ss' }}
 
         %br
-        %p{ "ng-if" => "home.mode == 'spoken'"}
+        %p{ "ng-if" => "home.mode_ui == 'spoken'"}
           Note: In the Spoken Word section, stopping or pausing a track will save a "bookmark" which you can resume later.
 
         %br
         %br
 
       // Radio
-      #selector2{ "ng-if" => "home.mode == 'radio'" }
+      #selector2{ "ng-if" => "home.mode_ui == 'radio'" }
         %h4
           Radio Stations:
         .mp3-record{ "ng-repeat" => "station in home.radio_stations", style: "width: 500px" }
           .mp3-playing
-            %span.play-button{ "ng-if" => "is_playing('mp3_url', station.url)", "ng-init" => "entry = is_playing('mp3_url', station.url)" }
+            %span.play-button{ "ng-if" => "is_playing('mp3.url', station.url)", "ng-init" => "entry = is_playing('mp3.url', station.url)" }
               %img{ "ng-src" => "/images/play_device_{{entry.num_casting}}.png"}
           .mp3-title.ellipsis
             %a{ "ng-click" => "play_radio(station)"}
@@ -205,16 +204,16 @@
               %tr{ "ng-repeat" => "device in home.devices", "ng-if" => "device.cast_type == 'audio'" }
                 = render :partial => 'device'
 
-    //{ "ng-if" => "home.device.player_status != 'IDLE' && home.device.player_status != 'UNKNOWN'" }
+    //{ "ng-if" => "home.device_selected.player_status != 'IDLE' && home.device_selected.player_status != 'UNKNOWN'" }
     #playbar
       #cur-song
         #song-name.ellipsis
           %span{  }
-            {{home.device.state_local.mp3.title || home.device.state_local.mp3.filename || home.device.state_local.radio_station.name || "---"}}
-          %span{ "ng-if" => "home.device.state_local.mp3.artist" }
-            ({{home.device.state_local.mp3.artist}})
+            {{home.device_selected.state_local.mp3.title || home.device_selected.state_local.mp3.filename || home.device_selected.state_local.radio_station.name || "---"}}
+          %span{ "ng-if" => "home.device_selected.state_local.mp3.artist" }
+            ({{home.device_selected.state_local.mp3.artist}})
         #current-cast-name.ellipsis
-          {{home.device.friendly_name}}
+          {{home.device_selected.friendly_name}}
       #play-controls
         #playbar-previous.play-control.play-control-large.hand{ "ng-click" => "prev()", title: "Play previous", "ng-class" => "{ 'disabled': playbar.playlistIndex == 0 }" }
           %img{ "ng-src" => "/images/{{theme.icons}}/previous_16.png" }
@@ -224,10 +223,10 @@
           %img{ "ng-src" => "/images/{{theme.icons}}/pause2_20.png" }
         #playbar-next.play-control.play-control-large.hand{ "ng-click" => "next()", title: "Skip to next", "ng-class" => "{ 'disabled': playbar.playlistIndex == playbar.playlist.length - 1 }" }
           %img{ "ng-src" => "/images/{{theme.icons}}/next_16.png" }
-        #playbar-repeat.play-control.play-control-small.hand{ "ng-click" => "toggleRepeat()", title: "Enable/disable repeat", "ng-hide" => "home.mode == 'radio'" }
-          %img{ "ng-src" => "/images/{{theme.icons}}/repeat_{{home.device.state_local.repeat}}_16.png" }
-        #playbar-shuffle.play-control.play-control-small.hand{ "ng-click" => "toggleShuffle()", title: "Enable/disable shuffle", "ng-hide" => "home.mode == 'radio'"  }
-          %img{ "ng-src" => "/images/{{theme.icons}}/shuffle_{{home.device.state_local.shuffle}}_16.png" }
+        #playbar-repeat.play-control.play-control-small.hand{ "ng-click" => "toggleRepeat()", title: "Enable/disable repeat", "ng-hide" => "home.mode_ui == 'radio'" }
+          %img{ "ng-src" => "/images/{{theme.icons}}/repeat_{{home.device_selected.state_local.repeat}}_16.png" }
+        #playbar-shuffle.play-control.play-control-small.hand{ "ng-click" => "toggleShuffle()", title: "Enable/disable shuffle", "ng-hide" => "home.mode_ui == 'radio'"  }
+          %img{ "ng-src" => "/images/{{theme.icons}}/shuffle_{{home.device_selected.state_local.shuffle}}_16.png" }
 
       #time-passed
         %span 0:00

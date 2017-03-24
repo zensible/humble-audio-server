@@ -70,10 +70,10 @@ var init_playbar = function($scope, $rootScope, Media, Device) {
    * Go back one entry in the playlist
    */
   $scope.prev = function() {
-    if ($scope.home.device.uuid == 'browser') {
+    if ($scope.home.device_selected.uuid == 'browser') {
       $scope.player_mp3.prev();
     } else {
-      Media.prev($scope.home.device.uuid)
+      Media.prev($scope.home.device_selected.uuid)
     }
   }
 
@@ -81,29 +81,29 @@ var init_playbar = function($scope, $rootScope, Media, Device) {
    * Go forward one entry in the playlist
    */
   $scope.next = function() {
-    if ($scope.home.device.uuid == 'browser') {
+    if ($scope.home.device_selected.uuid == 'browser') {
       $scope.player_mp3.next();
     } else {
-      Media.next($scope.home.device.uuid)
+      Media.next($scope.home.device_selected.uuid)
     }
   }
 
   $scope.toggleRepeat = function() {
-    switch ($scope.home.device.state_local.repeat) {
+    switch ($scope.home.device_selected.state_local.repeat) {
       case "off":
-        $scope.home.device.state_local.repeat = "all";
+        $scope.home.device_selected.state_local.repeat = "all";
         break;
       case "all":
-        $scope.home.device.state_local.repeat = "one";
+        $scope.home.device_selected.state_local.repeat = "one";
         break;
       case "one":
-        $scope.home.device.state_local.repeat = "off";
+        $scope.home.device_selected.state_local.repeat = "off";
         break;
     }
-    var dev = $scope.home.device;
+    var dev = $scope.home.device_selected;
 
-    if ($scope.home.device.uuid != 'browser') {
-      Device.repeat_change(dev.uuid, $scope.home.device.state_local.repeat, function() {
+    if ($scope.home.device_selected.uuid != 'browser') {
+      Device.repeat_change(dev.uuid, $scope.home.device_selected.state_local.repeat, function() {
         console.log("Repeat change successful")
       })
     }
@@ -111,21 +111,21 @@ var init_playbar = function($scope, $rootScope, Media, Device) {
 
 
   $scope.toggleShuffle = function() {
-    if ($scope.home.device.state_local.shuffle == "on") {
-      $scope.home.device.state_local.shuffle = "off";
+    if ($scope.home.device_selected.state_local.shuffle == "on") {
+      $scope.home.device_selected.state_local.shuffle = "off";
     } else {
-      $scope.home.device.state_local.shuffle = "on";
+      $scope.home.device_selected.state_local.shuffle = "on";
     }
-    var dev = $scope.home.device;
+    var dev = $scope.home.device_selected;
 
-    if ($scope.home.device.uuid == 'browser') {
-      if ($scope.home.device.state_local.shuffle == "on") {
+    if ($scope.home.device_selected.uuid == 'browser') {
+      if ($scope.home.device_selected.state_local.shuffle == "on") {
         $scope.player_mp3.shuffle_playlist();
       } else {
         $scope.player_mp3.unshuffle_playlist();
       }
     } else {
-      Device.shuffle_change(dev.uuid, $scope.home.device.state_local.shuffle, function() {
+      Device.shuffle_change(dev.uuid, $scope.home.device_selected.state_local.shuffle, function() {
         console.log("Shuffle change successful")
       })
     }
@@ -138,25 +138,39 @@ var init_playbar = function($scope, $rootScope, Media, Device) {
   */
 
   $scope.pause = function() {
-    if ($scope.home.device.uuid == 'browser') {
+    console.log("pause001")
+    if ($scope.home.device_selected.uuid == 'browser') {
+    console.log("pause002")
       $scope.player_mp3.pause();
+    console.log("pause002.1")
 
-      if ($scope.home.mode == 'spoken') {
-        Media.save_bookmark($scope.browser_device.state_local.mp3_id, parseInt($scope.playbar.progress / 1000), function(response) {
+      var sl = $scope.home.device_selected.state_local;
+      var mode = sl.mode;
+      var folder_id = sl.folder.id;
+    console.log("mode:", mode)
+      if (mode == 'spoken') {
+    console.log("pause003")
+        Media.save_bookmark($scope.browser_device.state_local.mp3.id, parseInt($scope.playbar.progress / 1000), function(response) {
+    console.log("pause004")
+          Media.get_folder('spoken', $scope.home.folder.id, function(response) {
+    console.log("pause005")
+            $scope.home.folder.bookmark = response.data.bookmark;
+            $scope.safeApply()
+          });
         })
       }
     } else {
-      Media.pause($scope.home.device.uuid, function(response) {
+      Media.pause($scope.home.device_selected.uuid, function(response) {
         $scope.playbar.pause()
       })
     }
   }
 
   $scope.resume = function() {
-    if ($scope.home.device.uuid == 'browser') {
+    if ($scope.home.device_selected.uuid == 'browser') {
       $scope.player_mp3.resume();
     } else {
-      Media.resume($scope.home.device.uuid, function(response) {
+      Media.resume($scope.home.device_selected.uuid, function(response) {
         $scope.playbar.resume()
       })
     }
@@ -181,10 +195,10 @@ var init_playbar = function($scope, $rootScope, Media, Device) {
     var seekMs = mult * tot;
     var seekSecs = parseInt(seekMs / 1000);
 console.log("seekSecs", seekSecs)
-    if ($scope.home.device.uuid == 'browser') {
+    if ($scope.home.device_selected.uuid == 'browser') {
       $scope.player_mp3.seek(seekSecs);
     } else {
-      Media.seek($scope.home.device.uuid, seekSecs, function() {
+      Media.seek($scope.home.device_selected.uuid, seekSecs, function() {
 
       });
     }

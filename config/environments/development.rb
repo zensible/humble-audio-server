@@ -69,6 +69,6 @@ Rails.application.configure do
   config.file_watcher = ActiveSupport::EventedFileUpdateChecker
 
   # Change to :debug to see all logs. Generally useful only for debugging the ruby code itself.
-  config.log_level = :warn
+  config.log_level = :debug
 
 end

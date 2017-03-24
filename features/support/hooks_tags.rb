@@ -1,3 +1,6 @@
+Before do |scenario|
+  DatabaseCleaner.clean()
+end
 
 # Wait up to 5 seconds for code block to return true
 def wait_until(max=5, wait_time=0.15)

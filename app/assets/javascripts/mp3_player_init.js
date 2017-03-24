@@ -63,7 +63,7 @@ var init_mp3_player = function($scope, $rootScope, Media, Device) {
       playa.playlist_order.push(i);
     }
 
-    if ($scope.home.device.state_local.shuffle == 'on') {
+    if ($scope.home.device_selected.state_local.shuffle == 'on') {
       playa.shuffle_playlist();
     }
     console.log("$scope.player_mp3.playlist_order", playa.playlist_order)
@@ -80,8 +80,7 @@ var init_mp3_player = function($scope, $rootScope, Media, Device) {
     console.log("entry.url", entry)
     $scope.player_mp3.load(entry.url, function() {
       if (entry.id == -1) {  // Playing a radio stream
-        $scope.browser_device.state_local.mp3_id = -1;
-        $scope.browser_device.state_local.mp3_url = entry.url;
+        $scope.browser_device.state_local.mp3 = entry;
 
         $scope.browser_device.player_status = "PLAYING";
         $scope.playbar.reset(0, 0)
@@ -91,10 +90,10 @@ var init_mp3_player = function($scope, $rootScope, Media, Device) {
         Media.get_by_id(entry.id, function(response) {
           var mp3 = response.data;
           $scope.browser_device.state_local.mp3 = mp3;
-          $scope.browser_device.state_local.mp3_id = mp3.id;
-          $scope.browser_device.state_local.mp3_url = entry.url;
+          //$scope.browser_device.state_local.mp3_id = mp3.id;
+          $scope.browser_device.state_local.mp3.url = entry.url;
           if ($scope.home.folder) {
-            $scope.browser_device.state_local.folder_id = $scope.home.folder.id;
+            $scope.browser_device.state_local.folder = $scope.home.folder;
           }
           $scope.browser_device.player_status = "PLAYING";
           $scope.playbar.reset(mp3['length_seconds'] * 1000, 0)
@@ -106,7 +105,7 @@ var init_mp3_player = function($scope, $rootScope, Media, Device) {
       $scope.player_mp3.play(pl, function() {  // Play is complete, advance in the playlist
         $scope.player_mp3.playlist_index += 1
 
-        if ($scope.home.device.state_local.repeat == "one") {
+        if ($scope.home.device_selected.state_local.repeat == "one") {
           $scope.player_mp3.playlist_index -= 1;
         } else {
           if (playa.playlist_index >= playa.playlist_order.length) { // Reached the end of the playlist
@@ -115,7 +114,7 @@ var init_mp3_player = function($scope, $rootScope, Media, Device) {
 
           // We've played the playlist until we're back to the first song clicked
           if (!is_orig_play && playa.playlist_order[playa.playlist_index] == playa.orig_index) {
-            if ($scope.home.device.state_local.repeat != "all") {
+            if ($scope.home.device_selected.state_local.repeat != "all") {
               // If repeat is 'all', do nothing -- just keep on playin'
               return;  // If it's off, stop here
             }
@@ -148,6 +147,9 @@ var init_mp3_player = function($scope, $rootScope, Media, Device) {
       jp.unbind($.jPlayer.event.canplay);
       callbackLoaded(jp.data('jPlayer').status.duration);
     });
+    jp.bind($.jPlayer.event.timeupdate, function(event) {
+      $scope.browser_device.state_local.elapsed = event.jPlayer.status.currentTime
+    })
   }
 
   $scope.player_mp3.play = function(seekMs, playCallback) {  // midi == MIDI.Player

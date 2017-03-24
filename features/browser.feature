@@ -19,5 +19,4 @@ Scenario: bookmarks
   Then I should be able to play a spoken word track
   When I hit pause a bookmark should be saved
   When I leave the page a bookmark should be saved
-  Then a bookmark should be saved
   And I should be able to resume from my bookmark
