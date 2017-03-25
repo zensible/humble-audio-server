@@ -48,7 +48,7 @@ https://www.google.com/search?q=how+install+curl+ubuntu
   if ip.nil?
     raise "Error 1000: Could not find a local IP address. Is this machine connected to a local network?"
   end
-  ip = Rails.env.test? ? '127.0.0.1' : ip.ip_address
+  ip = ip.ip_address
   $ip_address = ip
   $port = Rails.env.test? ? 65501 : $settings['port']
 

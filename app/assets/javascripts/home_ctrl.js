@@ -465,7 +465,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
         if (arr.length == 1) {
           var val_device = dev.state_local[arr[0]]
         } else if (arr.length == 2) {
-          console.log("arr", arr)
+          //console.log("arr", arr)
           var val_device = dev.state_local[arr[0]][arr[1]]
         }
 

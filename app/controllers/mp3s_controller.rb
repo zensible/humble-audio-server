@@ -60,22 +60,24 @@ class Mp3sController < ApiController
     render :json => { success: true }
   end
 
+
   def play
     puts "001"
+    orig_index = params[:playlist_index]
+    playlist_index = params[:playlist_index]
     playlist_params = params[:playlist]
     playlist = []
     playlist_params.each do |pl|
       playlist.push(pl.to_unsafe_h())
     end
+
+    playlist_order = []
+    playlist.each_with_index do |pl, i|
+      playlist_order.push(i)
+    end
+
     state_local = params[:state_local]
     cast_uuid = params[:state_local][:cast_uuid]
-
-    if state_local[:shuffle] == "on"
-      clicked = playlist.shift # We want the clicked mp3 to play first, all else is shuffled
-      playlist.shuffle!
-      playlist.unshift(clicked)
-    end
-    puts "002"
 
     buffering_pause = 3.0  # Magic number here: number of seconds to wait for device to go from buffering to playing. We could use the wait_for_device_status() function, but sadly the device starts playing about 1s before the status updates to PLAYING so this isn't an option.
 
@@ -89,6 +91,14 @@ class Mp3sController < ApiController
 
     device.state_local = state_local.to_unsafe_h
     device.playlist = playlist
+    device.playlist_order = playlist_order
+    device.playlist_index = playlist_index
+    device.orig_index = orig_index
+
+    if state_local[:shuffle] == "on"
+      device.shuffle_playlist()
+    end
+
     $redis.hset("thread_command", cast_uuid, "play")  # See: device.rb#refresh
     puts "003"
 

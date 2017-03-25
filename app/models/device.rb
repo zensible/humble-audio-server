@@ -1,7 +1,8 @@
 class Device
   require 'benchmark'
 
-  attr_accessor :uuid, :cast_type, :friendly_name, :volume_level, :status_text, :model_name, :state_local, :playlist, :playlist_index
+  attr_accessor :uuid, :cast_type, :friendly_name, :volume_level, :status_text, :model_name
+  attr_accessor :state_local, :playlist, :playlist_index, :playlist_order, :orig_index
 
   MAX_BUFFERING_WAIT ||= 10
   MAX_PLAYING_WAIT ||= 8
@@ -17,6 +18,7 @@ class Device
   @state_local = ""
   @playlist = []
   @playlist_index = 0
+  @playlist_order = []
 
   def initialize(hsh)
     @uuid = hsh["uuid"]
@@ -97,11 +99,7 @@ $populate_casts_var = "for cc in chromecasts:
 
     $devices = []
     devs.each do |hsh|
-      if Rails.env.test?
-        $devices.push(Device.new(hsh)) if hsh["friendly_name"] == "Bedroom-Guest"
-      else
-        $devices.push(Device.new(hsh)) if hsh["cast_type"] == "group" || hsh["cast_type"] == "audio"
-      end
+      $devices.push(Device.new(hsh)) if hsh["cast_type"] == "group" || hsh["cast_type"] == "audio"
     end
 
     stop_all() # Since the threads which monitored the casts will have died if we're here, we have no idea what they're playing. Stop all casts from playing for sanity's sake.
@@ -118,7 +116,6 @@ $populate_casts_var = "for cc in chromecasts:
         begin
           while(true) do
             cmd = ""
-            puts "004.1"
 
             $semaphore.synchronize {
               cmd = $redis.hget("thread_command", uuid)
@@ -138,34 +135,36 @@ $populate_casts_var = "for cc in chromecasts:
                 Device.broadcast()
               end
 
-              device.playlist_index = 0
-              device.play_at_index()
+              #device.playlist_index = 0
+              device.play_at_index(0, true)
             when "wait_for_idle"
               # When the cast goes from BUFFERING/PLAYING to IDLE, that means the song has ended or couldn't be played. Move on to the next item in the playlist
               if device.player_status() == "IDLE"
                 continue_playing = true
                 device.playlist_index += 1
                 if device.state_local[:repeat] == "one"
-                  device.playlist_index = 0
-                end
-                if device.playlist_index >= device.playlist.length # Reached the end of the playlist
-                  if device.state_local[:repeat] == "all"
+                  device.playlist_index -= 1
+                else
+                  if device.playlist_index >= device.playlist_order.length # Reached the end of the playlist
                     device.playlist_index = 0
-                  else # Repeat isn't on, just stop playing
-                    continue_playing = false
-                    Device.broadcast() # Inform user playlist is done playing
+                    if !is_orig_play && device.playlist_order[device.playlist_index] == device.orig_index
+                      if device.state_local[:repeat] == 'all'
+                        continue_playing = false
+                        Device.broadcast() # Inform user playlist is done playing
+                      end
+                    end
                   end
+                  device.play_at_index(0, false) if continue_playing
                 end
-                device.play_at_index() if continue_playing
               end
             when "next"
               device.playlist_index += 1
               device.playlist_index = 0 if device.playlist_index >= device.playlist.length
-              device.play_at_index()
+              device.play_at_index(0, false)
             when "prev"
               device.playlist_index -= 1
               device.playlist_index = device.playlist.length - 1 if device.playlist_index < 0
-              device.play_at_index()
+              device.play_at_index(0, false)
             end
             sleep 1
           end
@@ -183,9 +182,10 @@ $populate_casts_var = "for cc in chromecasts:
     return $devices
   end
 
-  def play_at_index(retry_num = 0)
+  def play_at_index(retry_num, is_orig_play)
     puts "Playlist index: #{@playlist_index}" if ENV['DEBUG'] == 'true'
-    mp3 = @playlist[@playlist_index]
+
+    mp3 = @playlist[@playlist_order[@playlist_index]]
 
     if mp3[:id] == -1
       mp3_obj = {
@@ -234,7 +234,7 @@ $populate_casts_var = "for cc in chromecasts:
           Rails.logger.warn("= 102 = Could not retrieve buffer for mp3 within #{MAX_PLAYING_WAIT}. Waiting #{RETRY_WAIT} seconds and retrying. Retry ##{retry_num + 1} of #{MAX_RETRIES} for #{mp3[:url]}")
           sleep(RETRY_WAIT)  # Wait 5 seconds and try again
           if retry_num < MAX_RETRIES
-            return play_at_index(retry_num + 1)
+            return play_at_index(retry_num + 1, is_orig_play)
           else
             Rails.logger.error("= 101 = Tried #{MAX_RETRIES} times and couldn't go from BUFFERING to PLAYING - give up and cancel play")
             $redis.hset("thread_command", @uuid, "")
@@ -401,7 +401,11 @@ $populate_casts_var = "for cc in chromecasts:
 
   def set_shuffle(shuffle)
     @state_local[:shuffle] = shuffle
-
+    if shuffle == 'on'
+      self.shuffle_playlist()
+    else
+      self.unshuffle_playlist()
+    end
     Device.broadcast()
   end
 
@@ -409,6 +413,23 @@ $populate_casts_var = "for cc in chromecasts:
     @state_local[:repeat] = repeat
 
     Device.broadcast()
+  end
+
+  def shuffle_playlist
+    cur_index_val = @playlist_order[@playlist_index]
+    #playlist_order = _.reject(playlist_order, function(num){ return num == cur_index_val; });
+    @playlist_order.delete(cur_index_val)
+
+    @playlist_order.shuffle!
+    @playlist_order.unshift(cur_index_val)
+    @playlist_index = 0;
+  end
+
+  def unshuffle_playlist
+    cur_index_val = @playlist_order[@playlist_index]
+
+    @playlist_order = @playlist_order.sort()
+    @playlist_index = @playlist_order.find_index(cur_index_val)
   end
 
   def to_h

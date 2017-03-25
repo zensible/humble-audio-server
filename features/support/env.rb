@@ -15,8 +15,16 @@ Capybara.register_driver :poltergeist do |app|
   Capybara::Poltergeist::Driver.new(app)
 end
 
+# This hack is so puma can...
+# 1. Run on more than 4 threads (since each CCA uses a thread)
+# 2. Server to all IPs rather than just 127.0.0.1 (so the CCAs can access the test server)
+Capybara.register_server :puma2 do |app, port, host|
+  require 'rack/handler/puma'
+  Rack::Handler::Puma.run(app, Host: "0.0.0.0", Port: port, Threads: "0:20")
+end
+
 Capybara.configure do |config|
-  config.server = :puma
+  config.server = :puma2
 end
 
 Capybara::Screenshot.autosave_on_failure = true
@@ -72,4 +80,3 @@ WebMock.disable_net_connect!(:allow_localhost => true)
 # The :transaction strategy is faster, but might give you threading problems.
 # See https://github.com/cucumber/cucumber-rails/blob/master/features/choose_javascript_database_strategy.feature
 Cucumber::Rails::Database.javascript_strategy = :truncation
-

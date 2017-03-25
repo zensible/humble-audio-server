@@ -73,7 +73,9 @@ var init_playbar = function($scope, $rootScope, Media, Device) {
     if ($scope.home.device_selected.uuid == 'browser') {
       $scope.player_mp3.prev();
     } else {
-      Media.prev($scope.home.device_selected.uuid)
+      Media.prev($scope.home.device_selected.uuid, function() {
+        console.log("success")
+      })
     }
   }
 
@@ -84,7 +86,9 @@ var init_playbar = function($scope, $rootScope, Media, Device) {
     if ($scope.home.device_selected.uuid == 'browser') {
       $scope.player_mp3.next();
     } else {
-      Media.next($scope.home.device_selected.uuid)
+      Media.next($scope.home.device_selected.uuid, function() {
+        console.log("success")
+      })
     }
   }
 

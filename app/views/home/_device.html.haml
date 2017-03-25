@@ -1,4 +1,4 @@
-%td.ellipsis{ :style => "width: 40%;" }
+%td.ellipsis{ :style => "width: 40%;", "ng-class" => "{ selected_device: home.device_selected.uuid == device.uuid }" }
   %a.ellipsis.select-cast{ "ng-click" => "select_cast(device, 'manual')", "ng-mouseover" => "home.device_hover = device" }<
     %span.selected{ "ng-if" => "home.device_selected.uuid == device.uuid" }<
       {{device.friendly_name}}

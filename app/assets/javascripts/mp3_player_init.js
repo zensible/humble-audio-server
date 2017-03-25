@@ -55,6 +55,7 @@ var init_mp3_player = function($scope, $rootScope, Media, Device) {
 
   $scope.player_mp3.play_playlist = function(data) {
     console.log('playlist', JSON.stringify(data));
+    // playa: $scope.player_mp3
     playa.orig_index = data.playlist_index;
     playa.playlist = data.playlist;
     playa.playlist_order = [];

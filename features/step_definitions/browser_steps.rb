@@ -13,13 +13,15 @@ Then(/^I should be able to play a music playlist$/) do
   # Click the first mp3
   page.first(".play-mp3").click()
   safeApply()
-  sleep(3.0)
-  page.find("#playbar-pause").should be_visible
+
+  wait_until {
+    page.find("#playbar-pause").should be_visible
+  }
 
   # UI updated correctly?
   page.find(".mp3-playing .play-button").should be_visible
   page.first("#media-selector .play-button").should be_visible
-  page.find("#browser-device .play-button").should be_visible
+  page.find(".selected_device .play-button").should be_visible
   page.find('#song-name').text.should match(/test-01\.mp3/)
 
   # Hit 'back' link, going to root folder of music
@@ -32,15 +34,21 @@ Then(/^I should be able to pause and resume an mp3$/) do
   page.find("#playbar-resume").should be_visible
 
   page.find("#playbar-resume").click()
-  page.find("#playbar-pause").should be_visible
+  wait_until {
+    page.find("#playbar-pause").should be_visible
+  }
 end
 
 Then(/^I should be able to use next and prev$/) do
   page.find("#playbar-next").click()
-  page.find('#song-name').text.should match(/test-02\.mp3/)
+  wait_until {
+    page.find('#song-name').text.should match(/test-02\.mp3/)
+  }
 
   page.find("#playbar-previous").click()
-  page.find('#song-name').text.should match(/test-01\.mp3/)
+  wait_until {
+    page.find('#song-name').text.should match(/test-01\.mp3/)
+  }
 end
 
 Then(/^I should be able to seek$/) do
