@@ -1,7 +1,7 @@
 @logged_in @javascript @music_exists
 Feature: Browser
 
-Scenario: music
+Scenario: play music, pause, next/prev, repeat/shuffle, stop, play white noise, play radio
   Given I am in 'music' mode
   Then I should be able to play a music playlist
   And I should be able to pause and resume an mp3

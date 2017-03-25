@@ -13,7 +13,7 @@ Then(/^I should be able to play a music playlist$/) do
   # Click the first mp3
   page.first(".play-mp3").click()
   safeApply()
-  sleep(1.0)
+  sleep(3.0)
   page.find("#playbar-pause").should be_visible
 
   # UI updated correctly?

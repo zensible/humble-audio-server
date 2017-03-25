@@ -97,7 +97,11 @@ $populate_casts_var = "for cc in chromecasts:
 
     $devices = []
     devs.each do |hsh|
-      $devices.push(Device.new(hsh)) if hsh["cast_type"] == "group" || hsh["cast_type"] == "audio"
+      if Rails.env.test?
+        $devices.push(Device.new(hsh)) if hsh["friendly_name"] == "Bedroom-Guest"
+      else
+        $devices.push(Device.new(hsh)) if hsh["cast_type"] == "group" || hsh["cast_type"] == "audio"
+      end
     end
 
     stop_all() # Since the threads which monitored the casts will have died if we're here, we have no idea what they're playing. Stop all casts from playing for sanity's sake.
@@ -114,6 +118,8 @@ $populate_casts_var = "for cc in chromecasts:
         begin
           while(true) do
             cmd = ""
+            puts "004.1"
+
             $semaphore.synchronize {
               cmd = $redis.hget("thread_command", uuid)
               puts "uuid: #{uuid}, cmd: #{cmd}" if ENV['DEBUG'] == 'true'
