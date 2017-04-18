@@ -1,5 +1,6 @@
 Before do |scenario|
   DatabaseCleaner.clean()
+  $test_mode = 'browser'
 end
 
 # Wait up to 5 seconds for code block to return true

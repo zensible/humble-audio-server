@@ -3,6 +3,7 @@ class Device
 
   attr_accessor :uuid, :cast_type, :friendly_name, :volume_level, :status_text, :model_name
   attr_accessor :state_local, :playlist, :playlist_index, :playlist_order, :orig_index
+  attr_accessor :is_orig_play2
 
   MAX_BUFFERING_WAIT ||= 10
   MAX_PLAYING_WAIT ||= 8
@@ -19,6 +20,8 @@ class Device
   @playlist = []
   @playlist_index = 0
   @playlist_order = []
+
+  @is_orig_play2 = false
 
   def initialize(hsh)
     @uuid = hsh["uuid"]
@@ -109,8 +112,10 @@ $populate_casts_var = "for cc in chromecasts:
     $threads.keys.each do |key|
       Thread.kill($threads[key])
     end
-
+puts $devices.inspect
     $devices.each do |device|
+      next if device.nil?
+      puts device.inspect
       uuid = device.uuid
       $threads[uuid] = Thread.new do
         begin
@@ -146,16 +151,22 @@ $populate_casts_var = "for cc in chromecasts:
                   device.playlist_index -= 1
                 else
                   if device.playlist_index >= device.playlist_order.length # Reached the end of the playlist
-                    device.playlist_index = 0
-                    if !is_orig_play && device.playlist_order[device.playlist_index] == device.orig_index
+                    puts @is_orig_play2.inspect
+                    puts device.playlist_order[device.playlist_index].to_s
+                    puts device.orig_index.to_s
+                    puts device.state_local[:repeat].to_s
+
+                    if !@is_orig_play2 && (!device.playlist_order[device.playlist_index] || device.playlist_order[device.playlist_index] == device.orig_index)
                       if device.state_local[:repeat] == 'all'
+                        device.playlist_index = 0
+                      else
                         continue_playing = false
                         Device.broadcast() # Inform user playlist is done playing
                       end
                     end
                   end
-                  device.play_at_index(0, false) if continue_playing
                 end
+                device.play_at_index(0, false) if continue_playing
               end
             when "next"
               device.playlist_index += 1
@@ -183,6 +194,7 @@ $populate_casts_var = "for cc in chromecasts:
   end
 
   def play_at_index(retry_num, is_orig_play)
+    @is_orig_play2 = is_orig_play
     puts "Playlist index: #{@playlist_index}" if ENV['DEBUG'] == 'true'
 
     mp3 = @playlist[@playlist_order[@playlist_index]]
@@ -210,6 +222,7 @@ $populate_casts_var = "for cc in chromecasts:
     end
 
     play_url(mp3[:url])
+    puts mp3[:url]
     sleep(0.5)
 
     if wait_for_device_status('BUFFERING', 0.5, MAX_BUFFERING_WAIT) # Wait 10 seconds to go from IDLE/UNKNOWN -> BUFFERING
@@ -359,7 +372,7 @@ $populate_casts_var = "for cc in chromecasts:
     PyChromecast.run(str)
     wait_for_device_status("PLAYING", 0.1)
 
-    @state_local[:paused_time] += Time.now().to_f - @state_local[:paused_start]
+    @state_local[:paused_time] += Time.now().to_f - (@state_local[:paused_start] || 0)
 
     Device.broadcast()
   end
@@ -416,6 +429,7 @@ $populate_casts_var = "for cc in chromecasts:
   end
 
   def shuffle_playlist
+    return unless @playlist_order && !@playlist_index.nil?
     cur_index_val = @playlist_order[@playlist_index]
     #playlist_order = _.reject(playlist_order, function(num){ return num == cur_index_val; });
     @playlist_order.delete(cur_index_val)

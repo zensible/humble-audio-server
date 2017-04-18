@@ -1,5 +1,7 @@
 
 Given(/^I select a chromecast device$/) do
+  $test_mode = 'cca'
+
   screenie()
 
   page.find(".select-cast", :text => "Bedroom-Guest").click()

@@ -14,9 +14,8 @@ Then(/^I should be able to play a music playlist$/) do
   page.first(".play-mp3").click()
   safeApply()
 
-  wait_until {
-    page.find("#playbar-pause").should be_visible
-  }
+  $devices[0].wait_for_device_status("PLAYING", 0.25, 5) if $test_mode == 'cca'
+  page.find("#playbar-pause").should be_visible
 
   # UI updated correctly?
   page.find(".mp3-playing .play-button").should be_visible
@@ -31,12 +30,12 @@ end
 
 Then(/^I should be able to pause and resume an mp3$/) do
   page.find("#playbar-pause").click()
+  $devices[0].wait_for_device_status("PAUSED", 0.25, 5) if $test_mode == 'cca'
   page.find("#playbar-resume").should be_visible
 
   page.find("#playbar-resume").click()
-  wait_until {
-    page.find("#playbar-pause").should be_visible
-  }
+  $devices[0].wait_for_device_status("PLAYING", 0.25, 5) if $test_mode == 'cca'
+  page.find("#playbar-pause").should be_visible
 end
 
 Then(/^I should be able to use next and prev$/) do
@@ -77,9 +76,10 @@ Then(/^I should be able to toggle shuffle$/) do
       raise "Doh same playlist"
     end
   }
-
+screenie()
   # 3. Playlist is now shuffled...wait for next song to play to be sure it plays in the correct (random) order
   sleep(2.2)
+screenie()
   num = @pl_shuffled[1].to_i
   page.find('#song-name').text.should match(/test-0#{num + 1}\.mp3/)
 
@@ -108,18 +108,30 @@ Then(/^I should be able to toggle repeat\-all$/) do
   page.find("#playbar-repeat").click
   page.find(".select-folder", :text => "playlist").click()
   page.first(".mp3-title a.play-mp3").click()
+  if $test_mode == 'cca'
+    sleep 3
+  end
 
   sleep(0.2)
-  page.find('#song-name').text.should match(/test-01\.mp3/)
+  wait_until {
+    page.find('#song-name').text.should match(/test-01\.mp3/)
+  }
   sleep(2)
 
-  page.find('#song-name').text.should match(/test-02\.mp3/)
+  wait_until {
+    page.find('#song-name').text.should match(/test-02\.mp3/)
+  }
   sleep(2)
 
-  page.find('#song-name').text.should match(/test-03\.mp3/)
+  wait_until {
+    page.find('#song-name').text.should match(/test-03\.mp3/)
+  }
   sleep(2)
 
-  page.find('#song-name').text.should match(/test-01\.mp3/)
+  # If we get here then we repeated back to the beginning
+  wait_until {
+    page.find('#song-name').text.should match(/test-01\.mp3/)
+  }
   page.find("#playbar-pause").click()
 
 end

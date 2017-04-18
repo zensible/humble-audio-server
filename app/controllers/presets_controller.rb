@@ -14,6 +14,7 @@ class PresetsController < ApplicationController
       if dev.player_status == 'PLAYING'
         parameters = {
           playlist: dev.playlist,
+          playlist_index: dev.playlist_index,
           state_local: dev.state_local
         }
         arr.push(parameters)

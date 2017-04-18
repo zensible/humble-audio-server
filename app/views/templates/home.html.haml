@@ -15,7 +15,7 @@
         %p{ "ng-repeat" => "mode in available_modes"}
           = render :partial => 'mode'
 
-      #selector2{ "ng-if" => "home.mode_ui_ui == 'settings'" }
+      #selector2{ "ng-if" => "home.mode_ui == 'settings'" }
         %h4
           Settings:
         %br
@@ -33,7 +33,7 @@
         {{http_address_ddns}}
 
       // Presets
-      #selector2{ "ng-if" => "home.mode_ui_ui == 'presets'" }
+      #selector2{ "ng-if" => "home.mode_ui == 'presets'" }
         %h4
           Chromecast Presets:
         %p{ "ng-if" => "is_anything_playing()"}

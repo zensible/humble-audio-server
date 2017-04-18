@@ -50,10 +50,6 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     if (sessionStorage.getItem('browser_volume_level')) {
       $scope.browser_device.volume_level = parseFloat(sessionStorage.getItem('browser_volume_level'))
     }
-    setInterval(function() {
-      sessionStorage.setItem('browser_state_local', JSON.stringify(get_state_local()))
-      sessionStorage.setItem('browser_volume_level', JSON.stringify($scope.browser_device.volume_level))
-    }, 1000)
 
     // Subscribe to devices channel. This shares the state of the cast list between users: audio casts, groups and their volume levels
     App.cable.subscriptions.create('DeviceChannel', {
@@ -95,6 +91,11 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
         var max = num_groups;
         if (num_audios > max) { max = num_audios; }
         $('#cast-select').css("height", ((1.7 * parseFloat(max)) + 2) + "em")
+
+        setInterval(function() {
+          sessionStorage.setItem('browser_state_local', JSON.stringify($scope.home.device_selected.state_local))
+          sessionStorage.setItem('browser_volume_level', JSON.stringify($scope.browser_device.volume_level))
+        }, 1000)
 
         // If we're here, enough has loaded that the page will look correct
         $scope.loaded = true;
@@ -161,7 +162,8 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     console.log("mode", mode)
     localStorage.setItem('mode', mode);
 
-    $scope.home.mode_ui = mode
+    $scope.home.mode_ui = mode;
+    $scope.safeApply();
 
     $scope.home.mp3s = [];
 
@@ -255,7 +257,8 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
    */
   function get_state_local() {
     if (!$scope.home.device_selected) {
-      return;
+      console.log("nope")
+      return {};
     }
     return {
       cast_uuid: $scope.home.device_selected.uuid,
@@ -446,7 +449,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       if (arr.length == 1) {
         var val_device = $scope.browser_device.state_local[arr[0]]
       } else if (arr.length == 2) {
-        //console.log("arr", arr)
+        console.log("arr", arr, "sl", $scope.browser_device.state_local)
         var val_device = $scope.browser_device.state_local[arr[0]][arr[1]]
       }
       //console.log("val_device", val_device)

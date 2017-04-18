@@ -80,6 +80,7 @@ var init_mp3_player = function($scope, $rootScope, Media, Device) {
     var entry = pl[playa.playlist_order[ind]];
     console.log("entry.url", entry)
     $scope.player_mp3.load(entry.url, function() {
+      console.log("0a")
       if (entry.id == -1) {  // Playing a radio stream
         $scope.browser_device.state_local.mp3 = entry;
 
@@ -88,7 +89,9 @@ var init_mp3_player = function($scope, $rootScope, Media, Device) {
         $scope.playbar.play()
         $scope.safeApply()
       } else {
+      console.log("0b")
         Media.get_by_id(entry.id, function(response) {
+      console.log("0C")
           var mp3 = response.data;
           $scope.browser_device.state_local.mp3 = mp3;
           //$scope.browser_device.state_local.mp3_id = mp3.id;
@@ -103,25 +106,31 @@ var init_mp3_player = function($scope, $rootScope, Media, Device) {
         })
       }
 
-      $scope.player_mp3.play(pl, function() {  // Play is complete, advance in the playlist
+      $scope.player_mp3.play(0, function() {  // Play is complete, advance in the playlist
+      console.log("0D")
         $scope.player_mp3.playlist_index += 1
 
         if ($scope.home.device_selected.state_local.repeat == "one") {
           $scope.player_mp3.playlist_index -= 1;
         } else {
           if (playa.playlist_index >= playa.playlist_order.length) { // Reached the end of the playlist
+            console.log("00a")
             playa.playlist_index = 0;
           }
 
           // We've played the playlist until we're back to the first song clicked
+          console.log("00b")
           if (!is_orig_play && playa.playlist_order[playa.playlist_index] == playa.orig_index) {
+          console.log("00c")
             if ($scope.home.device_selected.state_local.repeat != "all") {
+          console.log("00d")
               // If repeat is 'all', do nothing -- just keep on playin'
               return;  // If it's off, stop here
             }
           }
         }
 
+          console.log("00e")
         playAtIndex(false)
       });
     })    
@@ -154,6 +163,7 @@ var init_mp3_player = function($scope, $rootScope, Media, Device) {
   }
 
   $scope.player_mp3.play = function(seekMs, playCallback) {  // midi == MIDI.Player
+    console.log("pl001")
     if (window.env == 'test') {
       setTimeout(function() {
         playCallback();
@@ -161,13 +171,21 @@ var init_mp3_player = function($scope, $rootScope, Media, Device) {
       return;
     }
 
+    console.log("pl002")
     var jp = $scope.player_mp3.jplayer;
     jp.jPlayer('play', seekMs);
+    console.log("pl003")
 
-    jp.unbind($.jPlayer.event.ended);
+    //jp.unbind($.jPlayer.event.ended);
     jp.bind($.jPlayer.event.ended, function(event) { // Add a listener to report the time play began
+    console.log("pl003")
       jp.unbind($.jPlayer.event.ended);
       playCallback();
+    });
+    jp.bind($.jPlayer.event.error, function(evt) {
+      jp.unbind($.jPlayer.event.error);
+    console.log("pl004")
+      console.log("jplayer err", evt)
     });
   }
 
