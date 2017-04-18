@@ -92,7 +92,7 @@ $populate_casts_var = "for cc in chromecasts:
 
     PyChromecast.run("print(casts_by_uuid)")
 
-    devs = JSON.parse(all)
+    devs = JSON.parse(all || [])
     if devs.length == 0
       puts "==== WARNING: No chromecast audio devices found on the network! Server will only be able to stream to web browsers."
     else
