@@ -1,5 +1,5 @@
 
-multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $rootScope, Device, Media, Preset) {
+multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $rootScope, Device, Mp3, Preset) {
 
   // For use in debugging w/ the chrome console
   window.scope = $scope;
@@ -110,12 +110,35 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       }
     });
 
+    App.cable.subscriptions.create('SyncChannel', {
+      connected: function() {
+        console.log("Connected to ActionCable: SYNC")
+      },
+      received: function(data) {
+        console.log('SYNC RECEIVED', data)
+        console.log("data['current'] / data['total']", parseFloat(data['current']) / parseFloat(data['total']))
+        var percentInt = parseInt(parseFloat(data['current']) / parseFloat(data['total']) * 100);
+        if (percentInt > 0) {
+          $('#percent').text(percentInt + "%")
+        } else {
+          $('#percent').text("")
+        }
+        $scope.safeApply()
+      },
+      disconnected: function() {
+        console.log("Disconnected!")
+      },
+      status: function() {
+        console.log("STATUS")
+      }
+    });
+
     $scope.select_mode(localStorage.getItem('mode') || $scope.available_modes[0])
 
     // Set up playbar. 
-    init_playbar($scope, $rootScope, Media, Device);
-    init_mp3_player($scope, $rootScope, Media, Device);
-    init_presets($scope, $rootScope, Media, Device, Preset);
+    init_playbar($scope, $rootScope, Mp3, Device);
+    init_mp3_player($scope, $rootScope, Mp3, Device);
+    init_presets($scope, $rootScope, Mp3, Device, Preset);
   }
 
   /*
@@ -177,7 +200,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     }
     // White noise mode is essentially a single directory, as opposed to mult-level like music/spokens
     if (mode == 'white-noise') {
-      Media.get('white-noise', -1, function(response) {
+      Mp3.index('white-noise', -1, function(response) {
         if (response.data.length == 0) {
           $.notify("No mp3s found in this folder. You may need to populate and/or refresh your media.", "warn")
         }
@@ -186,16 +209,16 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     }
     // These modes share a multi-level directory structure
     if (mode == 'music' || mode == 'spoken') {
-      Media.get_folders(mode, -1, function(response) {
+      Mp3.get_folders(mode, -1, function(response) {
         $scope.home.folders = response.data;
         if (response.data.length == 0) {  // No folders...
-          Media.get(mode, -1, function(response) { // ...and no mp3s
+          Mp3.index(mode, -1, function(response) { // ...and no mp3s
             if (response.data.length == 0) {
               $.notify("No mp3s found. You may need to populate and/or refresh your media.", "warn")
             }
           })
         }
-        Media.get(mode, -1, function(response) {
+        Mp3.index(mode, -1, function(response) {
           $scope.home.mp3s = response.data
         })
 
@@ -208,7 +231,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       })
     }
     if (mode == 'radio') {
-      Media.get_radio(function(response) {
+      Mp3.get_radio(function(response) {
         $scope.home.radio_stations = response.data;
         if ($scope.home.radio_stations.length == 0) {
           $.notify("No radio stations found. Please configure public/audio/radio.json", "warn")
@@ -239,7 +262,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       }
     }
 
-    Media.get($scope.home.mode_ui, folder_id, function(response) {
+    Mp3.index($scope.home.mode_ui, folder_id, function(response) {
       if (response.data.length > 0) {
         $scope.home.mp3s = response.data
         //$scope.playbar.init($scope.home.mp3s)
@@ -284,9 +307,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     var mp3s = $scope.home.mp3s;
 
     function add_playlist(mp3) {
-      var path = mp3['path'];
-      url = url_prefix + encodeURI(path.replace(regex, ''))
-      url = url.replace(/'/g, '%27')
+      url = url_prefix + mp3['url']  // We add hostname here rather than the DB because the user could be hitting the server from localhost, 127.0.0.1, IP or a DDNS hostname
 
       playlist.push({
         id: mp3.id,
@@ -324,14 +345,14 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     } else {
       // For chromecasts, we have to tell the back-end to load and play the playlist on the given device
       // We then depend on Device.broadcast() to fire when buffering/playing starts. See the init() and $scope.select_cast() functions
-      Media.play(data, function(response) {
+      Mp3.play(data, function(response) {
         $scope.buffering = false;
       })
     }
   }
 
   $scope.play_bookmark = function(bookmark) {
-    Media.get_folder('spoken', $scope.home.folder.id, function(response) {
+    Mp3.get_folder('spoken', $scope.home.folder.id, function(response) {
       var fol = response.data;
       var bookmark = fol['bookmark']
 
@@ -400,7 +421,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       // For playing in the browser it's easy, just start playing with a hidden jPlayer and update the playbar
       $scope.player_mp3.play_playlist(data)
     } else {
-      Media.play(data, function(response) {
+      Mp3.play(data, function(response) {
         $scope.buffering = false;
       })    
     }
@@ -409,7 +430,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
   $scope.stop_all = function() {
     $.notify("Stopping all chromecasts!", "warn")
     $scope.player_mp3.stop()
-    Media.stop_all(function(response) {
+    Mp3.stop_all(function(response) {
       $scope.playbar.stop();
     })
   }
@@ -501,10 +522,19 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     return false;
   }
 
+  $scope.refreshing = false;
   $scope.refresh_media = function() {
+    if ($scope.refreshing) {
+      $.notify("Please wait until the previous sync is complete", "error")
+      return
+    }
     $.notify("Beginning sync. This can take several minutes depending on how many new MP3s are found.", "error")
 
-    Media.refresh($scope.home.mode_ui, function(response) {
+    $scope.refreshing = true;
+
+    Mp3.refresh($scope.home.mode_ui, function(response) {
+      $scope.refreshing = false;
+
       console.log("response", response.data)
       var stats = response.data;
       var str = "Done. ";
@@ -525,6 +555,8 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       $.notify(str)
 
       $scope.select_mode($scope.home.mode_ui);
+    }, function() {
+      $scope.refreshing = false;
     })
   }
 

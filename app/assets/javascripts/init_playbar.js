@@ -1,4 +1,4 @@
-var init_playbar = function($scope, $rootScope, Media, Device) {
+var init_playbar = function($scope, $rootScope, Mp3, Device) {
 
   $scope.playbar = {
     interval: null,
@@ -73,7 +73,7 @@ var init_playbar = function($scope, $rootScope, Media, Device) {
     if ($scope.home.device_selected.uuid == 'browser') {
       $scope.player_mp3.prev();
     } else {
-      Media.prev($scope.home.device_selected.uuid, function() {
+      Mp3.prev($scope.home.device_selected.uuid, function() {
         console.log("success")
       })
     }
@@ -86,7 +86,7 @@ var init_playbar = function($scope, $rootScope, Media, Device) {
     if ($scope.home.device_selected.uuid == 'browser') {
       $scope.player_mp3.next();
     } else {
-      Media.next($scope.home.device_selected.uuid, function() {
+      Mp3.next($scope.home.device_selected.uuid, function() {
         console.log("success")
       })
     }
@@ -137,7 +137,7 @@ var init_playbar = function($scope, $rootScope, Media, Device) {
 
   /*
   $scope.stop = function() {
-    Media.stop($scope.home.device.uuid)
+    Mp3.stop($scope.home.device.uuid)
   }
   */
 
@@ -154,9 +154,9 @@ var init_playbar = function($scope, $rootScope, Media, Device) {
     console.log("mode:", mode)
       if (mode == 'spoken') {
     console.log("pause003")
-        Media.save_bookmark($scope.browser_device.state_local.mp3.id, parseInt($scope.playbar.progress / 1000), function(response) {
+        Mp3.save_bookmark($scope.browser_device.state_local.mp3.id, parseInt($scope.playbar.progress / 1000), function(response) {
     console.log("pause004")
-          Media.get_folder('spoken', $scope.home.folder.id, function(response) {
+          Mp3.get_folder('spoken', $scope.home.folder.id, function(response) {
     console.log("pause005")
             $scope.home.folder.bookmark = response.data.bookmark;
             $scope.safeApply()
@@ -164,7 +164,7 @@ var init_playbar = function($scope, $rootScope, Media, Device) {
         })
       }
     } else {
-      Media.pause($scope.home.device_selected.uuid, function(response) {
+      Mp3.pause($scope.home.device_selected.uuid, function(response) {
         $scope.playbar.pause()
       })
     }
@@ -174,7 +174,7 @@ var init_playbar = function($scope, $rootScope, Media, Device) {
     if ($scope.home.device_selected.uuid == 'browser') {
       $scope.player_mp3.resume();
     } else {
-      Media.resume($scope.home.device_selected.uuid, function(response) {
+      Mp3.resume($scope.home.device_selected.uuid, function(response) {
         $scope.playbar.resume()
       })
     }
@@ -202,7 +202,7 @@ console.log("seekSecs", seekSecs)
     if ($scope.home.device_selected.uuid == 'browser') {
       $scope.player_mp3.seek(seekSecs);
     } else {
-      Media.seek($scope.home.device_selected.uuid, seekSecs, function() {
+      Mp3.seek($scope.home.device_selected.uuid, seekSecs, function() {
 
       });
     }

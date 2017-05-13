@@ -1,4 +1,4 @@
-var init_presets = function($scope, $rootScope, Media, Device, Preset) {
+var init_presets = function($scope, $rootScope, Mp3, Device, Preset) {
 
   function refresh() {
     Preset.get_all(function(response) {

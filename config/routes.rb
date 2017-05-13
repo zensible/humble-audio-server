@@ -27,7 +27,7 @@ Rails.application.routes.draw do
     end
 
     scope '/mp3s' do
-      get '/get/:mode/:id' => 'mp3s#get'
+      get '/index/:mode/:id' => 'mp3s#index'
       get '/:id' => 'mp3s#get_by_id', :constraints => { :id => /\d+/ }
       get '/get_folders/:mode/:folder_id' => 'mp3s#get_folders'
       get '/get_folder/:mode/:folder_id' => 'mp3s#get_folder'

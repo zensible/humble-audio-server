@@ -11,7 +11,7 @@ multiroomApp.controller('GlobalCtrl', function ($scope, $routeParams, $route, $
     }
   }
 
-  $rootScope.loading = false;
+  $rootScope.loading = 0;
 
   $rootScope.showDefaultError = function(response) {
     var data = response.data;

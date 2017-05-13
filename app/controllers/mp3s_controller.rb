@@ -2,7 +2,7 @@ class Mp3sController < ApiController
 
   skip_before_action :verify_authenticity_token, :only => [:play]
 
-  def get
+  def index
     mode = params[:mode]
     id = params[:id]
 
@@ -62,7 +62,6 @@ class Mp3sController < ApiController
 
 
   def play
-    puts "001"
     orig_index = params[:playlist_index]
     playlist_index = params[:playlist_index]
     playlist_params = params[:playlist]
@@ -179,7 +178,7 @@ class Mp3sController < ApiController
   def refresh
     mode = params[:mode]
 
-    stats = Sync.refresh(mode)
+    stats = Sync.refresh(mode, "http://" + request.host_with_port)
     render :json => stats
   end
 

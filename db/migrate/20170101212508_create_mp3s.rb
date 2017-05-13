@@ -11,7 +11,8 @@ class CreateMp3s < ActiveRecord::Migration[5.0]
       t.integer :track_nr
       t.integer :length_seconds
       t.integer :folder_id
-      t.string :path
+      t.string :path, :limit => 1024
+      t.string :url, :limit => 1024
       t.string :filename
       t.string :md5
     end

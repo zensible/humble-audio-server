@@ -440,6 +440,7 @@ puts $devices.inspect
   end
 
   def unshuffle_playlist
+    return unless @playlist_order && !@playlist_index.nil?
     cur_index_val = @playlist_order[@playlist_index]
 
     @playlist_order = @playlist_order.sort()

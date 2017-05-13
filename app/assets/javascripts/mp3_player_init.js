@@ -1,4 +1,4 @@
-var init_mp3_player = function($scope, $rootScope, Media, Device) {
+var init_mp3_player = function($scope, $rootScope, Mp3, Device) {
 
   $scope.player_mp3 = {
     playing: {},
@@ -90,7 +90,7 @@ var init_mp3_player = function($scope, $rootScope, Media, Device) {
         $scope.safeApply()
       } else {
       console.log("0b")
-        Media.get_by_id(entry.id, function(response) {
+        Mp3.get_by_id(entry.id, function(response) {
       console.log("0C")
           var mp3 = response.data;
           $scope.browser_device.state_local.mp3 = mp3;
@@ -148,7 +148,7 @@ var init_mp3_player = function($scope, $rootScope, Media, Device) {
 
     var jp = $scope.player_mp3.jplayer;
 
-    jp.jPlayer("setMedia", {
+    jp.jPlayer("setMp3", {
       title: "Bubble",
       mp3: url
     });

@@ -7,7 +7,7 @@
   #top{ "ng-if" => "loaded" }
     = render :partial => 'configure_group'
 
-    #loading-small{ "ng-if" => "loading" }
+    #loading-small{ "ng-if" => "loading > 0" }
       = render :partial => 'loading'
 
     #media-selector{ "ng-if" => "home.device_selected"}
@@ -102,6 +102,10 @@
 
         %h3{ "ng-if" => "(home.mode_ui == 'music' || home.mode_ui == 'spoken') && home.folder.id == -1" }
           Home:
+
+        // Edge case: user is in a folder that disappeared during a sync
+        %a#back-button{ "ng-if" => "(!home || !home.folder || !home.folder.parent_folder_id) && home.folder.id != -1", "ng-click" => "select_folder(-1)" }
+          &lt;-- Back
 
         /Sort by:
         /%input{ :type => "radio", :name => "sort_by", :value => "title" } Title
