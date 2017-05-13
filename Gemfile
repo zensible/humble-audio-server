@@ -2,17 +2,21 @@ source 'https://rubygems.org'
 
 ruby "2.3.1"
 
-git_source(:github) do |repo_name|
-  repo_name = "#{repo_name}/#{repo_name}" unless repo_name.include?("/")
-  "https://github.com/#{repo_name}.git"
-end
-
-gem 'redis'
-gem 'rails', '~> 5.0.1'
-gem 'mysql2', '~> 0.3.18'
 gem 'puma', '~> 3.0'
+gem 'rails', '~> 5.0.1'
+
+gem 'mysql2', '~> 0.3.18'
+gem 'redis'
+
+gem 'haml'
 gem 'sass-rails', '~> 5.0'
 gem 'uglifier', '>= 1.3.0'
+gem 'therubyracer', '0.12.0'
+gem 'libv8'
+gem 'jquery-rails'
+gem 'jbuilder', '~> 2.5'
+gem 'bcrypt', '~> 3.1.7'
+
 gem 'rest-client'
 gem 'colorize'
 
@@ -23,10 +27,6 @@ gem 'daemons'
 # Reads mp3 id3 tags
 gem 'taglib-ruby'
 
-gem 'haml'
-gem 'jquery-rails'
-gem 'jbuilder', '~> 2.5'
-gem 'bcrypt', '~> 3.1.7'
 
 group :development, :test do
   gem 'byebug', platform: :mri
