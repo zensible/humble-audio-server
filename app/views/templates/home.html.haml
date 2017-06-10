@@ -7,7 +7,7 @@
   #top{ "ng-if" => "loaded" }
     = render :partial => 'configure_group'
 
-    #loading-small{ "ng-if" => "loading > 0" }
+    #loading-small{ "ng-if" => "loading > 0 || home.sync_data.refreshing" }
       = render :partial => 'loading'
 
     #media-selector{ "ng-if" => "home.device_selected"}
@@ -158,7 +158,7 @@
           .mp3-track-nr
             {{mp3.track_nr || "-"}}
           .mp3-title.ellipsis
-            %a.play-mp3{ "ng-click" => "play($index)"}
+            %a.play-mp3{ "ng-click" => "play($index)", "ng-attr-title" => "{{mp3.title}}" }
               {{mp3.title || mp3.filename}}
           .mp3-artist.ellipsis
             {{mp3.artist || ' - ' }}

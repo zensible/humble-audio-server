@@ -7,10 +7,14 @@ class Sync
   @hostname = ""
   @mp3_count = 0
   @mp3_processed = 0
+  @refreshing = false
 
   def self.refresh(mode, hostname)
+    @refreshing = true
     @mp3_count = 0
     @mp3_processed = 0
+
+    self.broadcast()
 
     @hostname = hostname
 
@@ -29,6 +33,8 @@ class Sync
     hsh_existing_md5 = {}
     to_delete = []
     existing.each do |mp3|
+      mp3.url = mp3.url.gsub(/%2F/, '/')  # Not sure why this is necessary, but whatevs
+      mp3.save
       hsh_existing_path[mp3.path] = mp3
       hsh_existing_md5[mp3.md5] = mp3
       if !File.exist?(mp3.path)
@@ -71,6 +77,9 @@ class Sync
 
     stats[:total] = stats[:existing] + stats[:added]
 
+    @refreshing = false
+    self.broadcast()
+
     return stats
   end
 
@@ -86,7 +95,6 @@ class Sync
       recursive_count_folder(dir)
     end
   end
-
 
   def self.recursive_sync_folder(path, parent_id, mode, folders_hsh, arr, stats)
     puts "recursive_sync_folder: #{path}"
@@ -117,24 +125,28 @@ class Sync
         stats[:existing] += 1
         #puts "Already in DB: #{mp3}"
       else
+        puts "001 #{Time.now.to_s}"
         md5 = Digest::MD5.hexdigest(File.read(mp3))
+        puts "002 #{Time.now.to_s}"
         attrs = get_attributes(mode, mp3, md5, folder_id)
         if attrs.nil?
           stats[:error] += 1
           Rails.logger.warn("== Could not read file information: #{mp3}. Not an MP3?")
         else
           mp3 = hsh_existing_md5[md5]
-
-          # URL changed? Make sure we can still hit it. Prevents mp3s from being added if they've got characters so weird the CGI.escape() can't convert them
-          #if mp3 && attrs[:url] != mp3.url
-          #  cmd = "curl -s --head -w %{http_code} http://192.168.0.103:4040/#{attrs[:url]}"
-          #  exists = `#{cmd}`
-          #  if !exists.match(/200 OK/)
-          #    stats[:error] += 1
-          #    Rails.logger.warn("== Could not hit URL: #{attrs[:url]}. Filename contains weird characters?")
-          #    return
-          #  end
-          #end
+          puts "== GO"
+          # New mp3 or URL changed? Make sure we can still hit it. Prevents mp3s from being added if they've got characters so weird the CGI.escape() can't convert them
+          if !mp3 || (mp3 && attrs[:url] != mp3.url)
+            puts "003.1 #{Time.now.to_s}"
+            cmd = "curl -s --head -w %{http_code} http://192.168.0.103:#{$port}/#{attrs[:url]}"
+            exists = `#{cmd}`
+            if !exists.match(/200 OK/)
+              stats[:error] += 1
+              Rails.logger.warn("== Could not hit URL: #{attrs[:url]}. Filename contains weird characters?")
+              return
+            end
+            puts "003.1 #{Time.now.to_s}"
+          end
 
           if mp3 && !File.exist?(mp3.path)
             stats[:moved] += 1
@@ -146,6 +158,7 @@ class Sync
             puts "Adding new mp3 to DB: #{mp3}"
             Mp3.create(attrs)
           end
+          puts "003 #{Time.now.to_s}"
         end
       end
     end
@@ -164,7 +177,8 @@ class Sync
         url = path.sub(/^#{$audio_dir}/, "") # Remove file system path
         url = CGI.escape(url) # Url encode folder and mp3 name
         url = url.gsub(/\+/, '%20')  # Not sure why this is necessary, but whatevs
-        url = '/audio' + url
+        url = url.gsub(/%2F/, '/')  # Not sure why this is necessary, but whatevs
+        url = '/' + (Rails.env.test? ? 'test' : 'audio') + url
 
         return {
           :mode => mode,
@@ -187,7 +201,7 @@ class Sync
   end
 
   def self.broadcast()
-    ActionCable.server.broadcast "sync", { total: @mp3_count, current: @mp3_processed }
+    ActionCable.server.broadcast "sync", { total: @mp3_count, current: @mp3_processed, refreshing: @refreshing }
   end
 
 

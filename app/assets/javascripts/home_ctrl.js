@@ -18,7 +18,8 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       folder: {},  // Currently selected folder
       mp3s: [],  // Mp3s in current folder
       radio_stations: [],  // All radio stations
-      radio_station: ""  // Currently selected radio station
+      radio_station: "",  // Currently selected radio station
+      sync_data: {}
     }
 
     // Init browser-play state
@@ -115,14 +116,10 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
         console.log("Connected to ActionCable: SYNC")
       },
       received: function(data) {
-        console.log('SYNC RECEIVED', data)
-        console.log("data['current'] / data['total']", parseFloat(data['current']) / parseFloat(data['total']))
-        var percentInt = parseInt(parseFloat(data['current']) / parseFloat(data['total']) * 100);
-        if (percentInt > 0) {
-          $('#percent').text(percentInt + "%")
-        } else {
-          $('#percent').text("")
-        }
+        $scope.home.sync_data = data;
+        $scope.home.sync_data.percentage = parseInt(parseFloat(data['current'] || 0) / parseFloat(data['total'] || 100) * 100) + "%"
+        $scope.safeApply()
+
         $scope.safeApply()
       },
       disconnected: function() {
@@ -470,7 +467,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       if (arr.length == 1) {
         var val_device = $scope.browser_device.state_local[arr[0]]
       } else if (arr.length == 2) {
-        console.log("arr", arr, "sl", $scope.browser_device.state_local)
+        //console.log("arr", arr, "sl", $scope.browser_device.state_local)
         var val_device = $scope.browser_device.state_local[arr[0]][arr[1]]
       }
       //console.log("val_device", val_device)
@@ -522,18 +519,14 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     return false;
   }
 
-  $scope.refreshing = false;
   $scope.refresh_media = function() {
-    if ($scope.refreshing) {
+    if ($scope.home.sync_data.refreshing) {
       $.notify("Please wait until the previous sync is complete", "error")
       return
     }
     $.notify("Beginning sync. This can take several minutes depending on how many new MP3s are found.", "error")
 
-    $scope.refreshing = true;
-
     Mp3.refresh($scope.home.mode_ui, function(response) {
-      $scope.refreshing = false;
 
       console.log("response", response.data)
       var stats = response.data;
@@ -556,7 +549,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
 
       $scope.select_mode($scope.home.mode_ui);
     }, function() {
-      $scope.refreshing = false;
+
     })
   }
 

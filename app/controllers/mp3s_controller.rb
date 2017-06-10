@@ -36,7 +36,6 @@ class Mp3sController < ApiController
     render :json => folders
   end
 
-
   def get_folder
     mode = params[:mode]
     folder_id = params[:folder_id]
@@ -45,10 +44,6 @@ class Mp3sController < ApiController
 
     render :json => fol.to_h
   end
-
-  #def cur_cast
-  #  $redis.get("cur_cast")  # UUID of cast
-  #end
 
   def next
     $redis.hset("thread_command", params[:cast_uuid], "next")
@@ -59,7 +54,6 @@ class Mp3sController < ApiController
     $redis.hset("thread_command", params[:cast_uuid], "prev")
     render :json => { success: true }
   end
-
 
   def play
     orig_index = params[:playlist_index]

@@ -55,6 +55,10 @@ Then(/^I should be able to seek$/) do
   page.evaluate_script("scope.playbar.progress").should eql(1000)
 end
 
+def console_log(str)
+  page.execute_script("console.log('#{str}')")
+end
+
 Then(/^I should be able to toggle shuffle$/) do
 
   # This tests the most complicated case
@@ -76,10 +80,10 @@ Then(/^I should be able to toggle shuffle$/) do
       raise "Doh same playlist"
     end
   }
-screenie()
+
   # 3. Playlist is now shuffled...wait for next song to play to be sure it plays in the correct (random) order
   sleep(2.2)
-screenie()
+
   num = @pl_shuffled[1].to_i
   page.find('#song-name').text.should match(/test-0#{num + 1}\.mp3/)
 
@@ -109,10 +113,12 @@ Then(/^I should be able to toggle repeat\-all$/) do
   page.find(".select-folder", :text => "playlist").click()
   page.first(".mp3-title a.play-mp3").click()
   if $test_mode == 'cca'
+    puts "=== CCAAAA"
     sleep 3
   end
 
   sleep(0.2)
+
   wait_until {
     page.find('#song-name').text.should match(/test-01\.mp3/)
   }

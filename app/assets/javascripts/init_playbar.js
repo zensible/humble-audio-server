@@ -142,22 +142,15 @@ var init_playbar = function($scope, $rootScope, Mp3, Device) {
   */
 
   $scope.pause = function() {
-    console.log("pause001")
     if ($scope.home.device_selected.uuid == 'browser') {
-    console.log("pause002")
       $scope.player_mp3.pause();
-    console.log("pause002.1")
 
       var sl = $scope.home.device_selected.state_local;
       var mode = sl.mode;
       var folder_id = sl.folder.id;
-    console.log("mode:", mode)
       if (mode == 'spoken') {
-    console.log("pause003")
         Mp3.save_bookmark($scope.browser_device.state_local.mp3.id, parseInt($scope.playbar.progress / 1000), function(response) {
-    console.log("pause004")
           Mp3.get_folder('spoken', $scope.home.folder.id, function(response) {
-    console.log("pause005")
             $scope.home.folder.bookmark = response.data.bookmark;
             $scope.safeApply()
           });

@@ -2092,8 +2092,11 @@
       this._resetActive();
     },
     load: function() {
+      console.log("000")
       if(this.status.srcSet) {
+      console.log("001")
         if(this.html.active) {
+      console.log("002")
           this._html_load();
         } else if(this.aurora.active) {
           this._aurora_load();

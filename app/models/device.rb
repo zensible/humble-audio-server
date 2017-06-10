@@ -166,6 +166,7 @@ puts $devices.inspect
                     end
                   end
                 end
+                puts "=== PLAY NEXT: #{device.playlist_index}"
                 device.play_at_index(0, false) if continue_playing
               end
             when "next"

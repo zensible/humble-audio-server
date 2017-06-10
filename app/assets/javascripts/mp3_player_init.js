@@ -46,15 +46,12 @@ var init_mp3_player = function($scope, $rootScope, Mp3, Device) {
   $scope.player_mp3.unshuffle_playlist = function() {
     var cur_index_val = playa.playlist_order[playa.playlist_index]
 
-    console.log("playa.playlist_order before", playa.playlist_order)
     playa.playlist_order = playa.playlist_order.sort(function(a, b) { return a - b })
-    console.log("playa.playlist_order after", playa.playlist_order)
     playa.playlist_index = playa.playlist_order.indexOf(cur_index_val)
-    console.log("playa.playlist_index", playa.playlist_index)
   }
 
   $scope.player_mp3.play_playlist = function(data) {
-    console.log('playlist', JSON.stringify(data));
+    //console.log('playlist', JSON.stringify(data));
     // playa: $scope.player_mp3
     playa.orig_index = data.playlist_index;
     playa.playlist = data.playlist;
@@ -67,7 +64,7 @@ var init_mp3_player = function($scope, $rootScope, Mp3, Device) {
     if ($scope.home.device_selected.state_local.shuffle == 'on') {
       playa.shuffle_playlist();
     }
-    console.log("$scope.player_mp3.playlist_order", playa.playlist_order)
+    //console.log("$scope.player_mp3.playlist_order", playa.playlist_order)
 
     //$scope.player_mp3.playlist_index = 0;
     playAtIndex(true)
@@ -76,11 +73,9 @@ var init_mp3_player = function($scope, $rootScope, Mp3, Device) {
   var playAtIndex = function(is_orig_play) {
     var ind = playa.playlist_index;
     var pl = playa.playlist;
-    console.log("ind", ind, "pl", playa.playlist_order)
     var entry = pl[playa.playlist_order[ind]];
-    console.log("entry.url", entry)
+    //console.log($scope.player_mp3)
     $scope.player_mp3.load(entry.url, function() {
-      console.log("0a")
       if (entry.id == -1) {  // Playing a radio stream
         $scope.browser_device.state_local.mp3 = entry;
 
@@ -89,9 +84,7 @@ var init_mp3_player = function($scope, $rootScope, Mp3, Device) {
         $scope.playbar.play()
         $scope.safeApply()
       } else {
-      console.log("0b")
         Mp3.get_by_id(entry.id, function(response) {
-      console.log("0C")
           var mp3 = response.data;
           $scope.browser_device.state_local.mp3 = mp3;
           //$scope.browser_device.state_local.mp3_id = mp3.id;
@@ -103,34 +96,29 @@ var init_mp3_player = function($scope, $rootScope, Mp3, Device) {
           $scope.playbar.reset(mp3['length_seconds'] * 1000, 0)
           $scope.playbar.play()
           $scope.safeApply()
+          //console.log($("#song-name").text())
         })
       }
 
       $scope.player_mp3.play(0, function() {  // Play is complete, advance in the playlist
-      console.log("0D")
         $scope.player_mp3.playlist_index += 1
 
         if ($scope.home.device_selected.state_local.repeat == "one") {
           $scope.player_mp3.playlist_index -= 1;
         } else {
           if (playa.playlist_index >= playa.playlist_order.length) { // Reached the end of the playlist
-            console.log("00a")
             playa.playlist_index = 0;
           }
 
           // We've played the playlist until we're back to the first song clicked
-          console.log("00b")
           if (!is_orig_play && playa.playlist_order[playa.playlist_index] == playa.orig_index) {
-          console.log("00c")
             if ($scope.home.device_selected.state_local.repeat != "all") {
-          console.log("00d")
               // If repeat is 'all', do nothing -- just keep on playin'
               return;  // If it's off, stop here
             }
           }
         }
 
-          console.log("00e")
         playAtIndex(false)
       });
     })    
@@ -147,12 +135,11 @@ var init_mp3_player = function($scope, $rootScope, Mp3, Device) {
     }
 
     var jp = $scope.player_mp3.jplayer;
-
-    jp.jPlayer("setMp3", {
+    jp.jPlayer("setMedia", {
       title: "Bubble",
       mp3: url
     });
-    jp.unbind($.jPlayer.event.canplay);
+    jp.unbind($.jPlayer.event.loadeddata);
     jp.bind($.jPlayer.event.canplay, function(event) { // Add a listener to report the time play began
       jp.unbind($.jPlayer.event.canplay);
       callbackLoaded(jp.data('jPlayer').status.duration);
@@ -162,29 +149,26 @@ var init_mp3_player = function($scope, $rootScope, Mp3, Device) {
     })
   }
 
+  var testTimeout = null;
   $scope.player_mp3.play = function(seekMs, playCallback) {  // midi == MIDI.Player
-    console.log("pl001")
     if (window.env == 'test') {
-      setTimeout(function() {
+      clearTimeout(testTimeout)
+      testTimeout = setTimeout(function() {
         playCallback();
       }, 2000)
       return;
     }
 
-    console.log("pl002")
     var jp = $scope.player_mp3.jplayer;
     jp.jPlayer('play', seekMs);
-    console.log("pl003")
 
     //jp.unbind($.jPlayer.event.ended);
     jp.bind($.jPlayer.event.ended, function(event) { // Add a listener to report the time play began
-    console.log("pl003")
       jp.unbind($.jPlayer.event.ended);
       playCallback();
     });
     jp.bind($.jPlayer.event.error, function(evt) {
       jp.unbind($.jPlayer.event.error);
-    console.log("pl004")
       console.log("jplayer err", evt)
     });
   }
@@ -204,12 +188,12 @@ var init_mp3_player = function($scope, $rootScope, Mp3, Device) {
     if ($scope.player_mp3.playlist_index >= $scope.player_mp3.playlist.length) {
       $scope.player_mp3.playlist_index = 0
     }
-    console.log("$scope.player_mp3.playlist_index", $scope.player_mp3.playlist_index)
     playAtIndex()
   }
 
   $scope.player_mp3.stop = function() {
     if (window.env != 'test') {
+      clearTimeout(testTimeout)
       $scope.player_mp3.jplayer.jPlayer('stop');    
     }
     $scope.browser_device.player_status = "STOPPED";
@@ -222,6 +206,7 @@ var init_mp3_player = function($scope, $rootScope, Mp3, Device) {
     $scope.browser_device.player_status = "PAUSED";
 
     if (window.env == 'test') {
+      clearTimeout(testTimeout)
       pausedMs == 1000;
     } else {
       $scope.player_mp3.jplayer.jPlayer('stop');

@@ -54,7 +54,7 @@ Before('@music_exists') do
     `#{cmd}`
   else
     # Go through and sync existing mp3s in each category
-    puts "== POPULATING DB"
+    puts "== POPULATING DB. Be sure to DROP DATABASE, rake db:create and rake db:migrate if there have been any DB schema changes"
 
     page.find(".select-mode", :text => 'Music').click()
     page.text.should match(/No mp3s found/)

@@ -19,7 +19,6 @@ end
 
 # Set audio directory and $http_address
 $audio_dir = Rails.root.join('public', (Rails.env.test? ? 'test' : 'audio'))
-
 if $0 == 'bin/rails' || $0.match(/cucumber/) # Don't run for rake tasks, tests etc
 
   if !`curl --version`.match(/^curl \d/)

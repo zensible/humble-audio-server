@@ -2,7 +2,7 @@ source 'https://rubygems.org'
 
 ruby "2.3.1"
 
-gem 'puma', '~> 3.0'
+gem 'puma', '3.8.0'
 gem 'rails', '~> 5.0.1'
 
 gem 'mysql2', '~> 0.3.18'
