@@ -126,7 +126,10 @@ $populate_casts_var = "for cc in chromecasts:
       Thread.kill($threads[key])
     end
 puts $devices.inspect
+
     $devices.each do |device|
+      @test_idle_wait = 0.0
+
       next if device.nil?
       puts device.inspect
       uuid = device.uuid
@@ -142,6 +145,8 @@ puts $devices.inspect
 
             case cmd
             when "play" # See: mp3s_controller.rb#play
+              @test_idle_wait = 0.0 if Rails.env.test?
+
               # User clicked play
               if device.cast_type == "group"
                 device.children.each do |child_uuid|
@@ -155,8 +160,18 @@ puts $devices.inspect
               #device.playlist_index = 0
               device.play_at_index(0, true)
             when "wait_for_idle"
+              if Rails.env.test?
+                sleep 1
+                @test_idle_wait += 1
+                if @test_idle_wait < 5
+                  puts "____ TEST WAIT"
+                  next
+                end
+                puts "____ TEST NEXT"
+                @test_idle_wait = 0
+              end
               # When the cast goes from BUFFERING/PLAYING to IDLE, that means the song has ended or couldn't be played. Move on to the next item in the playlist
-              if device.player_status() == "IDLE"
+              if device.player_status("IDLE") == "IDLE"
                 continue_playing = true
                 device.playlist_index += 1
                 if device.state_local[:repeat] == "one"
@@ -182,11 +197,13 @@ puts $devices.inspect
                 device.play_at_index(0, false) if continue_playing
               end
             when "next"
+              @test_idle_wait = 0.0 if Rails.env.test?
               puts "=== NEEXXTT"
               device.playlist_index += 1
               device.playlist_index = 0 if device.playlist_index >= device.playlist.length
               device.play_at_index(0, false)
             when "prev"
+              @test_idle_wait = 0.0 if Rails.env.test?
               puts "=== PERV"
               device.playlist_index -= 1
               device.playlist_index = device.playlist.length - 1 if device.playlist_index < 0
@@ -291,19 +308,21 @@ puts "002.9"
     end
   end
 
+  $test_status_override = ""
   def wait_for_device_status(str, interval = 0.5, max_wait = 5)
-    #if Rails.env.test?
-    #  case str
-    #  when "BUFFERING"
-    #    sleep 2
-    #    return true
-    #  when "PLAYING"
-    #    sleep 3
-    #    return true
-    #  else
-    #    return true
-    #  end
-    #end
+    if Rails.env.test?
+      $test_status_override = str
+      case str
+      when "BUFFERING"
+        sleep 1
+        return true
+      when "PLAYING"
+        sleep 1
+        return true
+      else
+        return true
+      end
+    end
 
     player_state = ""
     reps = 0
@@ -359,7 +378,11 @@ puts "002.9"
     PyChromecast.run(str)
   end
 
-  def player_status
+  def player_status(test_default = nil)
+    if Rails.env.test?
+      $test_status_override = test_default if test_default
+      return $test_status_override
+    end
     #  cast = next(cc for cc in chromecasts if cc.device.uuid.urn == "urn:uuid:#{uuid}")
     #  cast.wait()
     str = %Q{
@@ -397,6 +420,7 @@ puts "002.9"
   end
 
   def pause()
+    @test_idle_wait = 0
     str = %Q{
       #{cast_var}.media_controller.pause()
     }
@@ -513,6 +537,7 @@ puts "002.9"
     num_casting = -1
     $devices.each do |dev|
       hsh = dev.to_h()
+      puts "BROADCAST STATUS: #{hsh[:player_status]}"
       if hsh[:player_status] == 'BUFFERING' || hsh[:player_status] == 'PLAYING'
         num_casting += 1
         hsh[:num_casting] = num_casting

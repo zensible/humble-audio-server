@@ -197,7 +197,7 @@ Then(/^I should be able to toggle repeat\-one$/) do
   sleep(tracklen)
 
   page.find('#song-name').text.should match(/test-01\.mp3/)
-  sleep(tracklen)
+  sleep(1)
 
   # Turn off repeat
   page.find("#playbar-repeat").click
@@ -215,8 +215,8 @@ Then(/^I should be able to play and pause white noise$/) do
   page.find(".select-mode", :text => 'White Noise').click() 
 
   page.first(".mp3-title a").click
-  $devices[0].wait_for_device_status("BUFFERING", 0.25, 5) if $test_mode == 'cca'
-  $devices[0].wait_for_device_status("PLAYING", 0.25, 5) if $test_mode == 'cca'
+  #$devices[0].wait_for_device_status("BUFFERING", 0.25, 5) if $test_mode == 'cca'
+  #$devices[0].wait_for_device_status("PLAYING", 0.25, 5) if $test_mode == 'cca'
 
   page.find('#song-name').text.should match(/test-04\.mp3/)
   pause_for_next_step
