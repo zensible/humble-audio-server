@@ -13,6 +13,9 @@ ddns_update:
 login_username: 
 login_password: 
 
+test_cca_id: 72af5e77-b9c9-150a-9372-f613c16698b8
+test_cca_name: Bedroom-Guest
+
 menu:
   - music
   - spoken

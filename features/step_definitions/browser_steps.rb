@@ -2,6 +2,19 @@ def safeApply()
   execute_script("scope.safeApply()")
 end
 
+# Length of the test track
+# See also: search for testTimeout in *.js
+def tracklen
+  return 4.0
+end
+
+def pause_for_next_step
+  wait_until {
+    page.find("#playbar-pause").click()
+    $devices[0].wait_for_device_status("PAUSED", 0.25, 5) if $test_mode == 'cca'
+  }
+end
+
 Given(/^I am in 'music' mode$/) do
   page.find(".select-mode", :text => 'Music').click()
 end
@@ -39,15 +52,28 @@ Then(/^I should be able to pause and resume an mp3$/) do
 end
 
 Then(/^I should be able to use next and prev$/) do
+
+  console_log "+++++++++++ HIT NEXT #{Time.now.to_i}"
   page.find("#playbar-next").click()
-  wait_until {
+  $devices[0].wait_for_device_status("BUFFERING", 0.25, 5) if $test_mode == 'cca'
+  $devices[0].wait_for_device_status("PLAYING", 0.25, 5) if $test_mode == 'cca'
+  wait_until(tracklen * 1.5) {
+  console_log "+++++++++++ HIT NEXT2 #{Time.now.to_i}"
     page.find('#song-name').text.should match(/test-02\.mp3/)
   }
 
+  console_log "+++++++++++ HIT PREV #{Time.now.to_i}"
+  sleep 2 if $test_mode == 'cca' # Wait for song to play 2 secs
   page.find("#playbar-previous").click()
-  wait_until {
+  $devices[0].wait_for_device_status("BUFFERING", 0.25, 5) if $test_mode == 'cca'
+  $devices[0].wait_for_device_status("PLAYING", 0.25, 5) if $test_mode == 'cca'
+  console_log "+++++++++++ HIT PREV2 #{Time.now.to_i}"
+  wait_until(10) {
+  console_log "+++++++++++ HIT PREV3 #{Time.now.to_i}"
     page.find('#song-name').text.should match(/test-01\.mp3/)
   }
+
+  pause_for_next_step
 end
 
 Then(/^I should be able to seek$/) do
@@ -66,6 +92,9 @@ Then(/^I should be able to toggle shuffle$/) do
   # 1: start playing w/o shuffle on
   page.first(".mp3-title a.play-mp3").click()
   sleep 0.1
+  $devices[0].wait_for_device_status("BUFFERING", 0.25, 5) if $test_mode == 'cca'
+  $devices[0].wait_for_device_status("PLAYING", 0.25, 5) if $test_mode == 'cca'
+
 
   # 2: turn shuffle on
   @pl_shuffled = []
@@ -82,7 +111,7 @@ Then(/^I should be able to toggle shuffle$/) do
   }
 
   # 3. Playlist is now shuffled...wait for next song to play to be sure it plays in the correct (random) order
-  sleep(2.2)
+  sleep(tracklen + 0.2)
 
   num = @pl_shuffled[1].to_i
   page.find('#song-name').text.should match(/test-0#{num + 1}\.mp3/)
@@ -91,76 +120,89 @@ Then(/^I should be able to toggle shuffle$/) do
   @pl_unshuffled = []
   wait_until {
     page.find("#playbar-shuffle").click
-    @pl_unshuffled = page.evaluate_script("scope.player_mp3.playlist_order")
+    if $test_mode == 'cca'
+      @pl_unshuffled = $devices[0].playlist_order
+    else
+      @pl_unshuffled = page.evaluate_script("scope.player_mp3.playlist_order")
+    end
     @pl_unshuffled[0].should eql(0)
     @pl_unshuffled[1].should eql(1)
     @pl_unshuffled[2].should eql(2)
   }
 
   # 4. Wait for next song after unshuffling. Should be the next one in the sorted list
-  sleep(2)
+  sleep(tracklen)
   puts "- unshuf: #{@pl_unshuffled.inspect}"
   puts "- shuf: #{@pl_shuffled.inspect}"
   num = @pl_unshuffled[2].to_i
 
   # This works in practice but not in tests. Disabling for now
   # page.find('#song-name').text.should match(/test-0#{num + 1}\.mp3/)
+  pause_for_next_step
 
 end
 
 Then(/^I should be able to toggle repeat\-all$/) do
   page.find("#playbar-repeat").click
   page.find(".select-folder", :text => "playlist").click()
+  console_log "(((((( 000 }}}}}}"
   page.first(".mp3-title a.play-mp3").click()
-  if $test_mode == 'cca'
-    puts "=== CCAAAA"
-    sleep 3
-  end
+  #if $test_mode == 'cca'
+    #puts "=== CCAAAA"
+    #sleep tracklen
+  #end
+  console_log "(((((( 001 }}}}}}"
+  $devices[0].wait_for_device_status("BUFFERING", 0.25, 5) if $test_mode == 'cca'
+  $devices[0].wait_for_device_status("PLAYING", 0.25, 5) if $test_mode == 'cca'
+  console_log "(((((( 002 }}}}}}"
 
   sleep(0.2)
 
   wait_until {
     page.find('#song-name').text.should match(/test-01\.mp3/)
   }
-  sleep(2)
+  sleep(tracklen)
 
   wait_until {
     page.find('#song-name').text.should match(/test-02\.mp3/)
   }
-  sleep(2)
+  sleep(tracklen)
 
   wait_until {
     page.find('#song-name').text.should match(/test-03\.mp3/)
   }
-  sleep(2)
+  sleep(tracklen)
 
   # If we get here then we repeated back to the beginning
   wait_until {
     page.find('#song-name').text.should match(/test-01\.mp3/)
   }
-  page.find("#playbar-pause").click()
+  $devices[0].wait_for_device_status("PLAYING", 0.25, 5) if $test_mode == 'cca'
 
+  pause_for_next_step
 end
 
 Then(/^I should be able to toggle repeat\-one$/) do
   page.find("#playbar-repeat").click
 
   page.first(".mp3-title a.play-mp3").click()
+  $devices[0].wait_for_device_status("BUFFERING", 0.25, 5) if $test_mode == 'cca'
+  $devices[0].wait_for_device_status("PLAYING", 0.25, 5) if $test_mode == 'cca'
 
   sleep(0.2)
   page.find('#song-name').text.should match(/test-01\.mp3/)
-  sleep(2)
+  sleep(tracklen)
 
   page.find('#song-name').text.should match(/test-01\.mp3/)
-  sleep(2)
+  sleep(tracklen)
 
   page.find('#song-name').text.should match(/test-01\.mp3/)
-  sleep(2)
+  sleep(tracklen)
 
   # Turn off repeat
   page.find("#playbar-repeat").click
 
-  page.find("#playbar-pause").click()
+  pause_for_next_step
 end
 
 Then(/^I should be able to stop all$/) do
@@ -169,20 +211,26 @@ Then(/^I should be able to stop all$/) do
   page.evaluate_script("scope.browser_device.player_status").should_not eql("PLAYING")
 end
 
-Then(/^I should be able to play and pause a radio station$/) do
-  page.find(".select-mode", :text => 'Radio').click() 
-
-  page.first(".mp3-title a").click
-
-  page.find('#song-name').text.should match(/WBEZ Chicago/)
-end
-
 Then(/^I should be able to play and pause white noise$/) do
   page.find(".select-mode", :text => 'White Noise').click() 
 
   page.first(".mp3-title a").click
+  $devices[0].wait_for_device_status("BUFFERING", 0.25, 5) if $test_mode == 'cca'
+  $devices[0].wait_for_device_status("PLAYING", 0.25, 5) if $test_mode == 'cca'
 
   page.find('#song-name').text.should match(/test-04\.mp3/)
+  pause_for_next_step
+end
+
+Then(/^I should be able to play and pause a radio station$/) do
+  page.find(".select-mode", :text => 'Radio').click() 
+  $devices[0].wait_for_device_status("BUFFERING", 0.25, 5) if $test_mode == 'cca'
+  $devices[0].wait_for_device_status("PLAYING", 0.25, 5) if $test_mode == 'cca'
+
+  page.first(".mp3-title a").click
+
+  page.find('#song-name').text.should match(/WBEZ Chicago/)
+  #pause_for_next_step
 end
 
 Given(/^I am in 'spoken' mode$/) do

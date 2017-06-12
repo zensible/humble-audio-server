@@ -54,6 +54,7 @@ angular.module("multiroomApp").factory('Mp3', function($rootScope, HttpErrorWrap
     },
 
     prev: function(cast_uuid, success, error) {
+      console.log("++++++++++ PREV002")
       HttpErrorWrapper.get("/api/mp3s/prev/" + cast_uuid, success, error);
     },
 

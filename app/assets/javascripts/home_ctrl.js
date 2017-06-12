@@ -58,7 +58,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
         console.log("Connected to ActionCable: DEVICE")
       },
       received: function(data) {
-        console.log('DEVICES RECEIVED', JSON.parse(data))
+        console.log('DEVICES RECEIVED', data)
         $scope.home.devices = JSON.parse(data || "{}")
 
         // Set default device / update it based on changes on the back-end (see: Device.broadcast())
@@ -332,6 +332,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       seek: seekSecs
     };
 
+    console.log("play2")
     if ($scope.home.device_selected.uuid == 'browser') {
       $scope.browser_device.state_local = hsh;
       //$scope.browser_device.mode = $scope.home.mode_ui
@@ -340,9 +341,11 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       // For playing in the browser it's easy, just start playing with a hidden jPlayer and update the playbar
       $scope.player_mp3.play_playlist(data)
     } else {
+      console.log("play3")
       // For chromecasts, we have to tell the back-end to load and play the playlist on the given device
       // We then depend on Device.broadcast() to fire when buffering/playing starts. See the init() and $scope.select_cast() functions
       Mp3.play(data, function(response) {
+      console.log("play4")
         $scope.buffering = false;
       })
     }
@@ -435,7 +438,6 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
   var volume_timer;
 
   $scope.volume_change = function(device) {
-    console.log("vc dev", device)
     if (!device) {
       return;
     }
@@ -443,14 +445,13 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       $('#jquery_jplayer_1').jPlayer("volume", device.volume_level)
       return;
     }
-    console.log("device.volume_level", device.volume_level)
     clearTimeout(volume_timer);
     volume_timer = setTimeout(function() {  // Timeout prevents user from changing volume 10 times a second
       var val = device.volume_level;
       if (device.volume_level == 1) { val = "1.0" }
       if (device.volume_level == 0) { val = "0.0" }
       Device.volume_change(device.uuid, val, function() {
-        console.log("yay")
+        //console.log("yay")
       })
     }, 100)
   }
@@ -486,8 +487,12 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
         if (arr.length == 1) {
           var val_device = dev.state_local[arr[0]]
         } else if (arr.length == 2) {
-          //console.log("arr", arr)
-          var val_device = dev.state_local[arr[0]][arr[1]]
+          //console.log("arr", JSON.stringify(arr), "sl", JSON.stringify(dev.state_local))
+          if (dev.state_local[arr[0]]) {
+            var val_device = dev.state_local[arr[0]][arr[1]]
+          } else {
+            console.warn("Could not find dev.state_local[" + arr[0] + "]")
+          }
         }
 
         if (val_device == val) {

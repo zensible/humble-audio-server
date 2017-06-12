@@ -6,7 +6,7 @@ class Device
   attr_accessor :is_orig_play2
 
   MAX_BUFFERING_WAIT ||= 10
-  MAX_PLAYING_WAIT ||= 8
+  MAX_PLAYING_WAIT ||= 10
   RETRY_WAIT ||= 5
   MAX_RETRIES ||= 3
 
@@ -67,9 +67,20 @@ class Device
     # Without this sleep, the cc.status calls will fail with: "AttributeError: 'NoneType' object has no attribute 'status_text'"
     # I'm making it configurable here in case others require a longer sleep
     sleep_before_status = 1 
+    if Rails.env.test?
+      # We only want to care about one CCA when testing
+      test_cca_id = $settings['test_cca_id']
+      get_ccs_cmd = "
+chromecasts = pychromecast.get_chromecasts()
+cast = next(cc for cc in chromecasts if cc.device.uuid.urn[9:] == \"#{test_cca_id}\")
+chromecasts = [ cast ]"
+    else
+      # Get all chromecasts
+      get_ccs_cmd = "chromecasts = pychromecast.get_chromecasts()"
+    end
 
     $get_devices = "
-chromecasts = pychromecast.get_chromecasts()
+#{get_ccs_cmd}
 time.sleep(#{sleep_before_status})
 arr = [ { u'friendly_name': cc.device.friendly_name, u'model_name': cc.device.model_name, 'uuid': cc.device.uuid.urn[9:], 'cast_type': cc.device.cast_type, 'status_text': cc.status.status_text, 'volume_level': cc.status.volume_level } for cc in chromecasts]
 print(json.dumps(arr))
@@ -109,6 +120,8 @@ $populate_casts_var = "for cc in chromecasts:
 
     buffering_pause = 3
 
+    Thread.abort_on_exception = true if Rails.env.test?
+
     $threads.keys.each do |key|
       Thread.kill($threads[key])
     end
@@ -124,13 +137,12 @@ puts $devices.inspect
 
             $semaphore.synchronize {
               cmd = $redis.hget("thread_command", uuid)
-              puts "uuid: #{uuid}, cmd: #{cmd}" if ENV['DEBUG'] == 'true'
+              puts "+++---+++ uuid: #{uuid}, cmd: #{cmd}" if ENV['DEBUG'] == 'true'
             }
 
             case cmd
             when "play" # See: mp3s_controller.rb#play
               # User clicked play
-
               if device.cast_type == "group"
                 device.children.each do |child_uuid|
                   puts "====+++++ CHILD #{child_uuid}" if ENV['DEBUG'] == 'true'
@@ -170,10 +182,12 @@ puts $devices.inspect
                 device.play_at_index(0, false) if continue_playing
               end
             when "next"
+              puts "=== NEEXXTT"
               device.playlist_index += 1
               device.playlist_index = 0 if device.playlist_index >= device.playlist.length
               device.play_at_index(0, false)
             when "prev"
+              puts "=== PERV"
               device.playlist_index -= 1
               device.playlist_index = device.playlist.length - 1 if device.playlist_index < 0
               device.play_at_index(0, false)
@@ -199,6 +213,8 @@ puts $devices.inspect
     puts "Playlist index: #{@playlist_index}" if ENV['DEBUG'] == 'true'
 
     mp3 = @playlist[@playlist_order[@playlist_index]]
+puts "Play at index: #{@playlist_index} : "
+puts mp3.inspect
 
     if mp3[:id] == -1
       mp3_obj = {
@@ -216,6 +232,7 @@ puts $devices.inspect
     #@state_local[:mp3_id] = mp3[:id]
     #@state_local[:mp3_url] = mp3[:url]
 
+puts "002.2"
     skip_to_seconds = 0
     if @state_local["seek"] # We only want to seek the first track in the playlist
       skip_to_seconds = @state_local["seek"]
@@ -225,15 +242,21 @@ puts $devices.inspect
     play_url(mp3[:url])
     puts mp3[:url]
     sleep(0.5)
+puts "002.3"
 
     if wait_for_device_status('BUFFERING', 0.5, MAX_BUFFERING_WAIT) # Wait 10 seconds to go from IDLE/UNKNOWN -> BUFFERING
+puts "002.4"
       Device.broadcast()
+puts "002.5"
 
       if skip_to_seconds && skip_to_seconds > 0
+puts "002.55"
         seek(skip_to_seconds)
         $redis.hset("thread_command", @uuid, "wait_for_idle") # Wait indefinitely for "IDLE" status a.k.a. MP3 has stopped playing
       else
+puts "002.6"
         if wait_for_device_status('PLAYING', 0.5, MAX_PLAYING_WAIT) # Wait 5 seconds to go from BUFFERING -> PLAYING
+puts "002.7"
           @state_local[:elapsed] = 0
           @state_local[:start] = Time.now().to_i - skip_to_seconds
           @state_local[:paused_start] = 0
@@ -241,9 +264,11 @@ puts $devices.inspect
 
           Device.broadcast()
           $redis.hset("thread_command", @uuid, "wait_for_idle") # Wait indefinitely for "IDLE" status a.k.a. MP3 has stopped playing
+puts "002.7.1"
 
           return true
         else
+puts "002.8"
           # Could not get MP3
           Rails.logger.warn("= 102 = Could not retrieve buffer for mp3 within #{MAX_PLAYING_WAIT}. Waiting #{RETRY_WAIT} seconds and retrying. Retry ##{retry_num + 1} of #{MAX_RETRIES} for #{mp3[:url]}")
           sleep(RETRY_WAIT)  # Wait 5 seconds and try again
@@ -257,6 +282,9 @@ puts $devices.inspect
         end
       end
     else
+puts "002.9"
+      puts "Check: " + mp3[:url]
+      sleep 60
       Rails.logger.error("= 103 = Couldn't download/buffer mp3 in #{MAX_BUFFERING_WAIT} seconds. Canceling play.")
       $redis.hset("thread_command", @uuid, "")
       return false
@@ -264,11 +292,24 @@ puts $devices.inspect
   end
 
   def wait_for_device_status(str, interval = 0.5, max_wait = 5)
+    #if Rails.env.test?
+    #  case str
+    #  when "BUFFERING"
+    #    sleep 2
+    #    return true
+    #  when "PLAYING"
+    #    sleep 3
+    #    return true
+    #  else
+    #    return true
+    #  end
+    #end
+
     player_state = ""
     reps = 0
     while (player_state != str && reps * interval < max_wait)
       reps += 1
-      puts "Waiting for...#{str}" if ENV['DEBUG'] == 'true'
+      puts "Waiting for...#{str}. \tCaller: " + caller[0] if ENV['DEBUG'] == 'true'
       player_state = player_status()
       sleep(interval) # Poll device every half second
     end
@@ -286,6 +327,7 @@ puts $devices.inspect
   end
 
   def self.stop_all(broadc = false)
+    puts "\n\n\n======= STOP ALL =====\n\n\n"
     $devices.each do |dev|
       dev.stop()
       $redis.hset("thread_command", dev.uuid, "")

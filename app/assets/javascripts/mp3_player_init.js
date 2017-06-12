@@ -155,7 +155,7 @@ var init_mp3_player = function($scope, $rootScope, Mp3, Device) {
       clearTimeout(testTimeout)
       testTimeout = setTimeout(function() {
         playCallback();
-      }, 2000)
+      }, 4000)
       return;
     }
 

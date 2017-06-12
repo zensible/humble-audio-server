@@ -51,6 +51,7 @@ class Mp3sController < ApiController
   end
 
   def prev
+    Rails.logger.info("== PREVVVV")
     $redis.hset("thread_command", params[:cast_uuid], "prev")
     render :json => { success: true }
   end

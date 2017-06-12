@@ -24,8 +24,10 @@ var init_playbar = function($scope, $rootScope, Mp3, Device) {
 
     isPaused = false;
 
+    console.log("should not be showin")
     $scope.playbar.playing = true;
     $scope.safeApply();
+    console.log("should be showin")
 
     $scope.playbar.initPlayProgress();
   }
@@ -73,6 +75,7 @@ var init_playbar = function($scope, $rootScope, Mp3, Device) {
     if ($scope.home.device_selected.uuid == 'browser') {
       $scope.player_mp3.prev();
     } else {
+      console.log("++++++++++ PREV001")
       Mp3.prev($scope.home.device_selected.uuid, function() {
         console.log("success")
       })

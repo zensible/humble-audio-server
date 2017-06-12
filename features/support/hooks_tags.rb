@@ -26,7 +26,7 @@ def screenie()
 
   nam = "screen_#{@screenNum}.png"
   puts "== Saving screenshot: #{nam}"
-  save_screenshot(nam, :full => true)
+  save_screenshot("./#{nam}", :full => true)
 end
 
 def clear_notifications
@@ -54,7 +54,12 @@ Before('@music_exists') do
     `#{cmd}`
   else
     # Go through and sync existing mp3s in each category
-    puts "== POPULATING DB. Be sure to DROP DATABASE, rake db:create and rake db:migrate if there have been any DB schema changes"
+    sql = "DROP DATABASE #{database};"
+    ActiveRecord::Base.connection.execute(sql)
+    `rake db:create`
+    `rake db:migrate`
+    puts "== POPULATING DB."
+    # Be sure to DROP DATABASE, rake db:create and rake db:migrate if there have been any DB schema changes
 
     page.find(".select-mode", :text => 'Music').click()
     page.text.should match(/No mp3s found/)

@@ -1,10 +1,29 @@
 
 Given(/^I select a chromecast device$/) do
+
+  puts "
+================================================================================================
+These tests talk to an actual Chromecast Audio
+
+In order for them to work, follow these steps:
+
+1. Start the server normally and play something with your test device.
+2. Set the test_cca_name and test_cca_id in config/test.yml
+3. STOP the dev server (it will cause the tests to fail)
+4. Run the tests:
+
+DEBUG=true cucumber features/chromecast.feature
+
+Steps 1 and 4 prevent getting stuck in an 'UNKNOWN' status for your test device
+
+Note: you may have to re-run the tests if they fail. There are some weird timing problems if it's hitting the test CCA for the first time.
+================================================================================================
+"
+  sleep 1
+
   $test_mode = 'cca'
 
-  screenie()
-
-  page.find(".select-cast", :text => "Bedroom-Guest").click()
+  page.find(".select-cast", :text => $settings['test_cca_name']).click()
   safeApply()
   sleep(0.1)
   page.should have_css(".select-cast span.selected")
@@ -12,61 +31,5 @@ end
 
 Then(/^I should be able to play a music playlist \(CCA\)$/) do
   
-end
-
-Then(/^I should be able to pause and resume an mp(\d+) \(CCA\)$/) do |arg1|
-  pending # Write code here that turns the phrase above into concrete actions
-end
-
-Then(/^I should be able to use next and prev \(CCA\)$/) do
-  pending # Write code here that turns the phrase above into concrete actions
-end
-
-Then(/^I should be able to seek \(CCA\)$/) do
-  pending # Write code here that turns the phrase above into concrete actions
-end
-
-Then(/^I should be able to toggle repeat\-all \(CCA\)$/) do
-  pending # Write code here that turns the phrase above into concrete actions
-end
-
-Then(/^I should be able to toggle repeat\-one \(CCA\)$/) do
-  pending # Write code here that turns the phrase above into concrete actions
-end
-
-Then(/^I should be able to toggle shuffle \(CCA\)$/) do
-  pending # Write code here that turns the phrase above into concrete actions
-end
-
-Then(/^I should be able to stop all \(CCA\)$/) do
-  pending # Write code here that turns the phrase above into concrete actions
-end
-
-Then(/^I should be able to play and pause white noise \(CCA\)$/) do
-  pending # Write code here that turns the phrase above into concrete actions
-end
-
-Then(/^I should be able to play and pause a radio station \(CCA\)$/) do
-  pending # Write code here that turns the phrase above into concrete actions
-end
-
-Given(/^I am in 'spoken' mode \(CCA\)$/) do
-  pending # Write code here that turns the phrase above into concrete actions
-end
-
-Then(/^I should be able to play a spoken word track \(CCA\)$/) do
-  pending # Write code here that turns the phrase above into concrete actions
-end
-
-When(/^I hit pause a bookmark should be saved \(CCA\)$/) do
-  pending # Write code here that turns the phrase above into concrete actions
-end
-
-When(/^I leave the page a bookmark should be saved \(CCA\)$/) do
-  pending # Write code here that turns the phrase above into concrete actions
-end
-
-When(/^I should be able to resume from my bookmark \(CCA\)$/) do
-  pending # Write code here that turns the phrase above into concrete actions
 end
 
