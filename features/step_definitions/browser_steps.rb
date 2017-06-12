@@ -78,7 +78,7 @@ end
 
 Then(/^I should be able to seek$/) do
   page.evaluate_script("scope.seek({ offsetX: 550 })")
-  page.evaluate_script("scope.playbar.progress").should eql(1000)
+  page.evaluate_script("scope.playbar.progress").should eql(2000)
 end
 
 def console_log(str)
