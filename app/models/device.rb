@@ -67,43 +67,34 @@ class Device
     # Without this sleep, the cc.status calls will fail with: "AttributeError: 'NoneType' object has no attribute 'status_text'"
     # I'm making it configurable here in case others require a longer sleep
     sleep_before_status = 1 
-    if Rails.env.test?
-      # We only want to care about one CCA when testing
-      test_cca_id = $settings['test_cca_id']
-      get_ccs_cmd = "
-chromecasts = pychromecast.get_chromecasts()
-cast = next(cc for cc in chromecasts if cc.device.uuid.urn[9:] == \"#{test_cca_id}\")
-chromecasts = [ cast ]"
-    else
-      # Get all chromecasts
-      get_ccs_cmd = "chromecasts = pychromecast.get_chromecasts()"
-    end
 
-    $get_devices = "
-#{get_ccs_cmd}
+    unless Rails.env.test?
+      # 
+      $get_devices = "
+chromecasts = pychromecast.get_chromecasts()
 time.sleep(#{sleep_before_status})
 arr = [ { u'friendly_name': cc.device.friendly_name, u'model_name': cc.device.model_name, 'uuid': cc.device.uuid.urn[9:], 'cast_type': cc.device.cast_type, 'status_text': cc.status.status_text, 'volume_level': cc.status.volume_level } for cc in chromecasts]
 print(json.dumps(arr))
 "
-    all = PyChromecast.run($get_devices)
 
-$init_casts_by_uuid = "
+      $init_casts_by_uuid = "
 casts_by_uuid = {}
 print('Number of casts:')
 print(len(chromecasts))
 "
-    PyChromecast.run($init_casts_by_uuid)
-
-$populate_casts_var = "for cc in chromecasts:
-  cc.wait()
-  casts_by_uuid[cc.uuid.urn[9:]] = cc
-
+      PyChromecast.run($init_casts_by_uuid)
+    $populate_casts_var = "for cc in chromecasts:
+cc.wait()
+casts_by_uuid[cc.uuid.urn[9:]] = cc
 "
-    PyChromecast.run($populate_casts_var, false, false)
+      PyChromecast.run($populate_casts_var, false, false)
 
-    PyChromecast.run("print(casts_by_uuid)")
+      PyChromecast.run("print(casts_by_uuid)")
+    else  # For test mode, don't hit a real chromecast, these calls are very slow
+      all = '[{"uuid": "72af5e77-b9c9-150a-9372-f613c16698b8", "cast_type": "audio", "friendly_name": "Bedroom-Guest", "volume_level": 0.4000000059604645, "status_text": "Ready To Cast", "model_name": "Chromecast Audio"}]'
+    end
 
-    devs = JSON.parse(all || [])
+    devs = JSON.parse(all || "[]")
     if devs.length == 0
       puts "==== WARNING: No chromecast audio devices found on the network! Server will only be able to stream to web browsers."
     else
@@ -125,13 +116,13 @@ $populate_casts_var = "for cc in chromecasts:
     $threads.keys.each do |key|
       Thread.kill($threads[key])
     end
-puts $devices.inspect
+#puts $devices.inspect
 
     $devices.each do |device|
       @test_idle_wait = 0.0
 
       next if device.nil?
-      puts device.inspect
+      #puts device.inspect
       uuid = device.uuid
       $threads[uuid] = Thread.new do
         begin
@@ -140,7 +131,7 @@ puts $devices.inspect
 
             $semaphore.synchronize {
               cmd = $redis.hget("thread_command", uuid)
-              puts "+++---+++ uuid: #{uuid}, cmd: #{cmd}" if ENV['DEBUG'] == 'true'
+              #puts "+++---+++ uuid: #{uuid}, cmd: #{cmd}" if ENV['DEBUG'] == 'true'
             }
 
             case cmd
@@ -164,10 +155,10 @@ puts $devices.inspect
                 sleep 1
                 @test_idle_wait += 1
                 if @test_idle_wait < 5
-                  puts "____ TEST WAIT"
+                  #puts "____ TEST WAIT"
                   next
                 end
-                puts "____ TEST NEXT"
+                #puts "____ TEST NEXT"
                 @test_idle_wait = 0
               end
               # When the cast goes from BUFFERING/PLAYING to IDLE, that means the song has ended or couldn't be played. Move on to the next item in the playlist
@@ -178,10 +169,10 @@ puts $devices.inspect
                   device.playlist_index -= 1
                 else
                   if device.playlist_index >= device.playlist_order.length # Reached the end of the playlist
-                    puts @is_orig_play2.inspect
-                    puts device.playlist_order[device.playlist_index].to_s
-                    puts device.orig_index.to_s
-                    puts device.state_local[:repeat].to_s
+                    #puts @is_orig_play2.inspect
+                    #puts device.playlist_order[device.playlist_index].to_s
+                    #puts device.orig_index.to_s
+                    #puts device.state_local[:repeat].to_s
 
                     if !@is_orig_play2 && (!device.playlist_order[device.playlist_index] || device.playlist_order[device.playlist_index] == device.orig_index)
                       if device.state_local[:repeat] == 'all'
@@ -193,18 +184,18 @@ puts $devices.inspect
                     end
                   end
                 end
-                puts "=== PLAY NEXT: #{device.playlist_index}"
+                #puts "=== PLAY NEXT: #{device.playlist_index}"
                 device.play_at_index(0, false) if continue_playing
               end
             when "next"
               @test_idle_wait = 0.0 if Rails.env.test?
-              puts "=== NEEXXTT"
+              #puts "=== NEEXXTT"
               device.playlist_index += 1
               device.playlist_index = 0 if device.playlist_index >= device.playlist.length
               device.play_at_index(0, false)
             when "prev"
               @test_idle_wait = 0.0 if Rails.env.test?
-              puts "=== PERV"
+              #puts "=== PERV"
               device.playlist_index -= 1
               device.playlist_index = device.playlist.length - 1 if device.playlist_index < 0
               device.play_at_index(0, false)
@@ -230,8 +221,8 @@ puts $devices.inspect
     puts "Playlist index: #{@playlist_index}" if ENV['DEBUG'] == 'true'
 
     mp3 = @playlist[@playlist_order[@playlist_index]]
-puts "Play at index: #{@playlist_index} : "
-puts mp3.inspect
+#puts "Play at index: #{@playlist_index} : "
+#puts mp3.inspect
 
     if mp3[:id] == -1
       mp3_obj = {
@@ -249,7 +240,7 @@ puts mp3.inspect
     #@state_local[:mp3_id] = mp3[:id]
     #@state_local[:mp3_url] = mp3[:url]
 
-puts "002.2"
+#puts "002.2"
     skip_to_seconds = 0
     if @state_local["seek"] # We only want to seek the first track in the playlist
       skip_to_seconds = @state_local["seek"]
@@ -257,23 +248,17 @@ puts "002.2"
     end
 
     play_url(mp3[:url])
-    puts mp3[:url]
+    #puts mp3[:url]
     sleep(0.5)
-puts "002.3"
 
     if wait_for_device_status('BUFFERING', 0.5, MAX_BUFFERING_WAIT) # Wait 10 seconds to go from IDLE/UNKNOWN -> BUFFERING
-puts "002.4"
       Device.broadcast()
-puts "002.5"
 
       if skip_to_seconds && skip_to_seconds > 0
-puts "002.55"
         seek(skip_to_seconds)
         $redis.hset("thread_command", @uuid, "wait_for_idle") # Wait indefinitely for "IDLE" status a.k.a. MP3 has stopped playing
       else
-puts "002.6"
         if wait_for_device_status('PLAYING', 0.5, MAX_PLAYING_WAIT) # Wait 5 seconds to go from BUFFERING -> PLAYING
-puts "002.7"
           @state_local[:elapsed] = 0
           @state_local[:start] = Time.now().to_i - skip_to_seconds
           @state_local[:paused_start] = 0
@@ -281,11 +266,9 @@ puts "002.7"
 
           Device.broadcast()
           $redis.hset("thread_command", @uuid, "wait_for_idle") # Wait indefinitely for "IDLE" status a.k.a. MP3 has stopped playing
-puts "002.7.1"
 
           return true
         else
-puts "002.8"
           # Could not get MP3
           Rails.logger.warn("= 102 = Could not retrieve buffer for mp3 within #{MAX_PLAYING_WAIT}. Waiting #{RETRY_WAIT} seconds and retrying. Retry ##{retry_num + 1} of #{MAX_RETRIES} for #{mp3[:url]}")
           sleep(RETRY_WAIT)  # Wait 5 seconds and try again
@@ -299,7 +282,6 @@ puts "002.8"
         end
       end
     else
-puts "002.9"
       puts "Check: " + mp3[:url]
       sleep 60
       Rails.logger.error("= 103 = Couldn't download/buffer mp3 in #{MAX_BUFFERING_WAIT} seconds. Canceling play.")

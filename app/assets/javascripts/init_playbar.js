@@ -24,10 +24,8 @@ var init_playbar = function($scope, $rootScope, Mp3, Device) {
 
     isPaused = false;
 
-    console.log("should not be showin")
     $scope.playbar.playing = true;
     $scope.safeApply();
-    console.log("should be showin")
 
     $scope.playbar.initPlayProgress();
   }
@@ -75,7 +73,6 @@ var init_playbar = function($scope, $rootScope, Mp3, Device) {
     if ($scope.home.device_selected.uuid == 'browser') {
       $scope.player_mp3.prev();
     } else {
-      console.log("++++++++++ PREV001")
       Mp3.prev($scope.home.device_selected.uuid, function() {
         console.log("success")
       })
@@ -187,14 +184,12 @@ var init_playbar = function($scope, $rootScope, Mp3, Device) {
   }
 
   $scope.seek = function(evt) {
-    console.log("evt", evt)
     var offsetX = evt.offsetX;
     var tot = $scope.playbar.total;
     var maxWid = $('#progress-wrapper').width();
     var mult = offsetX / maxWid;
     var seekMs = mult * tot;
     var seekSecs = parseInt(seekMs / 1000);
-console.log("seekSecs", seekSecs)
     if ($scope.home.device_selected.uuid == 'browser') {
       $scope.player_mp3.seek(seekSecs);
     } else {

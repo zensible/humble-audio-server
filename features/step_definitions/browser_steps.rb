@@ -53,23 +53,18 @@ end
 
 Then(/^I should be able to use next and prev$/) do
 
-  console_log "+++++++++++ HIT NEXT #{Time.now.to_i}"
   page.find("#playbar-next").click()
   $devices[0].wait_for_device_status("BUFFERING", 0.25, 5) if $test_mode == 'cca'
   $devices[0].wait_for_device_status("PLAYING", 0.25, 5) if $test_mode == 'cca'
   wait_until(tracklen * 1.5) {
-  console_log "+++++++++++ HIT NEXT2 #{Time.now.to_i}"
     page.find('#song-name').text.should match(/test-02\.mp3/)
   }
 
-  console_log "+++++++++++ HIT PREV #{Time.now.to_i}"
   sleep 2 if $test_mode == 'cca' # Wait for song to play 2 secs
   page.find("#playbar-previous").click()
   $devices[0].wait_for_device_status("BUFFERING", 0.25, 5) if $test_mode == 'cca'
   $devices[0].wait_for_device_status("PLAYING", 0.25, 5) if $test_mode == 'cca'
-  console_log "+++++++++++ HIT PREV2 #{Time.now.to_i}"
   wait_until(10) {
-  console_log "+++++++++++ HIT PREV3 #{Time.now.to_i}"
     page.find('#song-name').text.should match(/test-01\.mp3/)
   }
 
@@ -81,6 +76,8 @@ Then(/^I should be able to seek$/) do
   page.evaluate_script("scope.playbar.progress").should eql(2000)
 end
 
+# Send a string to javascript's console.log
+# This makes it easy to debug javascript by mixing in cucumber debug statements with javascript ones
 def console_log(str)
   page.execute_script("console.log('#{str}')")
 end
@@ -145,16 +142,13 @@ end
 Then(/^I should be able to toggle repeat\-all$/) do
   page.find("#playbar-repeat").click
   page.find(".select-folder", :text => "playlist").click()
-  console_log "(((((( 000 }}}}}}"
   page.first(".mp3-title a.play-mp3").click()
   #if $test_mode == 'cca'
     #puts "=== CCAAAA"
     #sleep tracklen
   #end
-  console_log "(((((( 001 }}}}}}"
   $devices[0].wait_for_device_status("BUFFERING", 0.25, 5) if $test_mode == 'cca'
   $devices[0].wait_for_device_status("PLAYING", 0.25, 5) if $test_mode == 'cca'
-  console_log "(((((( 002 }}}}}}"
 
   sleep(0.2)
 
@@ -256,10 +250,13 @@ When(/^I hit pause a bookmark should be saved$/) do
   sleep 0.1
 
   book_folder = nil
-  book_folder = Folder.where("mode = 'spoken' AND parent_folder_id = -1 AND basename = 'playlist'").first
-  bm = JSON.load(book_folder.bookmark)
-  bm["elapsed"].should eql(1)
-  bm["mp3"]["filename"].should match(/test-01/)
+  wait_until {
+    book_folder = Folder.where("mode = 'spoken' AND parent_folder_id = -1 AND basename = 'playlist'").first
+    bm = JSON.load(book_folder.bookmark)
+    bm["elapsed"].should eql(1)
+    bm["mp3"]["filename"].should match(/test-01/)
+    
+  }
 
   book_folder.bookmark = nil
   book_folder.save

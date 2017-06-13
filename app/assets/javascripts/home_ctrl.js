@@ -179,7 +179,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
    * User clicked one of the 'modes' in the leftmost column: Presets, Music, Radio etc
    */
   $scope.select_mode = function(mode) {
-    console.log("mode", mode)
+    //console.log("mode", mode)
     localStorage.setItem('mode', mode);
 
     $scope.home.mode_ui = mode;
@@ -294,7 +294,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
    * Construct a playlist of mp3 ids/urls and send it and the user's current UI state to mp3s_controller.rb#play
    */
   $scope.play = function(index, seekSecs) {
-    console.log("play", index)
+    //console.log("play", index)
     public_prefix = dirname(audio_dir)
     url_prefix = window.http_address
 
@@ -332,7 +332,6 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       seek: seekSecs
     };
 
-    console.log("play2")
     if ($scope.home.device_selected.uuid == 'browser') {
       $scope.browser_device.state_local = hsh;
       //$scope.browser_device.mode = $scope.home.mode_ui
@@ -341,11 +340,9 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       // For playing in the browser it's easy, just start playing with a hidden jPlayer and update the playbar
       $scope.player_mp3.play_playlist(data)
     } else {
-      console.log("play3")
       // For chromecasts, we have to tell the back-end to load and play the playlist on the given device
       // We then depend on Device.broadcast() to fire when buffering/playing starts. See the init() and $scope.select_cast() functions
       Mp3.play(data, function(response) {
-      console.log("play4")
         $scope.buffering = false;
       })
     }
@@ -380,7 +377,11 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
 
   function logData() {
     if ($scope.home.mode_ui == 'spoken' && $scope.home.device_selected.player_status == "PLAYING") {
-      var mp3_id = $scope.browser_device.state_local.mp3.id;
+      if ($scope.home.device_selected.uuid == 'browser') {
+        var mp3_id = $scope.browser_device.state_local.mp3.id;
+      } else {
+        var mp3_id = $scope.home.device_selected.state_local.mp3.id;
+      }
       var elapsed = parseInt($scope.playbar.progress / 1000);
       var url = "/api/mp3s/save_bookmark/" + mp3_id + "/" + elapsed;
 
@@ -533,7 +534,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
 
     Mp3.refresh($scope.home.mode_ui, function(response) {
 
-      console.log("response", response.data)
+      //console.log("response", response.data)
       var stats = response.data;
       var str = "Done. ";
       if (stats.added > 0) {

@@ -94,7 +94,6 @@ class Mp3sController < ApiController
     end
 
     $redis.hset("thread_command", cast_uuid, "play")  # See: device.rb#refresh
-    puts "003"
 
     sleep(buffering_pause)
     render :json => { success: true }
@@ -134,8 +133,10 @@ class Mp3sController < ApiController
   end
 
   def save_bookmark_by_device(device)
-    if device.state_local && device.state_local[:mp3_id] && device.state_local[:mode] == "spoken"
-      mp3 = Mp3.find_by_id(device.state_local[:mp3_id])
+    Rails.logger.info("====== 001 " + device.inspect)
+    if device.state_local && device.state_local[:mp3] && device.state_local[:mode] == "spoken"
+    Rails.logger.info("====== 002")
+      mp3 = Mp3.find_by_id(device.state_local[:mp3][:id])
       fold = Folder.find_by_id(mp3.folder_id)
 
       elapsed_friendly = Time.at(device.to_h()[:state_local]["elapsed"]).utc.strftime("%Hh %Mm %Ss")
