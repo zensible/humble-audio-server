@@ -87,7 +87,6 @@ class Preset < ApplicationRecord
   # If any preset schedule start/end/days values change, update our scheduler
   def self.update_crono
     str = ""
-
     if $settings['ddns_update'].match(/http/)
       str += %Q{
         class UpdateDDNSIP
@@ -107,7 +106,8 @@ class Preset < ApplicationRecord
     if !File.exist?("config/cronotab.rb") || (File.exist?("config/cronotab.rb") && File.read("config/cronotab.rb") != str)
       File.write("config/cronotab.rb", str)
 
-      `bundle exec crono restart`
+      output = `bundle exec crono restart`
+      puts output
     end
   end
 

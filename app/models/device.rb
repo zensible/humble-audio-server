@@ -69,13 +69,13 @@ class Device
     sleep_before_status = 1 
 
     unless Rails.env.test?
-      # 
       $get_devices = "
 chromecasts = pychromecast.get_chromecasts()
 time.sleep(#{sleep_before_status})
 arr = [ { u'friendly_name': cc.device.friendly_name, u'model_name': cc.device.model_name, 'uuid': cc.device.uuid.urn[9:], 'cast_type': cc.device.cast_type, 'status_text': cc.status.status_text, 'volume_level': cc.status.volume_level } for cc in chromecasts]
 print(json.dumps(arr))
 "
+      all = PyChromecast.run($get_devices)
 
       $init_casts_by_uuid = "
 casts_by_uuid = {}
@@ -83,15 +83,17 @@ print('Number of casts:')
 print(len(chromecasts))
 "
       PyChromecast.run($init_casts_by_uuid)
+
     $populate_casts_var = "for cc in chromecasts:
-cc.wait()
-casts_by_uuid[cc.uuid.urn[9:]] = cc
+  cc.wait()
+  casts_by_uuid[cc.uuid.urn[9:]] = cc
+
 "
       PyChromecast.run($populate_casts_var, false, false)
-
+      sleep 1
       PyChromecast.run("print(casts_by_uuid)")
     else  # For test mode, don't hit a real chromecast, these calls are very slow
-      all = '[{"uuid": "72af5e77-b9c9-150a-9372-f613c16698b8", "cast_type": "audio", "friendly_name": "Bedroom-Guest", "volume_level": 0.4000000059604645, "status_text": "Ready To Cast", "model_name": "Chromecast Audio"}]'
+      all = '[{"uuid": "72af5e77-b9c9-150a-9372-f613c16698b8", "cast_type": "audio", "friendly_name": "Test-CCA", "volume_level": 0.4000000059604645, "status_text": "Ready To Cast", "model_name": "Chromecast Audio"}]'
     end
 
     devs = JSON.parse(all || "[]")

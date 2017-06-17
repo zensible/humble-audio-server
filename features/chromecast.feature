@@ -22,3 +22,13 @@ Scenario: bookmarks
   When I hit pause a bookmark should be saved
   When I leave the page a bookmark should be saved
   And I should be able to resume from my bookmark
+
+Scenario: presets
+  Given I am in 'music' mode
+  And I select a chromecast device
+  Then I should be able to play a music playlist
+  And I should be able to save the current output as a Preset
+  And I should be able to update the preset with a start/stop time
+  And the preset should trigger at the appropriate time
+  And the preset should stop at the appropriate time
+  And the preset should trigger at the appropriate time
