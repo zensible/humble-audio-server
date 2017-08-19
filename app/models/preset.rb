@@ -103,10 +103,17 @@ class Preset < ApplicationRecord
       str += preset.get_crono
     end
 
-    if !File.exist?("config/cronotab.rb") || (File.exist?("config/cronotab.rb") && File.read("config/cronotab.rb") != str)
-      File.write("config/cronotab.rb", str)
+    options = ""
+    fn = "cronotab.rb"
+    if Rails.env.test?
+      fn = "cronotab_test.rb"
+      options = "--cronotab config/#{fn} -e test"
+    end
 
-      output = `bundle exec crono restart`
+    if !File.exist?("config/#{fn}") || (File.exist?("config/#{fn}") && File.read("config/#{fn}") != str)
+      File.write("config/#{fn}", str)
+
+      output = `bundle exec crono #{options} restart`
       puts output
     end
   end

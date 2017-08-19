@@ -12,9 +12,9 @@ class DeviceChannel < ApplicationCable::Channel
   def connect
   end
 
-  #def disconnect
-  #  # Any cleanup work needed when the cable connection is cut.
-  #end
+  def disconnect
+    # Any cleanup work needed when the cable connection is cut.
+  end
 
 end
 

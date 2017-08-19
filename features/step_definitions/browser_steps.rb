@@ -247,7 +247,7 @@ When(/^I hit pause a bookmark should be saved$/) do
   page.find("#playbar-pause").click()
   sleep 0.1
   page.find("#playbar-resume").should be_visible
-  sleep 0.1
+  sleep 0.25
 
   book_folder = nil
   wait_until {

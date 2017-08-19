@@ -5,16 +5,14 @@ class SyncChannel < ApplicationCable::Channel
     stream_from "sync"
     sleep 0.1 # Seems to be necessary to make the following work reliably
     Rails.logger.info("==== SUBSCRIBED SYNC")
-    #ActionCable.server.broadcast "device", $redis.get("devices")
     Sync.broadcast()
   end
 
   def connect
   end
 
-  #def disconnect
-  #  # Any cleanup work needed when the cable connection is cut.
-  #end
-
+  def disconnect
+    # Any cleanup work needed when the cable connection is cut.
+  end
 end
 
