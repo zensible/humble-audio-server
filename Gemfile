@@ -11,13 +11,13 @@ gem 'redis'
 gem 'haml'
 gem 'sass-rails', '~> 5.0'
 gem 'uglifier', '>= 1.3.0'
-gem 'therubyracer', '0.12.0'
+#gem 'therubyracer', '0.12.13'
 gem 'libv8'
 gem 'jquery-rails'
 gem 'jbuilder', '~> 2.5'
 gem 'bcrypt', '~> 3.1.7'
 
-gem 'rest-client'
+gem 'rest-client', '2.1.0.rc1'
 gem 'colorize'
 
 # For use in preset scheduling

@@ -1,0 +1,34 @@
+
+# Lets you change the colors in the UI
+
+theme: bw
+
+glow:
+  # If 'light', show white icons in playbar. If 'dark', show black icons
+  icons: light
+
+  bg_media: "#002240"
+  fg_media: "#FFF"
+  mode_media: "#fb5461"
+  link_media: "#ffee80"
+  folder_media: "#39d900"
+  bg_devices: "#003564"
+  fg_devices: "#80ffb5"
+  bg_playbar: "#00498a"
+  fg_playbar: "#FFBB5F"
+  selected_device: "#ffee80"
+
+bw:
+  # If 'light', show white icons in playbar. If 'dark', show black icons
+  icons: dark
+
+  bg_media: "#FFF"
+  fg_media: "#1d2129"
+  mode_media: "#1d2129"
+  link_media: "#1d2129"
+  folder_media: "#1d2129"
+  bg_devices: "#e9ebee"
+  fg_devices: "#1d2129"
+  bg_playbar: "#e9ebee"
+  fg_playbar: "#1d2129"
+  selected_device: "#f9bb00"

@@ -16,21 +16,31 @@
           = render :partial => 'mode'
 
       #selector2{ "ng-if" => "home.mode_ui == 'settings'" }
-        %h4
+        %h3
           Settings:
+        %hr
+
+        %h4 Theme:
+        ]
+        %input{ type: "radio", name: "theme", value: "bw", :checked => @theme_selected == "bw" }
+          Black &amp; White
         %br
+        %input{ type: "radio", name: "theme", value: "glow", :checked => @theme_selected == "glow" }
+          Glow
+        %hr
 
         %h4
           Server URL(s):
 
         %p
-          Wifi accessible:
+          %b Wifi accessible:
         {{http_address_local}}
         %br
         %br
         %p
-          Internet accessible:
+          %b Internet accessible:
         {{http_address_ddns}}
+        %hr
 
       // Presets
       #selector2{ "ng-if" => "home.mode_ui == 'presets'" }

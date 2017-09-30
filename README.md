@@ -125,6 +125,14 @@ sudo port install taglib
 
 ## bundle
 
+## Raspbian / Raspberry Pi installation
+
+I needed to do the following to get everything working:
+
+sudo apt install nodejs
+https://askubuntu.com/questions/766334/cant-login-as-mysql-user-root-from-normal-user-account-in-ubuntu-16-04
+
+
 ## Rails server setup
 
 bundle install
@@ -135,8 +143,6 @@ config/settings.yml
 rake db:create
 rake db:migrate
 ./start.sh
-
-
 # Customization
 
 

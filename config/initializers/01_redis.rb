@@ -4,4 +4,4 @@ require "redis"
 
 $redis = Redis.new(:host => $redis_config['host'], :port => $redis_config['port'], :db => $redis_config['db'])
 
-$redis.set('loaded', 'asdf')
+$redis.set('loaded', 'true')
