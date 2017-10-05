@@ -13,7 +13,9 @@ class Sync
     @refreshing = true
     @mp3_count = 0
     @mp3_processed = 0
+    @mp3_progress_percent = 0
 
+    # Notify front end that we're starting a sync
     self.broadcast()
 
     @hostname = hostname
@@ -24,6 +26,7 @@ class Sync
       :moved => 0,
       :error => 0,
       :removed => 0,
+      :removed_folders => 0,
       :total => 0
     }
     existing = Mp3.where("mode = '#{mode}'")
@@ -33,8 +36,10 @@ class Sync
     hsh_existing_md5 = {}
     to_delete = []
     existing.each do |mp3|
-      mp3.url = mp3.url.gsub(/%2F/, '/')  # Not sure why this is necessary, but whatevs
-      mp3.save
+      if mp3.url != mp3.url.gsub(/%2F/, '/')  # Not sure why this is necessary, but whatevs
+        mp3.url = mp3.url.gsub(/%2F/, '/')
+        mp3.save
+      end
       hsh_existing_path[mp3.path] = mp3
       hsh_existing_md5[mp3.md5] = mp3
       if !File.exist?(mp3.path)
@@ -56,9 +61,14 @@ class Sync
         end
       end
 
+      # Add any mp3s in the root of the folder
       parse_dir_mp3(mode, arr, stats, "#{$audio_dir}/#{mode}", -1)
 
+      # Count the # of MP3s in the library (for use in displaying progress)
       recursive_count_folder("#{$audio_dir}/#{mode}")
+      @mp3_count = 1 if @mp3_count == 0
+
+      # Sync folder recursively
       recursive_sync_folder("#{$audio_dir}/#{mode}", -1, mode, folders_hsh, arr, stats)
       #sql = "
       #  DELETE FROM folders WHERE id NOT IN (SELECT folder_id FROM mp3s)
@@ -78,6 +88,8 @@ class Sync
     stats[:total] = stats[:existing] + stats[:added]
 
     @refreshing = false
+
+    # Notify front end that we're done
     self.broadcast()
 
     return stats
@@ -97,7 +109,17 @@ class Sync
   end
 
   def self.recursive_sync_folder(path, parent_id, mode, folders_hsh, arr, stats)
+
     puts "recursive_sync_folder: #{path}"
+    if Dir.glob(escape_glob(path) + "/*/").length == 0 && Dir.glob(escape_glob(path) + "/*.mp3").length == 0
+      fold = folders_hsh[escape_glob(path)]
+      if fold
+        puts "== Remove empty folder: #{path}"        
+        stats[:removed_folders] += 1
+        fold.destroy
+      end
+    end
+
     Dir.glob(escape_glob(path) + "/*").each do |dir|
       next unless File.directory? dir
     puts "dir #{dir}"
@@ -112,6 +134,7 @@ class Sync
     end
   end
 
+  # For each mp3 in the given path, create or update the Mp3 record
   def self.parse_dir_mp3(mode, arr, stats, path, folder_id = nil)
     puts "parse_dir_mp3: #{path}/*.mp3"
     hsh_existing_path = arr[0]
@@ -163,7 +186,18 @@ class Sync
       end
     end
     @mp3_processed += mp3s.count
-    self.broadcast()
+
+    # Notify front end that we're starting a sync
+    puts "mp3s.count #{@mp3_processed} - @mp3_count #{@mp3_count}"
+    if @mp3_count > 0
+      percent = (@mp3_processed.to_f / @mp3_count.to_f * 100.0).to_i  #/
+      # Only notify if the percent has changed... throwing 20k websockets calls at the client is not nice
+      if percent != @mp3_progress_percent
+        @mp3_progress_percent = percent
+        puts "========== Sync percentage: #{percent}%" if ENV['DEBUG'] == 'true'
+        self.broadcast()
+      end
+    end
   end
 
   # Read id3 tags, return hash of all attributes

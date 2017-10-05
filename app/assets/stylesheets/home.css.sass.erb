@@ -1,17 +1,42 @@
 
-$bg_media: <%= $theme['bg_media'] %>
-$fg_media: <%= $theme['fg_media'] %>
-$mode_media: <%= $theme['mode_media'] %>
-$link_media: <%= $theme['link_media'] %>
-$folder_media: <%= $theme['folder_media'] %>
+//$bg_media: < % = $theme['bg_media'] %>
 
-$bg_devices: <%= $theme['bg_devices'] %>
-$fg_devices: <%= $theme['fg_devices'] %>
+$fg_a: #bbbcbb
+$fg_a_hover: #FFF
+$fg_a_selected: #FFF
 
-$bg_playbar: <%= $theme['bg_playbar'] %>
-$fg_playbar: <%= $theme['fg_playbar'] %>
+$bg_mode_select: #101010
+$fg_mode_select_a: #bbbcbb
+$fg_mode_select_a_hover: #FFF
+$fg_mode_select_a_selected: #FFF
 
-$selected_device: <%= $theme['selected_device'] %>
+$bg_default: linear-gradient(to bottom, #4c4c4c 0px, #131313 400px)
+
+$fg_presets: #bbbcbb
+$bg_presets: linear-gradient(to bottom, rgba(0, 0, 1, 0.55) 0%, rgba(0, 0, 0, 1) 60%)
+
+$fg_mp3s: #bbbcbb
+$bg_mp3s: linear-gradient(to bottom, rgba(0,0,0,0.75) 0%, rgba(0,0,0,1) 80%)
+
+$fg_radio: #bbbcbb
+$bg_radio: linear-gradient(to bottom, rgba(0,0,0,0.75) 0%, rgba(0,0,0,1) 80%)
+
+$fg_settings: #bbbcbb
+$bg_settings: linear-gradient(to bottom, #4c4c4c 0px, #131313 400px)
+
+$bg_devices: #2d2d2d
+$fg_devices: #bbbcbb
+
+$bg_playbar: #000
+$fg_playbar: #fff
+
+$selected_device: #FFF
+
+a
+  color: $fg_devices
+.selected
+  color: $selected_device
+
 
 html, body, #view, #content
   height: 100%
@@ -29,9 +54,23 @@ html, body, #view, #content
     width: 16px
     height: 16px
 
-  #content
-    background: $bg_media
+  color: #FFF
+  a
+    text-decoration: none
+  a
+    color: $fg_a
+  a:hover
+    color: $fg_a_hover
+  a.selected
+    color: $fg_a_selected
 
+  // Add borders to tables
+  .table
+    tr
+      td
+        border-top: 1px solid #333
+
+  #content
     #loading
       width: 200px
       height: 200px
@@ -56,8 +95,8 @@ html, body, #view, #content
         #percent
           padding-top: 80px
           padding-left: 70px
-          color: $link_media
           font-size: 30px
+
   #top
     height: 100%
     width: 100%
@@ -65,20 +104,18 @@ html, body, #view, #content
     flex-direction: column
 
     #media-selector
-      background: $bg_media
-      color: $fg_media
-      a
-        color: $link_media
-
       flex: 5 5 80%
       min-height: 40px
-
       display: flex
       flex-direction: row
 
       #mode-select
+        background: $bg_mode_select
         a
-          color: $mode_media
+          color: $fg_mode_select_a
+        a:hover
+          color: $fg_mode_select_a_hover
+
         width: 166px
         font-size: 1.6em
         padding-top: 4px
@@ -87,8 +124,10 @@ html, body, #view, #content
         margin-bottom: 1px
         border-right: 1px solid
 
+        .select-mode.selected
+          color: $fg_mode_select_a_selected
 
-      #selector2
+      #mp3s, #radio, #presets, #settings
         flex: 3 1 70%
         overflow-y: visible
 
@@ -100,37 +139,41 @@ html, body, #view, #content
         font-size: 1.2em
         line-height: 1.5em
 
-        input
-          background: $bg_media
+        padding-top: 20px
 
-        .folder-record
-          padding: 2px 8px 2px 8px
-          font-size: 1.3em
-          line-height: 1.6em
+        background: $bg_default
 
-          display: flex
-          flex-direction: row
-
+      #mp3s
+        color: $fg_mp3s
+        #refresh-media
+          float: right
+          padding-right: 8px
+        .folders
+          a
+            color: #FFF
           .folder-playing
             width: 20px
-          .folder-name
-            flex: 12 12
-            a
-              color: $folder_media
-          .folder-name.back
-            a
-              color: $fg_devices
 
-        .mp3-record
+        a#back-button
+          img
+            margin-top: -4px
+        h3
+          color: #FFF
+
+        .mp3-record, .mp3-header
+          border-top: 1px solid #333
+
           padding: 2px 8px 2px 8px
           display: flex
           flex-direction: row
           .mp3-playing
             width: 20px
           .mp3-track-nr
-            width: 25px
+            width: 28px
           .mp3-title
             flex: 10 10
+            a
+              color: #FFF
           .mp3-filename
             flex: 8 8
           .mp3-artist
@@ -142,19 +185,21 @@ html, body, #view, #content
           .mp3-length-seconds
             flex: 2 2
 
-        .preset-record
-          padding: 2px 8px 2px 8px
-          display: flex
-          flex-direction: row
+        .mp3-record:hover
+          background: #474646
 
-          .preset-title
-            flex: 4 4
-          .preset-schedule
-            flex: 8 8
-            .schedule_days
-              width: 160px
-          .preset-delete
-            flex: 1 1
+      #radio
+        color: $fg_radio
+        .mp3-record
+          .mp3-playing
+            width: 20px
+            max-width: 20px
+
+      #presets
+        color: $fg_presets
+
+      #settings
+        color: $fg_settings
 
 
     #cast-select
@@ -217,25 +262,25 @@ html, body, #view, #content
           line-height: 46px
           position: relative
           width: 100%
-          padding: 10px 0
+          padding: 8px 0
           margin: 13px 10px 0
 
         #progress-background 
           width: 100%
-          height: 2px
-          background-color: #ccc
+          height: 4px
+          background-color: #494949
           position: absolute
 
         #progress-bar 
           position: absolute
           width: 0px
-          height: 2px
-          background-color: #f9bb00
+          height: 4px
+          background-color: #bbbcbb
 
       #time-passed
         width: 60px
         height: 46px
-        color: #f9bb00
+        color: #bbbcbb
         text-align: right
         float: left
         line-height: 46px
@@ -258,6 +303,26 @@ html, body, #view, #content
         img
           float: right
 
+  #overlay
+    background: $bg_default
+
+.arrow-up
+  width: 0px
+  height: 0px
+  border-left: 5px solid transparent
+  border-right: 5px solid transparent
+  border-bottom: 5px solid #FFF
+  display: inline-block
+  margin-bottom: 4px
+
+.arrow-down
+  width: 0px
+  height: 0px
+  border-left: 5px solid transparent
+  border-right: 5px solid transparent
+  border-top: 5px solid #FFF
+  display: inline-block
+  margin-bottom: 4px
 
 @media screen and (max-width: 410px)
   .mp3-artist

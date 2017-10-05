@@ -68,7 +68,10 @@ class Device
     # I'm making it configurable here in case others require a longer sleep
     sleep_before_status = 1 
 
-    unless Rails.env.test?
+    if Rails.env.test? || ENV['DEBUG'] == 'true'
+      puts "== Skipping get chromecasts call -- test mode or DEBUG=true"
+      all = '[{"uuid": "72af5e77-b9c9-150a-9372-f613c16698b8", "cast_type": "audio", "friendly_name": "Test-CCA", "volume_level": 0.4000000059604645, "status_text": "Ready To Cast", "model_name": "Chromecast Audio"}]'
+    else  # For test mode, don't hit a real chromecast, these calls are very slow
       $get_devices = "
 chromecasts = pychromecast.get_chromecasts()
 time.sleep(#{sleep_before_status})
@@ -92,8 +95,6 @@ print(len(chromecasts))
       PyChromecast.run($populate_casts_var, false, false)
       sleep 1
       PyChromecast.run("print(casts_by_uuid)")
-    else  # For test mode, don't hit a real chromecast, these calls are very slow
-      all = '[{"uuid": "72af5e77-b9c9-150a-9372-f613c16698b8", "cast_type": "audio", "friendly_name": "Test-CCA", "volume_level": 0.4000000059604645, "status_text": "Ready To Cast", "model_name": "Chromecast Audio"}]'
     end
 
     devs = JSON.parse(all || "[]")

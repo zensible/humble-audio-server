@@ -17,6 +17,8 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       device_selected: null, // Currently selected device
       folder: {},  // Currently selected folder
       mp3s: [],  // Mp3s in current folder
+      mp3_sort: "track_nr",
+      mp3_sort_filename: false,
       radio_stations: [],  // All radio stations
       radio_station: "",  // Currently selected radio station
       sync_data: {}
@@ -91,7 +93,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
 
         var max = num_groups;
         if (num_audios > max) { max = num_audios; }
-        $('#cast-select').css("height", ((1.7 * parseFloat(max)) + 2) + "em")
+        //$('#cast-select').css("height", ((1.7 * parseFloat(max)) + 2) + "em")
 
         setInterval(function() {
           sessionStorage.setItem('browser_state_local', JSON.stringify($scope.home.device_selected.state_local))
@@ -118,8 +120,6 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       received: function(data) {
         $scope.home.sync_data = data;
         $scope.home.sync_data.percentage = parseInt(parseFloat(data['current'] || 0) / parseFloat(data['total'] || 100) * 100) + "%"
-        $scope.safeApply()
-
         $scope.safeApply()
       },
       disconnected: function() {
@@ -183,7 +183,6 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     localStorage.setItem('mode', mode);
 
     $scope.home.mode_ui = mode;
-    $scope.safeApply();
 
     $scope.home.mp3s = [];
 
@@ -202,11 +201,13 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
           $.notify("No mp3s found in this folder. You may need to populate and/or refresh your media.", "warn")
         }
         $scope.home.mp3s = response.data
+        $scope.safeApply()
       })
     }
     // These modes share a multi-level directory structure
     if (mode == 'music' || mode == 'spoken') {
       Mp3.get_folders(mode, -1, function(response) {
+        $scope.safeApply();
         $scope.home.folders = response.data;
         if (response.data.length == 0) {  // No folders...
           Mp3.index(mode, -1, function(response) { // ...and no mp3s
@@ -215,9 +216,12 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
             }
           })
         }
+        /*
         Mp3.index(mode, -1, function(response) {
           $scope.home.mp3s = response.data
+          $scope.safeApply()
         })
+        */
 
         var folder_id = localStorage.getItem('folder::' + mode)
         if (folder_id > 0) {
@@ -267,6 +271,59 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
         $scope.home.mp3s = []
       }
     })
+  }
+
+  var title_sort_num = -1;
+  $scope.set_mp3_sort = function(sort) {
+    var field = "";
+
+    function compare_asc(a,b) {
+      if (a[field] < b[field])
+        return -1;
+      if (a[field] > b[field])
+        return 1;
+      return 0;
+    }
+
+    function compare_desc(a,b) {
+      if (a[field] > b[field])
+        return -1;
+      if (a[field] < b[field])
+        return 1;
+      return 0;
+    }
+
+    $scope.home.mp3_sort_filename = false
+    if (sort == 'title') {
+      title_sort_num += 1
+      if (title_sort_num > 3) { title_sort_num = 0; }
+      var title_sort = [ 'title', '-title', 'filename', '-filename' ]
+      $scope.home.mp3_sort = title_sort[title_sort_num]
+      if (title_sort_num >= 2) {
+        $scope.home.mp3_sort_filename = true
+      }
+    } else {
+      title_sort_num = -1
+      if ($scope.home.mp3_sort == sort) {
+        $scope.home.mp3_sort = "-" + sort
+      } else {
+        $scope.home.mp3_sort = sort
+      }
+    }
+
+    field = $scope.home.mp3_sort;
+    if (field.match(/^-/)) {
+      field = field.replace(/^-/, "")
+      console.log("field desc", field)
+      $scope.home.mp3s = $scope.home.mp3s.sort(compare_desc);
+    } else {
+      console.log("field asc", field)
+      $scope.home.mp3s = $scope.home.mp3s.sort(compare_asc);
+    }
+  }
+
+  $scope.current_subfolders = function(folder) {
+    return folder && folder.parent_folder_id == $scope.home.folder.id && $scope.home.mode_ui != 'white-noise'
   }
 
   /*

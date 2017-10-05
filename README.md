@@ -117,11 +117,19 @@ sudo port install taglib
 
 ## mysql
 
+sudo apt install mysql-server mysql-client 
+
 ## redis
+
+sudo apt install redis-server
 
 ## rvm or rbenv
 
+sudo apt install rbenv
+
 ## ruby 2.3.1
+
+sudo apt install ruby=2.3.1
 
 ## bundle
 
@@ -130,8 +138,11 @@ sudo port install taglib
 I needed to do the following to get everything working:
 
 sudo apt install nodejs
+sudo apt install git
 https://askubuntu.com/questions/766334/cant-login-as-mysql-user-root-from-normal-user-account-in-ubuntu-16-04
-
+https://www.raspberrypi.org/magpi/samba-file-server/
+sudo apt-get install ruby-dev
+sudo apt install default-libmysqlclient-dev
 
 ## Rails server setup
 

@@ -15,18 +15,122 @@
         %p{ "ng-repeat" => "mode in available_modes"}
           = render :partial => 'mode'
 
-      #selector2{ "ng-if" => "home.mode_ui == 'settings'" }
+      // Music / White Noise
+      #mp3s{ "ng-if" => "home.mode_ui == 'music' || home.mode_ui == 'white-noise' || home.mode_ui == 'spoken'"}
+        %a#refresh-media.hand{ "ng-click" => "refresh_media()"}
+          Update Library
+
+        %h3{ "ng-if" => "(home.mode_ui == 'music' || home.mode_ui == 'spoken') && home.folder.id != -1" }
+          %a.hand#back-button{ "ng-click" => "select_folder(home.folder.parent_folder_id)", "ng-if" => "home.folder.id > -1 && mode != 'white-noise'" }
+            %img{ "ng-src" => "/images/{{theme.icons}}/back_20.png", width: 32 }
+          {{home.folder.basename}}:
+
+        // Edge case: user is in a folder that disappeared during a sync
+        %a#back-button{ "ng-if" => "(!home || !home.folder || !home.folder.parent_folder_id) && home.folder.id != -1", "ng-click" => "select_folder(-1)" }
+          &lt;-- Current folder has been removed. Click here to go home.
+
+        .mp3-record{ "ng-if" => "home.mode_ui == 'spoken' && home.folder.bookmark['mp3']"}
+          %p
+            %a.hand{ "ng-click" => "play_bookmark(home.folder.bookmark)" }
+              Resume From Bookmark: 
+          %p
+            &nbsp;&nbsp;{{home.folder.bookmark['mp3']['title']}} 
+            %span{ "ng-if" => "home.folder.bookmark['mp3']['track_nr']" }
+              (track {{home.folder.bookmark['mp3']['track_nr']}})
+            &nbsp;-> {{home.folder.bookmark['elapsed_friendly']}}
+
+        %table.folders.table.table-hover.folders.table-sm
+          %tr.folder-record{ "ng-repeat" => "folder in home.folders | filter : current_subfolders" }
+            %td.folder-playing
+              %span.play-button{ "ng-if" => "is_playing('folder.id', folder.id)", "ng-init" => "entry = is_playing('folder.id', folder.id)" }
+                %img{ "ng-src" => "/images/play_device_{{entry.num_casting || 0}}.png"}
+
+            %td.folder-name.ellipsis
+              %a.hand.select-folder{ "ng-click" => "select_folder(folder.id)" }
+                {{folder.basename}}
+
+        .mp3-record{ "ng-if" => "!home.mp3s.length && !home.folders.length" }
+          No tracks or folders found
+
+        .mp3s
+          .mp3-header{ "ng-if" => "home.mp3s.length" }
+            .mp3-playing
+            .mp3-track-nr.hand{ "ng-click" => "set_mp3_sort('track_nr')" }
+              = "#"
+              %span.arrow-up{ "ng-if" => "home.mp3_sort == 'track_nr'" }
+              %span.arrow-down{ "ng-if" => "home.mp3_sort == '-track_nr'" }
+            .mp3-title.hand{ "ng-click" => "set_mp3_sort('title')" }
+              %span{ "ng-if" => "home.mp3_sort_filename" }
+                Filename
+              %span.arrow-up{ "ng-if" => "home.mp3_sort == 'filename'" }
+              %span.arrow-down{ "ng-if" => "home.mp3_sort == '-filename'" }
+              %span{ "ng-if" => "!home.mp3_sort_filename" }
+                Title
+              %span.arrow-up{ "ng-if" => "home.mp3_sort == 'title'" }
+              %span.arrow-down{ "ng-if" => "home.mp3_sort == '-title'" }
+            .mp3-artist.hand.ellipsis{ "ng-click" => "set_mp3_sort('artist')" }
+              Artist
+              %span.arrow-up{ "ng-if" => "home.mp3_sort == 'artist'" }
+              %span.arrow-down{ "ng-if" => "home.mp3_sort == '-artist'" }
+            .mp3-album.hand.ellipsis{ "ng-click" => "set_mp3_sort('album')" }
+              Album
+              %span.arrow-up{ "ng-if" => "home.mp3_sort == 'album'" }
+              %span.arrow-down{ "ng-if" => "home.mp3_sort == '-album'" }
+            .mp3-year.hand{ "ng-click" => "set_mp3_sort('year')" }
+              Year
+              %span.arrow-up{ "ng-if" => "home.mp3_sort == 'year'" }
+              %span.arrow-down{ "ng-if" => "home.mp3_sort == '-year'" }
+            .mp3-length-seconds.hand{ "ng-click" => "set_mp3_sort('length_seconds')" }
+              Time
+              %span.arrow-up{ "ng-if" => "home.mp3_sort == 'length_seconds'" }
+              %span.arrow-down{ "ng-if" => "home.mp3_sort == '-length_seconds'" }
+
+          / works for 'white-noise' and 'music'
+          .mp3-record{ "ng-repeat" => "mp3 in home.mp3s" }
+            .mp3-playing
+              %span.play-button{ "ng-if" => "is_playing('mp3.id', mp3.id)", "ng-init" => "entry = is_playing('mp3.id', mp3.id)" }
+                %img{ "ng-src" => "/images/play_device_{{entry.num_casting}}.png"}
+            .mp3-track-nr
+              {{mp3.track_nr || "-"}}
+            .mp3-title.hand.ellipsis
+              %a.play-mp3{ "ng-click" => "play($index)", "ng-attr-title" => "{{mp3.title}}" }
+                %span{ "ng-if" => "home.mp3_sort_filename" }
+                  {{mp3.filename}}
+                %span{ "ng-if" => "!home.mp3_sort_filename" }
+                  {{mp3.title || mp3.filename}}
+            .mp3-artist.ellipsis
+              {{mp3.artist || ' - ' }}
+            .mp3-album.ellipsis
+              {{mp3.album || ' - '}}
+            .mp3-year
+              {{mp3.year || ' - '}}
+            .mp3-length-seconds
+              {{mp3.length_seconds | secondsToDateTime | date:'H:mm:ss' }}
+
+        //%br
+        //%p{ "ng-if" => "home.mode_ui == 'spoken'"}
+        //  Note: In the Spoken Word section, stopping or pausing a track will save a "bookmark" which you can resume later.
+        %br
+        %br
+
+      // Radio
+      #radio{ "ng-if" => "home.mode_ui == 'radio'" }
+        %h4
+          Radio Stations:
+        %table.table.table-hover
+          %tr.mp3-record{ "ng-repeat" => "station in home.radio_stations", style: "width: 500px" }
+            %td.mp3-playing
+              %span.play-button{ "ng-if" => "is_playing('mp3.url', station.url)", "ng-init" => "entry = is_playing('mp3.url', station.url)" }
+                %img{ "ng-src" => "/images/play_device_{{entry.num_casting}}.png"}
+            %td.mp3-title.ellipsis
+              %a{ "ng-click" => "play_radio(station)"}
+                {{station.name}}
+        %br
+
+
+      #settings{ "ng-if" => "home.mode_ui == 'settings'" }
         %h3
           Settings:
-        %hr
-
-        %h4 Theme:
-        ]
-        %input{ type: "radio", name: "theme", value: "bw", :checked => @theme_selected == "bw" }
-          Black &amp; White
-        %br
-        %input{ type: "radio", name: "theme", value: "glow", :checked => @theme_selected == "glow" }
-          Glow
         %hr
 
         %h4
@@ -43,8 +147,8 @@
         %hr
 
       // Presets
-      #selector2{ "ng-if" => "home.mode_ui == 'presets'" }
-        %h4
+      #presets{ "ng-if" => "home.mode_ui == 'presets'" }
+        %h3
           Chromecast Presets:
         %p{ "ng-if" => "is_anything_playing()"}
           %a{ "ng-click" => "preset_create()" }<
@@ -93,110 +197,6 @@
             %li
               If blank will run daily
         %br
-        %br
-
-      // Music / White Noise
-      #selector2{ "ng-if" => "home.mode_ui == 'music' || home.mode_ui == 'white-noise' || home.mode_ui == 'spoken'"}
-        %h3
-          %span{ "ng-if" => "home.mode_ui == 'music'"}
-            Music:
-          %span{ "ng-if" => "home.mode_ui == 'spoken'"}
-            Spoken:
-          %span{ "ng-if" => "home.mode_ui == 'white-noise'"}
-            White Noise:
-          %a#refresh-media.hand{ "ng-click" => "refresh_media()"}
-            %img{ "ng-src" => "/images/{{theme.icons}}/refresh_16.png", :title => "Refresh the media in '{{home.mode_ui}}'" }
-
-        %h3{ "ng-if" => "(home.mode_ui == 'music' || home.mode_ui == 'spoken') && home.folder.id != -1" }
-          {{home.folder.basename}}:
-
-        %h3{ "ng-if" => "(home.mode_ui == 'music' || home.mode_ui == 'spoken') && home.folder.id == -1" }
-          Home:
-
-        // Edge case: user is in a folder that disappeared during a sync
-        %a#back-button{ "ng-if" => "(!home || !home.folder || !home.folder.parent_folder_id) && home.folder.id != -1", "ng-click" => "select_folder(-1)" }
-          &lt;-- Back
-
-        /Sort by:
-        /%input{ :type => "radio", :name => "sort_by", :value => "title" } Title
-        /%input{ :type => "radio", :name => "sort_by", :value => "filename" } Filename
-
-        .mp3-record{ "ng-if" => "home.mode_ui == 'spoken' && home.folder.bookmark['mp3']"}
-          %p
-            %a{ "ng-click" => "play_bookmark(home.folder.bookmark)" }
-              Resume From Bookmark: 
-          %p
-            &nbsp;&nbsp;"{{home.folder.bookmark['mp3']['title']}}" -> {{home.folder.bookmark['elapsed_friendly']}}
-
-        .folder-record{ "ng-if" => "home.folder.id > -1 && mode != 'white-noise'" }
-          .folder-name.back.ellipsis
-            %a#back-button{ "ng-click" => "select_folder(home.folder.parent_folder_id)" }
-              &lt;-- Back
-
-        .folder-record{ "ng-repeat" => "folder in home.folders", "ng-if" => "folder.parent_folder_id == home.folder.id && home.mode_ui != 'white-noise'" }
-          .folder-playing
-            %span.play-button{ "ng-if" => "is_playing('folder.id', folder.id)", "ng-init" => "entry = is_playing('folder.id', folder.id)" }
-              %img{ "ng-src" => "/images/play_device_{{entry.num_casting || 0}}.png"}
-
-          .folder-name.ellipsis
-            %a.select-folder{ "ng-click" => "select_folder(folder.id)" }
-              {{folder.basename}}
-
-        .mp3-record{ "ng-if" => "!home.mp3s.length && !home.folders.length" }
-          No tracks or folders found
-
-        .mp3-record{ "ng-if" => "home.mp3s.length" }
-          .mp3-playing
-          .mp3-track-nr
-            = "#"
-          .mp3-title
-            Title
-          .mp3-artist.ellipsis
-            Artist
-          .mp3-album.ellipsis
-            Album
-          .mp3-year
-            Year
-          .mp3-length-seconds
-            Time
-
-        / works for 'white-noise' and 'music'
-        .mp3-record{ "ng-repeat" => "mp3 in home.mp3s" }
-          .mp3-playing
-            %span.play-button{ "ng-if" => "is_playing('mp3.id', mp3.id)", "ng-init" => "entry = is_playing('mp3.id', mp3.id)" }
-              %img{ "ng-src" => "/images/play_device_{{entry.num_casting}}.png"}
-          .mp3-track-nr
-            {{mp3.track_nr || "-"}}
-          .mp3-title.ellipsis
-            %a.play-mp3{ "ng-click" => "play($index)", "ng-attr-title" => "{{mp3.title}}" }
-              {{mp3.title || mp3.filename}}
-          .mp3-artist.ellipsis
-            {{mp3.artist || ' - ' }}
-          .mp3-album.ellipsis
-            {{mp3.album || ' - '}}
-          .mp3-year
-            {{mp3.year || ' - '}}
-          .mp3-length-seconds
-            {{mp3.length_seconds | secondsToDateTime | date:'H:mm:ss' }}
-
-        %br
-        %p{ "ng-if" => "home.mode_ui == 'spoken'"}
-          Note: In the Spoken Word section, stopping or pausing a track will save a "bookmark" which you can resume later.
-
-        %br
-        %br
-
-      // Radio
-      #selector2{ "ng-if" => "home.mode_ui == 'radio'" }
-        %h4
-          Radio Stations:
-        .mp3-record{ "ng-repeat" => "station in home.radio_stations", style: "width: 500px" }
-          .mp3-playing
-            %span.play-button{ "ng-if" => "is_playing('mp3.url', station.url)", "ng-init" => "entry = is_playing('mp3.url', station.url)" }
-              %img{ "ng-src" => "/images/play_device_{{entry.num_casting}}.png"}
-          .mp3-title.ellipsis
-            %a{ "ng-click" => "play_radio(station)"}
-              {{station.name}}
         %br
 
     #cast-select

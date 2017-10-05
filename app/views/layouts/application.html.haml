@@ -17,7 +17,7 @@
     window.env = "#{Rails.env}";
     window.audio_dir = "#{$audio_dir}";
     window.http_address = "#{request.host == $settings['ddns_hostname'] ? $http_address_ddns : $http_address_local}";
-    window.theme = #{JSON.dump($theme)};
+    window.theme = { icons: "light" };
     window.request_hostname = "#{request.host}";
     window.http_address_ddns = "#{$http_address_ddns}";
     window.http_address_local = "#{$http_address_local}";

@@ -7,7 +7,8 @@ class Mp3 < ApplicationRecord
       filename: self.filename,
       length_seconds: self.length_seconds,
       artist: self.artist,
-      album: self.album
+      album: self.album,
+      track_nr: self.track_nr
     }
   end
 end

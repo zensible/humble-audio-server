@@ -1,11 +1,11 @@
 %td.ellipsis{ :style => "width: 40%;", "ng-class" => "{ selected_device: home.device_selected.uuid == device.uuid }" }
-  %a.ellipsis.select-cast{ "ng-click" => "select_cast(device, 'manual')", "ng-mouseover" => "home.device_hover = device" }<
+  %a.hand.ellipsis.select-cast{ "ng-click" => "select_cast(device, 'manual')", "ng-mouseover" => "home.device_hover = device" }<
     %span.selected{ "ng-if" => "home.device_selected.uuid == device.uuid" }<
       {{device.friendly_name}}
     %span{ "ng-if" => "home.device_selected.uuid != device.uuid" }<
       {{device.friendly_name}}
   %span{ "ng-if" => "(device.cast_type == 'group' && (isMobile || home.device_hover == device || device.children.length == 0))" }<
-    %a{ "ng-click" => "configure_group(device)" }<
+    %a.hand{ "ng-click" => "configure_group(device)" }<
       %img.hand{ "ng-src" => "/images/{{theme.icons}}/config_16.png" }
   %span.play-button{ "ng-if" => "device.player_status == 'PLAYING' || device.player_status == 'BUFFERING'" }<
     %img{ "ng-src" => "/images/{{theme.icons}}/play_device_{{device.num_casting}}.png"}
