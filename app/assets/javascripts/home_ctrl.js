@@ -340,47 +340,45 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     }
 
     // Step 2: UPDATE PLAYLIST
-    if ($scope.home.device_selected.uuid == 'browser') {
-      var playa = $scope.player_mp3;
-      var ind = playa.playlist_index;
-      var pl = playa.playlist;
-      // Nothing to do for empty playlist...we haven't clicked Play yet.
-      if (pl.length == 0) { return; }
-      console.log("po", playa.playlist_order, "ind", ind)
-      var entry = pl[playa.playlist_order[ind]];
-      console.log("entry", entry)
-      var cur_entry_id = entry['id']
+    // mp3s have been rearranged, now time to update the playlist for the player, whether the browser or a CCA
 
-      var mp3s = $scope.home.mp3s;
-      var indexCurrentlyPlaying = 0;
-      for (var i = 0; i < mp3s.length; i++) {
-        var mp3 = mp3s[i];
-        if (mp3['id'] == cur_entry_id) {
-          indexCurrentlyPlaying = i
-          console.log("indexCurrentlyPlaying", indexCurrentlyPlaying)
-        }
+    // 2.1: Figure out the new index of the currently playing mp3 after the sort
+    var cur_entry_id = $scope.home.device_selected.state_local.mp3.id
+    var mp3s = $scope.home.mp3s;
+    var indexCurrentlyPlaying = 0;
+    for (var i = 0; i < mp3s.length; i++) {
+      var mp3 = mp3s[i];
+      if (mp3['id'] == cur_entry_id) {
+        indexCurrentlyPlaying = i
       }
-      // mp3s have been rearranged, now time to update the playlist for the player, whether the browser or a CCA
-      var hsh = get_state_local();
-      data = {
-        state_local: hsh,
-        playlist: $scope.get_playlist_from_mp3s(),
-        playlist_index: indexCurrentlyPlaying
-      };
+    }
+    var hsh = get_state_local();
+    data = {
+      state_local: hsh,
+      playlist: $scope.get_playlist_from_mp3s(),
+      playlist_index: indexCurrentlyPlaying,
+      update_only: true
+    };
+
+    // 2.2: update the current player's playlist with the new order
+    if ($scope.home.device_selected.uuid == 'browser') {
+      if (!$scope.home.device_selected.state_local.mp3) { return; }
+      var playa = $scope.player_mp3;
 
       // For playing in the browser it's easy, just start playing with a hidden jPlayer and update the playbar
       playa.update_playlist(data)
 
       $scope.browser_device.state_local = hsh;
     } else {
+      // Nothing to do for empty playlist...we haven't clicked Play yet.
+      if (!$scope.home.device_selected.state_local.mp3) { return; }
+
       // For chromecasts, we have to tell the back-end to load and play the playlist on the given device
       // We then depend on Device.broadcast() to fire when buffering/playing starts. See the init() and $scope.select_cast() functions
       Mp3.play(data, function(response) {
         $scope.buffering = false;
       })
     }
-
-
   }
 
   $scope.current_subfolders = function(folder) {

@@ -60,6 +60,7 @@ class Mp3sController < ApiController
     orig_index = params[:playlist_index]
     playlist_index = params[:playlist_index]
     playlist_params = params[:playlist]
+    update_only = params[:update_only]  # When sort changes, we want to update all these vars the same way as playing, but without actually modifying playback
     playlist = []
     playlist_params.each do |pl|
       playlist.push(pl.to_unsafe_h())
@@ -93,9 +94,11 @@ class Mp3sController < ApiController
       device.shuffle_playlist()
     end
 
-    $redis.hset("thread_command", cast_uuid, "play")  # See: device.rb#refresh
+    if update_only.nil?
+      $redis.hset("thread_command", cast_uuid, "play")  # See: device.rb#refresh
+      sleep(buffering_pause)
+    end
 
-    sleep(buffering_pause)
     render :json => { success: true }
   end
 
