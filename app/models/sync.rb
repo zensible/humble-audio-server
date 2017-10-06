@@ -235,7 +235,7 @@ class Sync
   end
 
   def self.broadcast()
-    ActionCable.server.broadcast "sync", { total: @mp3_count, current: @mp3_processed, refreshing: @refreshing }
+    ActionCable.server.broadcast (Rails.env.test? ? "sync_test" : "sync"), { total: @mp3_count, current: @mp3_processed, refreshing: @refreshing }
   end
 
 

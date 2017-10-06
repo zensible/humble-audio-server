@@ -2,7 +2,7 @@ class SyncChannel < ApplicationCable::Channel
   # Called when the consumer has successfully
   # become a subscriber of this channel.
   def subscribed
-    stream_from "sync"
+    stream_from (Rails.env.test? ? "sync_test" : "sync")
     sleep 0.1 # Seems to be necessary to make the following work reliably
     Rails.logger.info("==== SUBSCRIBED SYNC")
     Sync.broadcast()

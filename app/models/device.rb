@@ -529,7 +529,7 @@ print(len(chromecasts))
       end
       arr.push(hsh)
     end
-    ActionCable.server.broadcast "device", JSON.dump(arr)
+    ActionCable.server.broadcast (Rails.env.test? ? "device_test" : "device"), JSON.dump(arr)
   end
 
 end

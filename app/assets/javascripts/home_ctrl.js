@@ -1,4 +1,18 @@
 
+/*
+ * Home controller:
+ *
+ * This is the main interface. Selects mode (at left), folders and mp3s
+ *
+ * Also has the API for controlling device volume, CCA groups, etc
+ *
+ * It has several children which are on the same scope:
+ *
+ * init_playbar.js
+ * init_mp3_player.js
+ * init_preset.js
+ *
+ */
 multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $rootScope, Device, Mp3, Preset) {
 
   // For use in debugging w/ the chrome console
@@ -79,6 +93,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
           }
         }
 
+        /*
         // Auto-resize the list of devices: 24px per row
         var num_groups = 0;
         var num_audios = 0;
@@ -94,6 +109,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
         var max = num_groups;
         if (num_audios > max) { max = num_audios; }
         //$('#cast-select').css("height", ((1.7 * parseFloat(max)) + 2) + "em")
+        */
 
         setInterval(function() {
           sessionStorage.setItem('browser_state_local', JSON.stringify($scope.home.device_selected.state_local))
@@ -619,9 +635,11 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
   $scope.refresh_devices = function() {
     Device.refresh(function(response) {
       $scope.home.devices = response.data;
-      if (response.data.audios.length == 0 && response.data.audios.groups.length == 0) {
+      /*
+      if (response.data.length == 0) {
         $.notify("No chromecast audio devices or groups found!", "error")
       }
+      */
     })
   }
 

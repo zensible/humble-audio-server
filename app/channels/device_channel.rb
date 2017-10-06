@@ -2,7 +2,7 @@ class DeviceChannel < ApplicationCable::Channel
   # Called when the consumer has successfully
   # become a subscriber of this channel.
   def subscribed
-    stream_from "device"
+    stream_from (Rails.env.test? ? "device_test" : "device")
     sleep 0.1 # Seems to be necessary to make the following work reliably
     Rails.logger.info("==== SUBSCRIBED DEVICE")
     #ActionCable.server.broadcast "device", $redis.get("devices")
