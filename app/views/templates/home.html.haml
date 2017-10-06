@@ -229,6 +229,8 @@
         #current-cast-name.ellipsis
           {{home.device_selected.friendly_name}}
       #play-controls
+        #playbar-shuffle.play-control.play-control-small.hand{ "ng-click" => "toggleShuffle()", title: "Enable/disable shuffle", "ng-hide" => "home.mode_ui == 'radio'"  }
+          %img{ "ng-src" => "/images/light/shuffle_{{home.device_selected.state_local.shuffle}}_16.png" }
         #playbar-previous.play-control.play-control-large.hand{ "ng-click" => "prev()", title: "Play previous", "ng-class" => "{ 'disabled': playbar.playlistIndex == 0 }" }
           %img{ "ng-src" => "/images/light/previous_16.png" }
         #playbar-resume.play-control.play-control-large.hand{"ng-show" => "!playbar.playing", "ng-click" => "resume()", title: "Play current" }
@@ -239,8 +241,6 @@
           %img{ "ng-src" => "/images/light/next_16.png" }
         #playbar-repeat.play-control.play-control-small.hand{ "ng-click" => "toggleRepeat()", title: "Enable/disable repeat", "ng-hide" => "home.mode_ui == 'radio'" }
           %img{ "ng-src" => "/images/light/repeat_{{home.device_selected.state_local.repeat}}_16.png" }
-        #playbar-shuffle.play-control.play-control-small.hand{ "ng-click" => "toggleShuffle()", title: "Enable/disable shuffle", "ng-hide" => "home.mode_ui == 'radio'"  }
-          %img{ "ng-src" => "/images/light/shuffle_{{home.device_selected.state_local.shuffle}}_16.png" }
 
       #time-passed
         %span 0:00

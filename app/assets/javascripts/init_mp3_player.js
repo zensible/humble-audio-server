@@ -30,6 +30,11 @@ var init_mp3_player = function($scope, $rootScope, Mp3, Device) {
     
   }
 
+  /*
+   * playlist_order is a list of array indices on $scope.home.mp3s
+   * 
+   * We shuffle by randomizing this order
+   */
   $scope.player_mp3.shuffle_playlist = function() {
 
     // Filter out currently playing song
@@ -50,8 +55,18 @@ var init_mp3_player = function($scope, $rootScope, Mp3, Device) {
     playa.playlist_index = playa.playlist_order.indexOf(cur_index_val)
   }
 
+  // For data, see: home_ctrl.js#$scope.play(). Includes device state_local
   $scope.player_mp3.play_playlist = function(data) {
-    //console.log('playlist', JSON.stringify(data));
+    console.log('playlist', JSON.stringify(data));
+
+    $scope.player_mp3.update_playlist(data)
+
+    //$scope.player_mp3.playlist_index = 0;
+    playAtIndex(true)
+  }
+
+  // Sort changed or play clicked -- playa.playlist, playa.playlist_order and playa.playlist_index
+  $scope.player_mp3.update_playlist = function(data) {
     // playa: $scope.player_mp3
     playa.orig_index = data.playlist_index;
     playa.playlist = data.playlist;
@@ -64,10 +79,6 @@ var init_mp3_player = function($scope, $rootScope, Mp3, Device) {
     if ($scope.home.device_selected.state_local.shuffle == 'on') {
       playa.shuffle_playlist();
     }
-    //console.log("$scope.player_mp3.playlist_order", playa.playlist_order)
-
-    //$scope.player_mp3.playlist_index = 0;
-    playAtIndex(true)
   }
 
   var playAtIndex = function(is_orig_play) {
@@ -101,19 +112,24 @@ var init_mp3_player = function($scope, $rootScope, Mp3, Device) {
       }
 
       $scope.player_mp3.play(0, function() {  // Play is complete, advance in the playlist
+        console.log("== play complete")
         $scope.player_mp3.playlist_index += 1
 
         if ($scope.home.device_selected.state_local.repeat == "one") {
+          console.log("== repeat one")
           $scope.player_mp3.playlist_index -= 1;
         } else {
           if (playa.playlist_index >= playa.playlist_order.length) { // Reached the end of the playlist
+            console.log("== reached the end, restart")
             playa.playlist_index = 0;
           }
 
           // We've played the playlist until we're back to the first song clicked
           if (!is_orig_play && playa.playlist_order[playa.playlist_index] == playa.orig_index) {
+            console.log("== back to first song clicked")
             if ($scope.home.device_selected.state_local.repeat != "all") {
               // If repeat is 'all', do nothing -- just keep on playin'
+              console.log("== STOP")
               return;  // If it's off, stop here
             }
           }

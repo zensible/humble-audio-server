@@ -309,6 +309,8 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       return 0;
     }
 
+    // Step 1: appropriately sort $scope.home.mp3s
+
     $scope.home.mp3_sort_filename = false
     if (sort == 'title') {
       title_sort_num += 1
@@ -336,6 +338,49 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       console.log("field asc", field)
       $scope.home.mp3s = $scope.home.mp3s.sort(compare_asc);
     }
+
+    // Step 2: UPDATE PLAYLIST
+    if ($scope.home.device_selected.uuid == 'browser') {
+      var playa = $scope.player_mp3;
+      var ind = playa.playlist_index;
+      var pl = playa.playlist;
+      // Nothing to do for empty playlist...we haven't clicked Play yet.
+      if (pl.length == 0) { return; }
+      console.log("po", playa.playlist_order, "ind", ind)
+      var entry = pl[playa.playlist_order[ind]];
+      console.log("entry", entry)
+      var cur_entry_id = entry['id']
+
+      var mp3s = $scope.home.mp3s;
+      var indexCurrentlyPlaying = 0;
+      for (var i = 0; i < mp3s.length; i++) {
+        var mp3 = mp3s[i];
+        if (mp3['id'] == cur_entry_id) {
+          indexCurrentlyPlaying = i
+          console.log("indexCurrentlyPlaying", indexCurrentlyPlaying)
+        }
+      }
+      // mp3s have been rearranged, now time to update the playlist for the player, whether the browser or a CCA
+      var hsh = get_state_local();
+      data = {
+        state_local: hsh,
+        playlist: $scope.get_playlist_from_mp3s(),
+        playlist_index: indexCurrentlyPlaying
+      };
+
+      // For playing in the browser it's easy, just start playing with a hidden jPlayer and update the playbar
+      playa.update_playlist(data)
+
+      $scope.browser_device.state_local = hsh;
+    } else {
+      // For chromecasts, we have to tell the back-end to load and play the playlist on the given device
+      // We then depend on Device.broadcast() to fire when buffering/playing starts. See the init() and $scope.select_cast() functions
+      Mp3.play(data, function(response) {
+        $scope.buffering = false;
+      })
+    }
+
+
   }
 
   $scope.current_subfolders = function(folder) {
@@ -358,21 +403,21 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       mode: $scope.home.mode_ui,
       repeat: $scope.home.device_selected.state_local.repeat,
       shuffle: $scope.home.device_selected.state_local.shuffle,
-      folder: ($scope.home.folder ? $scope.home.folder : { id: -1 })
+      folder: ($scope.home.folder ? $scope.home.folder : { id: -1 }),
+      mp3: $scope.home.device_selected.state_local.mp3
     }
   }
 
-  /*
-   * The user has clicked an MP3 in #selector2, in music/spoken/white-noise mode.
-   * Construct a playlist of mp3 ids/urls and send it and the user's current UI state to mp3s_controller.rb#play
-   */
-  $scope.play = function(index, seekSecs) {
+  // Sort has changed, or play has been clicked
+  // Notify player_mp3 or device.rb that the play order has been changed
+  $scope.get_playlist_from_mp3s = function() {
     //console.log("play", index)
     public_prefix = dirname(audio_dir)
     url_prefix = window.http_address
 
-    var regex = new RegExp(RegExp.escape(public_prefix));
+    //var regex = new RegExp(RegExp.escape(public_prefix));
 
+    // Creates playlist of mp3 ids+urls by iterating through $scope.home.mp3s -- these can be in any order due to sorting
     var playlist = []
     var mp3s = $scope.home.mp3s;
 
@@ -387,6 +432,14 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     for (var i = 0; i < mp3s.length; i++) {
       add_playlist(mp3s[i])
     }
+    return playlist
+  }
+
+  /*
+   * The user has clicked an MP3 in #selector2, in music/spoken/white-noise mode.
+   * Construct a playlist of mp3 ids/urls and send it and the user's current UI state to mp3s_controller.rb#play
+   */
+  $scope.play = function(indexClicked, seekSecs) {
 
     //$scope.playbar.pause()
     $scope.buffering = true;
@@ -400,8 +453,8 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     hsh['seek'] = seekSecs;
     data = {
       state_local: hsh,
-      playlist: playlist,
-      playlist_index: index,
+      playlist: $scope.get_playlist_from_mp3s(),
+      playlist_index: indexClicked,
       seek: seekSecs
     };
 
@@ -539,15 +592,19 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
 
     if ($scope.browser_device.player_status == 'PLAYING') {
       var arr = type.split('.');
+      var val_device = null;
       if (arr.length == 1) {
-        var val_device = $scope.browser_device.state_local[arr[0]]
+        val_device = $scope.browser_device.state_local[arr[0]]
       } else if (arr.length == 2) {
         //console.log("arr", arr, "sl", $scope.browser_device.state_local)
-        var val_device = $scope.browser_device.state_local[arr[0]][arr[1]]
+        if ($scope.browser_device.state_local[arr[0]]) {
+          val_device = $scope.browser_device.state_local[arr[0]][arr[1]]
+        } else {
+          console.log("== no statelocal")
+        }
       }
       //console.log("val_device", val_device)
 
-      //console.log("YASS")
       if (val_device == val) {
         return $scope.browser_device;
       }
@@ -555,7 +612,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     for (var i = 0; i < devices.length; i++) {
       var dev = devices[i];
       if (dev.player_status && dev.player_status != "IDLE" && dev.player_status != "UNKNOWN") {
-        console.log("status", dev.player_status, "dev.state_local[type]", dev.state_local[type], "type", type, "val", val)
+        //console.log("status", dev.player_status, "dev.state_local[type]", dev.state_local[type], "type", type, "val", val)
 
         var arr = type.split('.');
         if (arr.length == 1) {
