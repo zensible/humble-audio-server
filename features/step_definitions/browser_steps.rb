@@ -20,6 +20,8 @@ Given(/^I am in 'music' mode$/) do
 end
 
 Then(/^I should be able to play a music playlist$/) do
+  puts "== mode: " + $test_mode
+
   # First: browse to a subfolder
   page.find(".select-folder", :text => "playlist").click()
 
@@ -37,7 +39,7 @@ Then(/^I should be able to play a music playlist$/) do
   page.find('#song-name').text.should match(/test-01\.mp3/)
 
   # Hit 'back' link, going to root folder of music
-  page.find("#back-button").click()
+  page.find("#back-button").trigger("click")
   page.first(".folder-playing .play-button").should be_visible
 end
 

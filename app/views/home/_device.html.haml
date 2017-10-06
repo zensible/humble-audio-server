@@ -6,11 +6,11 @@
       {{device.friendly_name}}
   %span{ "ng-if" => "(device.cast_type == 'group' && (isMobile || home.device_hover == device || device.children.length == 0))" }<
     %a.hand{ "ng-click" => "configure_group(device)" }<
-      %img.hand{ "ng-src" => "/images/{{theme.icons}}/config_16.png" }
+      %img.hand{ "ng-src" => "/images/light/config_16.png" }
   %span.play-button{ "ng-if" => "device.player_status == 'PLAYING' || device.player_status == 'BUFFERING'" }<
-    %img{ "ng-src" => "/images/{{theme.icons}}/play_device_{{device.num_casting}}.png"}
+    %img{ "ng-src" => "/images/light/play_device_{{device.num_casting}}.png"}
   %span.pause-button{ "ng-if" => "device.player_status == 'PAUSED'" }<
-    %img{ "ng-src" => "/images/{{theme.icons}}/pause2_16.png"}
+    %img{ "ng-src" => "/images/light/pause2_16.png"}
 
 %td.ellipsis{ :style => "width: 60%; padding-right: 40px" }
   %input.slider{ type: "range", min: "0", max: "1", step: ".05", autocomplete: "off", "ng-click" => "volume_change(device)", "ng-mobile-click" => "volume_change(device)", "ng-model" => "device.volume_level" }

@@ -1,4 +1,7 @@
 
+/*
+ * Top-level controller which exposes useful shared variables and functions to all child controllers
+ */
 multiroomApp.controller('GlobalCtrl', function ($scope, $routeParams, $route, $http, $rootScope) {
 
   // There special display logic for phones and tablets, use $scope.isMobile so the front end is aware

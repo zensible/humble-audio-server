@@ -538,8 +538,8 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     }
     for (var i = 0; i < devices.length; i++) {
       var dev = devices[i];
-      if (dev.player_status != "IDLE" && dev.player_status != "UNKNOWN") {
-        //console.log("dev.state_local[type]", dev.state_local[type], "type", type, "val", val)
+      if (dev.player_status && dev.player_status != "IDLE" && dev.player_status != "UNKNOWN") {
+        console.log("status", dev.player_status, "dev.state_local[type]", dev.state_local[type], "type", type, "val", val)
 
         var arr = type.split('.');
         if (arr.length == 1) {
