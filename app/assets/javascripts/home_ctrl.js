@@ -265,6 +265,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
    */
   $scope.select_folder = function(folder_id) {
     localStorage.setItem('folder::' + $scope.home.mode_ui, folder_id);
+    
 
     if (folder_id == -1) {
       $scope.home.folder = {
@@ -282,7 +283,18 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
     Mp3.index($scope.home.mode_ui, folder_id, function(response) {
       if (response.data.length > 0) {
         $scope.home.mp3s = response.data
-        //$scope.playbar.init($scope.home.mp3s)
+
+        // Get sort order from local storage, defaulting to track_nr
+        // Also sets title_sort_num and mp3_sort_filename
+        // ToDo: Edge case: should this be per-device? Otherwise if two devices are playing different sort orders, for one device it will seem random.
+        $scope.home.mp3_sort = localStorage.getItem("sort::" + folder_id) || "track_nr"
+        title_sort_num = parseInt(localStorage.getItem("title_sort_num::" + folder_id) || -1)
+        if (title_sort_num >= 2) {
+          $scope.home.mp3_sort_filename = true
+        } else {
+          $scope.home.mp3_sort_filename = false
+        }
+        perform_sort($scope.home.mp3_sort)
       } else {
         $scope.home.mp3s = []
       }
@@ -290,8 +302,7 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
   }
 
   var title_sort_num = -1;
-  $scope.set_mp3_sort = function(sort) {
-    var field = "";
+  function perform_sort(field) {
 
     function compare_asc(a,b) {
       if (a[field] < b[field])
@@ -309,10 +320,23 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       return 0;
     }
 
+    if (field.match(/^-/)) {
+      field = field.replace(/^-/, "")
+      console.log("field desc", field)
+      $scope.home.mp3s = $scope.home.mp3s.sort(compare_desc);
+    } else {
+      console.log("field asc", field)
+      $scope.home.mp3s = $scope.home.mp3s.sort(compare_asc);
+    }
+  }
+
+  $scope.set_mp3_sort = function(sort) {
+    var field = "";
+
     // Step 1: appropriately sort $scope.home.mp3s
 
     $scope.home.mp3_sort_filename = false
-    if (sort == 'title') {
+    if (sort == 'title') {  // Title has special rules: it cycles through title then filename
       title_sort_num += 1
       if (title_sort_num > 3) { title_sort_num = 0; }
       var title_sort = [ 'title', '-title', 'filename', '-filename' ]
@@ -329,15 +353,11 @@ multiroomApp.controller('HomeCtrl', function ($scope, $routeParams, $route, $ro
       }
     }
 
-    field = $scope.home.mp3_sort;
-    if (field.match(/^-/)) {
-      field = field.replace(/^-/, "")
-      console.log("field desc", field)
-      $scope.home.mp3s = $scope.home.mp3s.sort(compare_desc);
-    } else {
-      console.log("field asc", field)
-      $scope.home.mp3s = $scope.home.mp3s.sort(compare_asc);
-    }
+    perform_sort($scope.home.mp3_sort)
+
+    var folder_id = $scope.home.device_selected.state_local.folder.id
+    localStorage.setItem("sort::" + folder_id, $scope.home.mp3_sort);
+    localStorage.setItem("title_sort_num::" + folder_id, title_sort_num);
 
     // Step 2: UPDATE PLAYLIST
     // mp3s have been rearranged, now time to update the playlist for the player, whether the browser or a CCA
