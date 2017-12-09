@@ -161,7 +161,7 @@ class Sync
           # New mp3 or URL changed? Make sure we can still hit it. Prevents mp3s from being added if they've got characters so weird the CGI.escape() can't convert them
           if !mp3 || (mp3 && attrs[:url] != mp3.url)
             puts "003.1 #{Time.now.to_s}"
-            cmd = "curl -s --head -w %{http_code} http://192.168.0.103:#{$port}/#{attrs[:url]}"
+            cmd = "curl -s --head -w %{http_code} http://#{$ip_address}:#{$port}/#{attrs[:url]}"
             exists = `#{cmd}`
             if !exists.match(/200 OK/)
               stats[:error] += 1
