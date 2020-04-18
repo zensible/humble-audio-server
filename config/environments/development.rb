@@ -21,7 +21,10 @@ Rails.application.configure do
       puts "Error: couldn't get hostname for websockets, using localhost"
       host = "localhost"
     end
-    config.action_cable.url = "ws://#{host}/cable"
+    host = "ws://localhost:28080/cable"
+    puts "== Actioncable host: #{host}"
+    #config.action_cable.url = "ws://#{host}/cable"
+    config.action_cable.url = host
     config.action_cable.allowed_request_origins = [/http:\/\/*/, /https:\/\/*/]
   end
 

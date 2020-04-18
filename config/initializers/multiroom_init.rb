@@ -40,8 +40,8 @@ https://www.google.com/search?q=how+install+curl+ubuntu
 
 "
 
-  PyChromecast.init()
-  Device.refresh()
+  #PyChromecast.init()
+  #Device.refresh()
 
   ip = Socket.ip_address_list.detect{|intf| intf.ipv4_private?}
   if ip.nil?

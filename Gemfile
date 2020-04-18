@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 
-#ruby "2.3.1"
+ruby "2.3.7"
 
 gem 'puma', '3.8.0'
 gem 'rails', '~> 5.0.1'
@@ -11,7 +11,7 @@ gem 'redis'
 gem 'haml'
 gem 'sass-rails', '~> 5.0'
 gem 'uglifier', '>= 1.3.0'
-#gem 'therubyracer', '0.12.13'
+gem 'therubyracer'
 gem 'libv8'
 gem 'jquery-rails'
 gem 'jbuilder', '~> 2.5'
@@ -23,6 +23,8 @@ gem 'colorize'
 # For use in preset scheduling
 gem 'crono'
 gem 'daemons'
+
+gem 'ref', '2.0.0'
 
 # Reads mp3 id3 tags
 gem 'taglib-ruby'
