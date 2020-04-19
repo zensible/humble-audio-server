@@ -4,7 +4,7 @@
 # the maximum value specified for Puma. Default is set to 5 threads for minimum
 # and maximum, this matches the default thread size of Active Record.
 #
-threads_count = ENV.fetch("RAILS_MAX_THREADS") { 20 }.to_i
+threads_count = ENV.fetch("RAILS_MAX_THREADS") { 10 }.to_i
 threads threads_count, threads_count
 
 # Specifies the `port` that Puma will listen on to receive requests, default is 3000.
@@ -21,7 +21,7 @@ environment ENV.fetch("RAILS_ENV") { "development" }
 # Workers do not work on JRuby or Windows (both of which do not support
 # processes).
 #
-#workers ENV.fetch("WEB_CONCURRENCY") { 4 }
+workers ENV.fetch("WEB_CONCURRENCY") { 4 }
 
 # config/puma.rb
 #on_worker_boot do

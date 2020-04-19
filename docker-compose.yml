@@ -15,10 +15,13 @@ services:
       - '3030:3000/tcp'
     volumes:
       - .:/app
-      - /Volumes/MegaMedia/Primus/audio.music/wp:/app/public/audio/music
+      - /Volumes/MegaMedia/Primus/audio.music:/app/public/audio/music
+      - /Volumes/MegaMedia/Primus/audio.spoken:/app/public/audio/spoken
+      - /Volumes/MegaMedia/Primus/audio.whitenoise:/app/public/audio/white-noise
     environment:
       RAILS_ENV: "development"
-    command: rails s -p 3000 -b 0.0.0.0
+    command: bundle exec puma
+    restart: always
 
   # MySQL
   mysql: 
@@ -32,6 +35,7 @@ services:
     # No root password
     env_file:
       - '.env-local'
+    restart: always
 
   redis:
     image: 'redis:3.2-alpine'
@@ -40,19 +44,7 @@ services:
       - '6379:6379'
     volumes:
       - 'redis:/data'
-
-  cable:
-    image: humble_audio_server:local
-    depends_on:
-      - 'redis'
-    build: .
-    command: puma -p 28080 cable/config.ru
-    ports:
-      - '28080:28080'
-    volumes:
-      - '.:/app'
-    env_file:
-      - '.env-local'
+    restart: always
 
 volumes:
   redis:

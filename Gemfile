@@ -3,7 +3,7 @@ source 'https://rubygems.org'
 ruby "2.3.7"
 
 gem 'puma', '3.8.0'
-gem 'rails', '~> 5.0.1'
+gem 'rails', '~> 5.0.2'
 
 gem 'mysql2', '~> 0.3.18'
 gem 'redis'

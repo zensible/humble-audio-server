@@ -148,16 +148,16 @@ class Sync
         stats[:existing] += 1
         #puts "Already in DB: #{mp3}"
       else
-        puts "001 #{Time.now.to_s}"
+        #puts "001 #{Time.now.to_s}"
         md5 = Digest::MD5.hexdigest(File.read(mp3))
-        puts "002 #{Time.now.to_s}"
+        #puts "002 #{Time.now.to_s}"
         attrs = get_attributes(mode, mp3, md5, folder_id)
         if attrs.nil?
           stats[:error] += 1
           Rails.logger.warn("== Could not read file information: #{mp3}. Not an MP3?")
         else
           mp3 = hsh_existing_md5[md5]
-          puts "== GO"
+          #puts "== GO"
           # New mp3 or URL changed? Make sure we can still hit it. Prevents mp3s from being added if they've got characters so weird the CGI.escape() can't convert them
           #if !mp3 || (mp3 && attrs[:url] != mp3.url)
           #  puts "003.1 #{Time.now.to_s}"
@@ -181,7 +181,7 @@ class Sync
             puts "Adding new mp3 to DB: #{mp3}"
             Mp3.create(attrs)
           end
-          puts "003 #{Time.now.to_s}"
+          #puts "003 #{Time.now.to_s}"
         end
       end
     end

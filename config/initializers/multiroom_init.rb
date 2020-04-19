@@ -57,6 +57,8 @@ https://www.google.com/search?q=how+install+curl+ubuntu
     $http_address_local = "http://#{ip}:#{$port}"
   end
 
+  $http_address_local = ENV.fetch('WEB_HOST_OVERRIDE', $http_address_local)
+
   $has_ddns = false
   if !$settings['ddns_hostname'].blank?
     $has_ddns = true

@@ -21,11 +21,13 @@ Rails.application.configure do
       puts "Error: couldn't get hostname for websockets, using localhost"
       host = "localhost"
     end
-    host = "ws://localhost:28080/cable"
+    host = "ws://#{host}/cable"
+    host = ENV.fetch('WS_HOST_OVERRIDE', host)
+    # Docker hack
     puts "== Actioncable host: #{host}"
-    #config.action_cable.url = "ws://#{host}/cable"
     config.action_cable.url = host
     config.action_cable.allowed_request_origins = [/http:\/\/*/, /https:\/\/*/]
+    config.action_cable.disable_request_forgery_protection = true
   end
 
   # Enable/disable caching. By default caching is disabled.
